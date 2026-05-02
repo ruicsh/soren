@@ -15,6 +15,15 @@ import {
 import Animated from 'react-native-reanimated';
 
 import { Link as RouterLink } from 'expo-router';
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
+
+// CSS-enabled SafeAreaView
+export const SafeAreaView = (
+  props: React.ComponentProps<typeof RNSafeAreaView> & { className?: string },
+) => {
+  return useCssElement(RNSafeAreaView, props, { className: 'style' });
+};
+SafeAreaView.displayName = 'CSS(SafeAreaView)';
 
 // CSS-enabled Link
 export const Link = (

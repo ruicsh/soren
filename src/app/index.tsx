@@ -1,31 +1,15 @@
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Text, View } from '@/tw';
 
 export default function Home() {
-  return <SafeAreaProvider>
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>hello, world!</Text>
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View className="flex-1 items-center justify-center bg-orange-500">
+        <Text className="mt-4 rounded-md border-4 border-black bg-cyan-500 p-3 text-center text-3xl font-bold text-black">
+          hello, world!
+        </Text>
+      </View>
     </SafeAreaView>
-  </SafeAreaProvider>
+  );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  title: {
-    backgroundColor: '#61dafb',
-    borderColor: '#20232a',
-    borderRadius: 6,
-    borderWidth: 4,
-    color: '#20232a',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginTop: 16,
-    padding: 12,
-    textAlign: 'center',
-  },
-});

@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  KeyboardAvoidingView as RNKeyboardAvoidingView,
   Pressable as RNPressable,
   ScrollView as RNScrollView,
   Text as RNText,
@@ -24,6 +25,16 @@ export const SafeAreaView = (
   return useCssElement(RNSafeAreaView, props, { className: 'style' });
 };
 SafeAreaView.displayName = 'CSS(SafeAreaView)';
+
+// CSS-enabled KeyboardAvoidingView
+export const KeyboardAvoidingView = (
+  props: React.ComponentProps<typeof RNKeyboardAvoidingView> & {
+    className?: string;
+  },
+) => {
+  return useCssElement(RNKeyboardAvoidingView, props, { className: 'style' });
+};
+KeyboardAvoidingView.displayName = 'CSS(KeyboardAvoidingView)';
 
 // CSS-enabled Link
 export const Link = (

@@ -36,7 +36,8 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-app-example
+# unit tests
+/coverage
 
 # generated native folders
 /ios

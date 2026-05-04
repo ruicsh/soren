@@ -17,7 +17,7 @@ export function SendButton({ onPress }: SendButtonProps) {
       style={styles.button}
       testID="send-button"
     >
-      <ArrowUp color="white" size={18} strokeWidth={2.5} />
+      <ArrowUp color="white" pointerEvents="none" size={18} strokeWidth={2.5} />
     </Pressable>
   );
 }

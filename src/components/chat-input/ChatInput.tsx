@@ -10,6 +10,7 @@ import {
 import { useDictation } from '@/hooks/use-dictation';
 import { colors, radius, spacing, typography } from '@/theme';
 
+import { BTN_SIZE } from './const';
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
 
@@ -90,17 +91,27 @@ export function ChatInput(props: ChatInputProps) {
         ]}
         value={text}
       />
-      {hasText && !isRecording && <SendButton onPress={handleSend} />}
-      {(!hasText || isRecording) && (
-        <MicButton isRecording={isRecording} onPress={handleMicPress} />
-      )}
+      <View style={styles.buttonSlot}>
+        {hasText && !isRecording && <SendButton onPress={handleSend} />}
+        {(!hasText || isRecording) && (
+          <MicButton isRecording={isRecording} onPress={handleMicPress} />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  buttonSlot: {
+    alignItems: 'center',
+    bottom: spacing[3],
+    height: BTN_SIZE,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: spacing[4],
+    width: BTN_SIZE,
+  },
   container: {
-    alignItems: 'flex-end',
     backgroundColor: colors.bg2,
     borderColor: colors.border,
     borderRadius: radius['3xl'],
@@ -115,6 +126,7 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     minHeight: spacing[8],
     paddingBottom: spacing[2],
+    paddingRight: BTN_SIZE + spacing[2],
     paddingTop: spacing[2],
     textAlignVertical: 'center',
   },

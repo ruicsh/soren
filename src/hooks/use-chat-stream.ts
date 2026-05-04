@@ -17,17 +17,25 @@ const provider = openaiCompatProvider({
 
 const BATCH_MS = 50;
 
-export function useChatStream() {
+export interface UseChatStreamOptions {
+  /** Fired with each flushed batch of streaming text */
+  onStreamingChunk?: (chunk: string) => void;
+}
+
+export function useChatStream(options?: UseChatStreamOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(false);
   const pendingRef = useRef('');
   const flushTimerRef = useRef<null | ReturnType<typeof setInterval>>(null);
+  const onStreamingChunkRef = useRef(options?.onStreamingChunk);
+  onStreamingChunkRef.current = options?.onStreamingChunk;
 
   const flush = useCallback(() => {
     const delta = pendingRef.current;
     if (!delta) return;
     pendingRef.current = '';
+    onStreamingChunkRef.current?.(delta);
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (!last || last.role !== 'assistant') return prev;

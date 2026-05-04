@@ -1,4 +1,5 @@
-import { Brain as IconBrain } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Brain as IconBrain, Phone } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
@@ -6,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +18,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { colors, spacing, typography } from '@/theme';
 
 export default function Home() {
+  const router = useRouter();
   const { isStreaming, messages, sendMessage } = useChatStream();
   const scrollViewRef = useRef<any>(null);
 
@@ -36,6 +39,17 @@ export default function Home() {
         keyboardVerticalOffset={0}
         style={styles.flex}
       >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Soren</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/voice' as any)}
+            testID="voice-call-button"
+          >
+            <Phone color={colors.accent} pointerEvents="none" size={24} />
+          </TouchableOpacity>
+        </View>
+
         {/* Messages area */}
         {hasMessages ? (
           <ScrollView
@@ -85,6 +99,18 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: typography.lg,
+    fontWeight: '600',
   },
   inputWrap: {
     paddingBottom: spacing[4],

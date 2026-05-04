@@ -87,8 +87,26 @@ vi.mock('lucide-react-native', () => {
     ArrowUp: createIconMock('ArrowUp'),
     Brain: createIconMock('Brain'),
     Mic: createIconMock('Mic'),
+    Phone: createIconMock('Phone'),
+    PhoneOff: createIconMock('PhoneOff'),
   };
 });
+
+// expo-speech — mock TTS module
+vi.mock('expo-speech', () => ({
+  getAvailableVoicesAsync: vi.fn(() => Promise.resolve([])),
+  isSpeakingAsync: vi.fn(() => Promise.resolve(false)),
+  speak: vi.fn(),
+  stop: vi.fn(),
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
+}));
+
+// XMLHttpRequest — not available in Node test environment
+global.XMLHttpRequest = class MockXMLHttpRequest {
+  open = vi.fn();
+  send = vi.fn();
+  setRequestHeader = vi.fn();
+} as any;
 
 // expo-speech-recognition — mock module and hook
 const speechListeners = new Map<string, ((event: unknown) => void)[]>();

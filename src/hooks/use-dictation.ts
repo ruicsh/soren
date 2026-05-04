@@ -2,7 +2,14 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+export interface UseDictationOptions {
+  /** Callback fired after silenceMs of no transcript change while recording */
+  onEndOfSpeech?: (transcript: string) => void;
+  /** Milliseconds of silence to wait before firing onEndOfSpeech */
+  silenceMs?: number;
+}
 
 export interface UseDictationReturn {
   /** Error message if something went wrong */
@@ -17,36 +24,67 @@ export interface UseDictationReturn {
   transcript: string;
 }
 
-export function useDictation(): UseDictationReturn {
+export function useDictation(
+  options?: UseDictationOptions,
+): UseDictationReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<null | string>(null);
   const finalRef = useRef('');
   const interimRef = useRef('');
+  const silenceTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null);
+  const isRecordingRef = useRef(false);
+
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
 
   useSpeechRecognitionEvent('result', (event) => {
     const result = event.results[0];
     if (!result) return;
 
+    let nextTranscript: string;
+
     if (event.isFinal) {
       finalRef.current = (finalRef.current + ' ' + result.transcript).trim();
       interimRef.current = '';
-      setTranscript(finalRef.current);
+      nextTranscript = finalRef.current;
     } else {
       interimRef.current = result.transcript;
-      setTranscript((finalRef.current + ' ' + result.transcript).trim());
+      nextTranscript = (finalRef.current + ' ' + result.transcript).trim();
+    }
+
+    setTranscript(nextTranscript);
+
+    if (options?.silenceMs && options?.onEndOfSpeech) {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      silenceTimerRef.current = setTimeout(() => {
+        if (isRecordingRef.current && nextTranscript.trim()) {
+          options.onEndOfSpeech!(nextTranscript);
+        }
+      }, options.silenceMs);
     }
   });
 
   useSpeechRecognitionEvent('error', (event) => {
     setError(event.message);
     setIsRecording(false);
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
   });
 
   useSpeechRecognitionEvent('end', () => {
     setIsRecording(false);
     interimRef.current = '';
     setTranscript(finalRef.current);
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
   });
 
   const startDictation = useCallback(async () => {
@@ -54,6 +92,10 @@ export function useDictation(): UseDictationReturn {
     finalRef.current = '';
     interimRef.current = '';
     setTranscript('');
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
 
     try {
       const perms = await ExpoSpeechRecognitionModule.requestPermissionsAsync();

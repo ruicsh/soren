@@ -9,6 +9,7 @@
 - `npm run ios:clean` — Clean rebuild iOS
 - `npm run android` / `android:device` / `android:no-build` / `android:clean` — Same for Android
 - `npm run lint` — ESLint via `expo lint`
+- `npm run lint:fix` — Auto-fixable lint errors `expo lint --fix`
 - `npm run test` — Vitest single run
 - `npm run test:watch` — Vitest watch mode
 - `npm run test:coverage` — Vitest with coverage
@@ -16,7 +17,7 @@
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run web` — Web via Metro
 
-Verify with: `npm run format && npm run lint && npm run typecheck && npm run test`
+Verify with: `npm run lint:fix && npm run format && npm run lint && npm run typecheck && npm run test`
 
 ## Dev builds (not Expo Go)
 

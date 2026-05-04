@@ -13,6 +13,7 @@
     "ios:device": "expo run:ios --device",
     "ios:no-build": "expo run:ios --no-build",
     "lint": "expo lint",
+    "lint:fix": "expo lint --fix",
     "reset-project": "node ./scripts/reset-project.js",
     "start": "expo start --dev-client",
     "test": "vitest run",

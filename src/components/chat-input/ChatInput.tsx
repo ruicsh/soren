@@ -8,7 +8,7 @@ import { tv } from 'tailwind-variants';
 import { Pressable, TextInput, View } from '@/tw';
 
 const sendButtonCx = tv({
-  base: 'hidden bg-accent size-8 items-center justify-center rounded-full active:opacity-80',
+  base: 'hidden bg-accent size-8 items-center justify-center rounded-full',
   variants: {
     hasText: {
       true: 'flex',

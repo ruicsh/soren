@@ -44,10 +44,12 @@ Then open the dev client app on your simulator/device. It will auto-connect to t
 #### Physical device
 
 1. **Build & install** (first time, or after native changes):
+
    ```bash
    npm run ios:device      # iOS (USB connected)
    npm run android:device  # Android
    ```
+
    This builds, installs, and starts Metro. The app opens on your phone.
 
 2. **Day-to-day**, just start Metro — the app is already installed:

@@ -26,9 +26,11 @@ This project uses **development builds** (not Expo Go). Native modules are compi
    npm run ios:device   # physical iPhone
    ```
 2. **Day-to-day development** — just start Metro:
+
    ```bash
    npm start
    ```
+
    The installed dev client app auto-connects. Scan QR codes **from inside the dev client app**, not the phone's Camera app.
 
 3. **Rebuild native** only when installing/removing native modules or changing `app.json` / `Info.plist` / `AndroidManifest.xml`.
@@ -52,7 +54,9 @@ This project uses `react-native-css` `useCssElement` wrappers. NativeWind is pre
 Available from `@/tw`: View, Text, ScrollView, SafeAreaView, KeyboardAvoidingView, Pressable, TextInput, TouchableHighlight, Link, AnimatedScrollView.
 
 Available from `@/tw/animated`: Animated.View (Reanimated-interoped View with CSS).
-Available from `@/tw/image`: Image (expo-image with objectFit/objectPosition from CSS).
+Available from `@/tw`: `useCSSVariable` hook (uses `useNativeVariable` on native, `var()` on web).
+
+ScrollView supports `contentContainerClassName` prop (maps to `contentContainerStyle`).
 
 ### Metro config quirks
 
@@ -61,7 +65,7 @@ Available from `@/tw/image`: Image (expo-image with objectFit/objectPosition fro
 
 ### Design tokens
 
-Custom Tailwind v4 tokens in `src/styles/global.css` using CSS custom properties (`--color-bg`, `--color-text`, etc.). iOS uses native `platformColor()`, web/Android use explicit light/dark values. Use `className="text-text bg-bg"` etc.
+Tailwind v4 tokens in `src/styles/global.css`. Raw CSS vars use `--sf-*` prefix (iOS `platformColor()`, web/Android explicit light/dark), registered via `@theme { --color-* }`. Font families (`--font-*`) are platform-specific. Use `className="text-text bg-bg"` etc.
 
 ### React Compiler
 
@@ -71,11 +75,13 @@ Enabled. Use `.get()`/`.set()` on Reanimated shared values, NOT `.value`. Destru
 
 Vitest with `vitest-native` plugin and `@testing-library/react-native`. Globals enabled (no import needed for `describe`/`it`/`expect`).
 
-Test setup at `src/tests/test-setup.ts` — mocks `react-native-css`, `nativewind`, `expo-router`, and `lucide-react-native`.
+Test setup at `src/tests/test-setup.ts` — mocks `react-native-css`, `nativewind`, `expo-router`, `react-native-reanimated`, and `lucide-react-native`.
 
 Path alias `@/` → `src/` in both `tsconfig.json` and `vitest.config.mts` — they must stay in sync.
 
 Colocate tests: `Component.test.tsx` lives next to `Component.tsx` in the same directory.
+
+Run a single test file: `npx vitest run src/path/to/test.ts`
 
 ## LLM Layer
 

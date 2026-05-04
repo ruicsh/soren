@@ -59,6 +59,43 @@ vi.mock('expo-router', () => ({
   },
 }));
 
+// react-native-reanimated — passthrough for tests
+vi.mock('react-native-reanimated', () => {
+  const ViewMock = React.forwardRef(
+    (
+      {
+        children,
+        ...props
+      }: { children?: React.ReactNode; [key: string]: unknown },
+      ref: React.Ref<unknown>,
+    ) => {
+      return React.createElement('div', { ref, ...props }, children);
+    },
+  );
+  ViewMock.displayName = 'ReanimatedView';
+
+  return {
+    default: {
+      View: ViewMock,
+      createAnimatedComponent: (Component: React.ElementType) => Component,
+    },
+    View: ViewMock,
+    createAnimatedComponent: (Component: React.ElementType) => Component,
+    useSharedValue: (initialValue: unknown) => {
+      let value = initialValue;
+      return {
+        get value() {
+          return value;
+        },
+        set value(v: unknown) {
+          value = v;
+        },
+      };
+    },
+    useAnimatedStyle: (getter: () => Record<string, unknown>) => getter(),
+  };
+});
+
 // lucide-react-native — render as simple elements for testability
 vi.mock('lucide-react-native', () => {
   const createIconMock = (name: string) => {

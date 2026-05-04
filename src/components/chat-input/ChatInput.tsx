@@ -100,7 +100,7 @@ export function ChatInput(props: ChatInputProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     backgroundColor: colors.bg2,
     borderColor: colors.border,
     borderRadius: radius['3xl'],

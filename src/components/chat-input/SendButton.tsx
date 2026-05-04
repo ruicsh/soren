@@ -1,7 +1,9 @@
 import { ArrowUp } from 'lucide-react-native';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-const BTN_SIZE = 32;
+import { colors } from '@/theme';
+
+import { BTN_SIZE } from './const';
 
 interface SendButtonProps {
   onPress: () => void;
@@ -12,17 +14,21 @@ export function SendButton({ onPress }: SendButtonProps) {
     <Pressable
       hitSlop={16}
       onPress={onPress}
-      style={{
-        alignItems: 'center',
-        backgroundColor: '#007AFF',
-        borderRadius: BTN_SIZE / 2,
-        height: BTN_SIZE,
-        justifyContent: 'center',
-        width: BTN_SIZE,
-      }}
+      style={styles.button}
       testID="send-button"
     >
       <ArrowUp color="white" size={18} strokeWidth={2.5} />
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: BTN_SIZE / 2,
+    height: BTN_SIZE,
+    justifyContent: 'center',
+    width: BTN_SIZE,
+  },
+});

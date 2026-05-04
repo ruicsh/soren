@@ -1,6 +1,5 @@
-import { Pressable } from 'react-native';
-
 import { Mic } from 'lucide-react-native';
+import { Pressable } from 'react-native';
 
 const BTN_SIZE = 32;
 
@@ -12,21 +11,21 @@ interface MicButtonProps {
 export function MicButton({ isRecording, onPress }: MicButtonProps) {
   return (
     <Pressable
-      testID="mic-button"
-      onPress={onPress}
       hitSlop={16}
+      onPress={onPress}
       style={{
-        width: BTN_SIZE,
-        height: BTN_SIZE,
-        borderRadius: BTN_SIZE / 2,
-        backgroundColor: isRecording ? '#007AFF' : 'transparent',
         alignItems: 'center',
+        backgroundColor: isRecording ? '#007AFF' : 'transparent',
+        borderRadius: BTN_SIZE / 2,
+        height: BTN_SIZE,
         justifyContent: 'center',
+        width: BTN_SIZE,
       }}
+      testID="mic-button"
     >
       <Mic
-        size={20}
         color={isRecording ? 'white' : '#8E8E93'}
+        size={20}
         strokeWidth={2}
       />
     </Pressable>

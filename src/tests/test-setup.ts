@@ -3,39 +3,39 @@ import { vi } from 'vitest';
 
 // expo-router — mock navigation hooks
 vi.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    back: vi.fn(),
-    navigate: vi.fn(),
-    canGoBack: () => true,
-    setParams: vi.fn(),
-  }),
-  useLocalSearchParams: () => ({}),
-  useGlobalSearchParams: () => ({}),
-  useSegments: () => [],
-  usePathname: () => '/',
-  useNavigation: () => ({ navigate: vi.fn(), goBack: vi.fn() }),
-  useFocusEffect: (cb: () => void) => cb(),
   Link: ({
     children,
     ...props
   }: {
-    children: React.ReactNode;
     [key: string]: unknown;
+    children: React.ReactNode;
   }) => children,
+  Redirect: () => null,
+  router: {
+    back: vi.fn(),
+    canGoBack: () => true,
+    navigate: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    setParams: vi.fn(),
+  },
   Slot: ({ children }: { children?: React.ReactNode }) => children || null,
   Stack: { Screen: () => null },
   Tabs: { Screen: () => null },
-  Redirect: () => null,
-  router: {
+  useFocusEffect: (cb: () => void) => cb(),
+  useGlobalSearchParams: () => ({}),
+  useLocalSearchParams: () => ({}),
+  useNavigation: () => ({ goBack: vi.fn(), navigate: vi.fn() }),
+  usePathname: () => '/',
+  useRouter: () => ({
+    back: vi.fn(),
+    canGoBack: () => true,
+    navigate: vi.fn(),
     push: vi.fn(),
     replace: vi.fn(),
-    back: vi.fn(),
-    navigate: vi.fn(),
-    canGoBack: () => true,
     setParams: vi.fn(),
-  },
+  }),
+  useSegments: () => [],
 }));
 
 // react-native-reanimated — passthrough for tests
@@ -45,7 +45,7 @@ vi.mock('react-native-reanimated', () => {
       {
         children,
         ...props
-      }: { children?: React.ReactNode; [key: string]: unknown },
+      }: { [key: string]: unknown; children?: React.ReactNode },
       ref: React.Ref<unknown>,
     ) => {
       return React.createElement('div', { ref, ...props }, children);
@@ -54,12 +54,12 @@ vi.mock('react-native-reanimated', () => {
   ViewMock.displayName = 'ReanimatedView';
 
   return {
-    default: {
-      View: ViewMock,
-      createAnimatedComponent: (Component: React.ElementType) => Component,
-    },
-    View: ViewMock,
     createAnimatedComponent: (Component: React.ElementType) => Component,
+    default: {
+      createAnimatedComponent: (Component: React.ElementType) => Component,
+      View: ViewMock,
+    },
+    useAnimatedStyle: (getter: () => Record<string, unknown>) => getter(),
     useSharedValue: (initialValue: unknown) => {
       let value = initialValue;
       return {
@@ -71,7 +71,7 @@ vi.mock('react-native-reanimated', () => {
         },
       };
     },
-    useAnimatedStyle: (getter: () => Record<string, unknown>) => getter(),
+    View: ViewMock,
   };
 });
 
@@ -95,17 +95,17 @@ const speechListeners = new Map<string, ((event: unknown) => void)[]>();
 
 vi.mock('expo-speech-recognition', () => ({
   ExpoSpeechRecognitionModule: {
+    abort: vi.fn(),
     requestPermissionsAsync: vi.fn(() =>
       Promise.resolve({
+        canAskAgain: true,
+        expires: 'never',
         granted: true,
         status: 'granted',
-        expires: 'never',
-        canAskAgain: true,
       } as any),
     ),
     start: vi.fn(),
     stop: vi.fn(),
-    abort: vi.fn(),
   },
   useSpeechRecognitionEvent: (
     eventName: string,

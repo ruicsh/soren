@@ -8,7 +8,7 @@ describe('anthropicProvider', () => {
 
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
-      const messages = [{ role: 'user', content: 'Hello' }];
+      const messages = [{ content: 'Hello', role: 'user' }];
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.anthropic.com/v1/messages');
@@ -25,18 +25,18 @@ describe('anthropicProvider', () => {
 
     it('extracts system message to top-level param', () => {
       const messages = [
-        { role: 'system' as const, content: 'You are helpful.' },
-        { role: 'user' as const, content: 'Hi' },
+        { content: 'You are helpful.', role: 'system' as const },
+        { content: 'Hi', role: 'user' as const },
       ];
       const req = provider.buildRequest(messages);
       const body = JSON.parse(req.body);
 
       expect(body.system).toBe('You are helpful.');
-      expect(body.messages).toEqual([{ role: 'user', content: 'Hi' }]);
+      expect(body.messages).toEqual([{ content: 'Hi', role: 'user' }]);
     });
 
     it('omits system param when no system message', () => {
-      const messages = [{ role: 'user', content: 'Hi' }];
+      const messages = [{ content: 'Hi', role: 'user' }];
       const req = provider.buildRequest(messages);
       const body = JSON.parse(req.body);
 
@@ -47,11 +47,11 @@ describe('anthropicProvider', () => {
     it('uses custom maxTokens', () => {
       const customProvider = anthropicProvider({
         apiKey: 'key',
-        model: 'claude-sonnet-4-20250514',
         maxTokens: 1024,
+        model: 'claude-sonnet-4-20250514',
       });
       const req = customProvider.buildRequest([
-        { role: 'user', content: 'Hi' },
+        { content: 'Hi', role: 'user' },
       ]);
       const body = JSON.parse(req.body);
 
@@ -59,7 +59,7 @@ describe('anthropicProvider', () => {
     });
 
     it('defaults maxTokens to 4096', () => {
-      const req = provider.buildRequest([{ role: 'user', content: 'Hi' }]);
+      const req = provider.buildRequest([{ content: 'Hi', role: 'user' }]);
       const body = JSON.parse(req.body);
 
       expect(body.max_tokens).toBe(4096);

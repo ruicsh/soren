@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { colors, spacing, radius } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 
 const dotBase = {
   backgroundColor: colors.text2,
   borderRadius: radius.full,
-  width: 6,
   height: 6,
+  width: 6,
 };
 
 export function TypingDots() {
@@ -22,9 +22,9 @@ export function TypingDots() {
     <View style={styles.container}>
       {[0, 1, 2].map((i) => (
         <View
-          testID={`typing-dot-${i}`}
           key={i}
           style={{ ...dotBase, opacity: step === i ? 1 : 0.3 }}
+          testID={`typing-dot-${i}`}
         />
       ))}
     </View>
@@ -33,8 +33,8 @@ export function TypingDots() {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing[1],
   },
 });

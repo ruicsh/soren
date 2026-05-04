@@ -9,7 +9,7 @@ describe('openaiCompatProvider', () => {
 
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
-      const messages = [{ role: 'user', content: 'Hello' }];
+      const messages = [{ content: 'Hello', role: 'user' }];
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.example.com/v1/chat/completions');
@@ -26,12 +26,12 @@ describe('openaiCompatProvider', () => {
       const providerWithExtra = openaiCompatProvider({
         apiKey: 'key',
         baseUrl: 'https://api.example.com/v1',
-        model: 'deepseek-v4-flash',
         extraBody: { thinking: { type: 'disabled' } },
+        model: 'deepseek-v4-flash',
       });
 
       const req = providerWithExtra.buildRequest([
-        { role: 'user', content: 'hi' },
+        { content: 'hi', role: 'user' },
       ]);
       const body = JSON.parse(req.body);
 
@@ -40,7 +40,7 @@ describe('openaiCompatProvider', () => {
     });
 
     it('does not include extraBody when not provided', () => {
-      const req = provider.buildRequest([{ role: 'user', content: 'hi' }]);
+      const req = provider.buildRequest([{ content: 'hi', role: 'user' }]);
       const body = JSON.parse(req.body);
 
       expect(body).not.toHaveProperty('thinking');

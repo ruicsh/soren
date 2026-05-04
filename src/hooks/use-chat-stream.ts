@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ChatMessage } from '@/lib/llm/types';
+
 import { openaiCompatProvider } from '@/lib/llm/openai-compat';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
-import type { ChatMessage } from '@/lib/llm/types';
 
 const API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
 const BASE_URL = 'https://api.groq.com/openai/v1';
@@ -16,16 +17,12 @@ const provider = openaiCompatProvider({
 
 const BATCH_MS = 50;
 
-function generateId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
 export function useChatStream() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(false);
   const pendingRef = useRef('');
-  const flushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const flushTimerRef = useRef<null | ReturnType<typeof setInterval>>(null);
 
   const flush = useCallback(() => {
     const delta = pendingRef.current;
@@ -50,15 +47,15 @@ export function useChatStream() {
       pendingRef.current = '';
 
       const userMessage: ChatMessage = {
+        content: text.trim(),
         id: generateId(),
         role: 'user',
-        content: text.trim(),
       };
 
       const assistantMessage: ChatMessage = {
+        content: '',
         id: generateId(),
         role: 'assistant',
-        content: '',
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
@@ -68,15 +65,15 @@ export function useChatStream() {
 
       try {
         const history = [...messages, userMessage].map((m) => ({
-          role: m.role as 'user' | 'assistant',
           content: m.content,
+          role: m.role as 'assistant' | 'user',
         }));
 
         const historyWithSystem = [
           {
-            role: 'system' as const,
             content:
               'You are a helpful, concise assistant. Keep responses brief.',
+            role: 'system' as const,
           },
           ...history,
         ];
@@ -110,5 +107,9 @@ export function useChatStream() {
     abortRef.current = true;
   }, []);
 
-  return { messages, isStreaming, sendMessage, stop };
+  return { isStreaming, messages, sendMessage, stop };
+}
+
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }

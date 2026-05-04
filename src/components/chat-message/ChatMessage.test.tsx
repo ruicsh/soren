@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react-native';
 
 import { ChatMessageBubble } from './ChatMessage';
 
-function makeMessage(role: 'user' | 'assistant', content: string) {
-  return { id: '1', role, content };
+function makeMessage(role: 'assistant' | 'user', content: string) {
+  return { content, id: '1', role };
 }
 
 describe('ChatMessageBubble', () => {
@@ -22,8 +22,8 @@ describe('ChatMessageBubble', () => {
   it('shows TypingDots when streaming an empty assistant message', () => {
     const { queryByTestId } = render(
       <ChatMessageBubble
-        message={makeMessage('assistant', '')}
         isStreaming={true}
+        message={makeMessage('assistant', '')}
       />,
     );
 
@@ -33,8 +33,8 @@ describe('ChatMessageBubble', () => {
   it('does not show TypingDots when not streaming', () => {
     render(
       <ChatMessageBubble
-        message={makeMessage('assistant', '')}
         isStreaming={false}
+        message={makeMessage('assistant', '')}
       />,
     );
 
@@ -44,8 +44,8 @@ describe('ChatMessageBubble', () => {
   it('does not show TypingDots when assistant message has content', () => {
     render(
       <ChatMessageBubble
-        message={makeMessage('assistant', 'Some text')}
         isStreaming={true}
+        message={makeMessage('assistant', 'Some text')}
       />,
     );
 
@@ -55,8 +55,8 @@ describe('ChatMessageBubble', () => {
   it('shows cursor when streaming assistant message with content', () => {
     render(
       <ChatMessageBubble
-        message={makeMessage('assistant', 'Streaming')}
         isStreaming={true}
+        message={makeMessage('assistant', 'Streaming')}
       />,
     );
 
@@ -70,8 +70,8 @@ describe('ChatMessageBubble', () => {
   it('does not show cursor when not streaming', () => {
     render(
       <ChatMessageBubble
-        message={makeMessage('assistant', 'Done')}
         isStreaming={false}
+        message={makeMessage('assistant', 'Done')}
       />,
     );
 
@@ -84,8 +84,8 @@ describe('ChatMessageBubble', () => {
   it('does not show cursor for user messages even when streaming', () => {
     render(
       <ChatMessageBubble
-        message={makeMessage('user', 'My message')}
         isStreaming={true}
+        message={makeMessage('user', 'My message')}
       />,
     );
 

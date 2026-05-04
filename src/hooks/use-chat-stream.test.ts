@@ -1,14 +1,16 @@
 import {
-  renderHook,
   act,
-  waitFor,
   cleanup,
+  renderHook,
+  waitFor,
 } from '@testing-library/react-native';
 import { vi } from 'vitest';
 
-import { useChatStream } from './use-chat-stream';
-import { createStreamChat } from '@/lib/llm/xhr-stream';
 import type { StreamMetrics } from '@/lib/llm/types';
+
+import { createStreamChat } from '@/lib/llm/xhr-stream';
+
+import { useChatStream } from './use-chat-stream';
 
 vi.mock('@/lib/llm/xhr-stream', () => ({
   createStreamChat: vi.fn(),
@@ -16,9 +18,9 @@ vi.mock('@/lib/llm/xhr-stream', () => ({
 
 vi.mock('@/lib/llm/openai-compat', () => ({
   openaiCompatProvider: vi.fn(() => ({
-    buildRequest: vi.fn(() => ({ url: '', headers: {}, body: '' })),
-    parseChunk: vi.fn(() => []),
+    buildRequest: vi.fn(() => ({ body: '', headers: {}, url: '' })),
     isDone: vi.fn(() => false),
+    parseChunk: vi.fn(() => []),
     warmup: vi.fn(),
   })),
 }));
@@ -27,7 +29,7 @@ function withMetrics(
   gen: AsyncGenerator<string>,
 ): AsyncGenerator<string> & { metrics: StreamMetrics } {
   return Object.assign(gen, {
-    metrics: { headersTime: null, firstTokenTime: null },
+    metrics: { firstTokenTime: null, headersTime: null },
   });
 }
 
@@ -64,12 +66,12 @@ describe('useChatStream', () => {
 
     expect(result.current.messages).toHaveLength(2);
     expect(result.current.messages[0]).toMatchObject({
-      role: 'user',
       content: 'Hello',
+      role: 'user',
     });
     expect(result.current.messages[1]).toMatchObject({
-      role: 'assistant',
       content: '',
+      role: 'assistant',
     });
   });
 

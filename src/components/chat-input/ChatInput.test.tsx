@@ -1,13 +1,14 @@
 import {
+  act,
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
-  act,
 } from '@testing-library/react-native';
 
-import { ChatInput } from './ChatInput';
 import { emitSpeechEvent } from '@/tests/test-setup';
+
+import { ChatInput } from './ChatInput';
 
 describe('ChatInput', () => {
   it('renders placeholder text', () => {
@@ -75,7 +76,7 @@ describe('ChatInput', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: true,
-        results: [{ transcript: 'Hello world', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Hello world' }],
       });
     });
 
@@ -105,7 +106,7 @@ describe('ChatInput', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: true,
-        results: [{ transcript: 'Once', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Once' }],
       });
     });
 

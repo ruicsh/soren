@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { LLMProvider } from './types';
 
@@ -6,13 +6,23 @@ function createMockProvider(): LLMProvider {
   return {
     buildRequest(messages) {
       return {
-        url: 'https://api.test.com/v1/chat/completions',
+        body: JSON.stringify({ messages, model: 'test-model', stream: true }),
         headers: {
-          'Content-Type': 'application/json',
           Authorization: 'Bearer test-key',
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ model: 'test-model', messages, stream: true }),
+        url: 'https://api.test.com/v1/chat/completions',
       };
+    },
+
+    isDone(lines) {
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ') && trimmed.slice(6) === '[DONE]') {
+          return true;
+        }
+      }
+      return false;
     },
 
     parseChunk(lines) {
@@ -34,16 +44,6 @@ function createMockProvider(): LLMProvider {
       }
       return deltas;
     },
-
-    isDone(lines) {
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('data: ') && trimmed.slice(6) === '[DONE]') {
-          return true;
-        }
-      }
-      return false;
-    },
   };
 }
 
@@ -51,11 +51,11 @@ describe('createStreamChat', () => {
   it('builds correct request from provider config', () => {
     const provider = createMockProvider();
     const messages = [
-      { role: 'system', content: 'Be brief.' },
-      { role: 'user', content: 'Hello' },
+      { content: 'Be brief.', role: 'system' },
+      { content: 'Hello', role: 'user' },
     ];
 
-    const { url, headers, body } = provider.buildRequest(messages);
+    const { body, headers, url } = provider.buildRequest(messages);
 
     expect(url).toBe('https://api.test.com/v1/chat/completions');
     expect(headers.Authorization).toBe('Bearer test-key');
@@ -145,14 +145,21 @@ describe('Anthropic-style SSE parsing', () => {
   const anthropicProvider: LLMProvider = {
     buildRequest() {
       return {
-        url: 'https://api.anthropic.com/v1/messages',
+        body: '{}',
         headers: {
+          'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
           'x-api-key': 'test',
-          'anthropic-version': '2023-06-01',
         },
-        body: '{}',
+        url: 'https://api.anthropic.com/v1/messages',
       };
+    },
+
+    isDone(lines) {
+      for (const line of lines) {
+        if (line.trim() === 'event: message_stop') return true;
+      }
+      return false;
     },
 
     parseChunk(lines) {
@@ -179,13 +186,6 @@ describe('Anthropic-style SSE parsing', () => {
         }
       }
       return deltas;
-    },
-
-    isDone(lines) {
-      for (const line of lines) {
-        if (line.trim() === 'event: message_stop') return true;
-      }
-      return false;
     },
   };
 

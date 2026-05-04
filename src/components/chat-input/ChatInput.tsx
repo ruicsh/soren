@@ -1,31 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  useWindowDimensions,
   StyleSheet,
   TextInput,
-  View,
   type TextInputContentSizeChangeEvent,
+  useWindowDimensions,
+  View,
 } from 'react-native';
 
 import { useDictation } from '@/hooks/use-dictation';
+import { colors, radius, spacing, typography } from '@/theme';
+
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
-import { colors, spacing, radius, typography } from '@/theme';
 
 interface ChatInputProps {
-  placeholder?: string;
   onSend: (text: string) => void;
+  placeholder?: string;
 }
 
 export function ChatInput(props: ChatInputProps) {
-  const { placeholder = 'Message…', onSend } = props;
+  const { onSend, placeholder = 'Message…' } = props;
 
   const [text, setText] = useState('');
   const [contentHeight, setContentHeight] = useState<number | undefined>(
     undefined,
   );
   const { height: screenHeight } = useWindowDimensions();
-  const { isRecording, transcript, startDictation, stopDictation } =
+  const { isRecording, startDictation, stopDictation, transcript } =
     useDictation();
   const pendingSendRef = useRef(false);
 
@@ -73,13 +74,6 @@ export function ChatInput(props: ChatInputProps) {
   return (
     <View style={styles.container}>
       <TextInput
-        style={[
-          styles.input,
-          {
-            height: isAtMax ? maxHeight : undefined,
-            maxHeight,
-          },
-        ]}
         multiline
         onChangeText={setText}
         onContentSizeChange={handleContentSizeChange}
@@ -87,6 +81,13 @@ export function ChatInput(props: ChatInputProps) {
         placeholder={isRecording ? 'Listening…' : placeholder}
         placeholderTextColor={colors.text2}
         scrollEnabled={isAtMax}
+        style={[
+          styles.input,
+          {
+            height: isAtMax ? maxHeight : undefined,
+            maxHeight,
+          },
+        ]}
         value={text}
       />
       {hasText && !isRecording && <SendButton onPress={handleSend} />}
@@ -99,21 +100,22 @@ export function ChatInput(props: ChatInputProps) {
 
 const styles = StyleSheet.create({
   container: {
-    borderColor: colors.border,
+    alignItems: 'center',
     backgroundColor: colors.bg2,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    borderColor: colors.border,
     borderRadius: radius['3xl'],
     borderWidth: 1,
+    flexDirection: 'row',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
   input: {
     color: colors.text,
-    minHeight: spacing[8],
     flex: 1,
-    paddingTop: 0,
+    fontSize: typography.base,
+    minHeight: spacing[8],
     paddingBottom: 0,
-    fontSize: typography.xl,
+    paddingTop: 0,
+    textAlignVertical: 'center',
   },
 });

@@ -1,21 +1,21 @@
 export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
   content: string;
-}
-
-export interface StreamMetrics {
-  headersTime: number | null;
-  firstTokenTime: number | null;
+  id: string;
+  role: 'assistant' | 'user';
 }
 
 export interface LLMProvider {
-  buildRequest(messages: { role: string; content: string }[]): {
-    url: string;
-    headers: Record<string, string>;
+  buildRequest(messages: { content: string; role: string }[]): {
     body: string;
+    headers: Record<string, string>;
+    url: string;
   };
-  parseChunk(lines: string[]): string[];
   isDone(lines: string[]): boolean;
+  parseChunk(lines: string[]): string[];
   warmup?(): void;
+}
+
+export interface StreamMetrics {
+  firstTokenTime: null | number;
+  headersTime: null | number;
 }

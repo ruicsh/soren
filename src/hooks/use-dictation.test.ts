@@ -1,9 +1,10 @@
-import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { vi } from 'vitest';
 
-import { useDictation } from './use-dictation';
-import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { emitSpeechEvent } from '@/tests/test-setup';
+
+import { useDictation } from './use-dictation';
 
 describe('useDictation', () => {
   beforeEach(() => {
@@ -30,10 +31,10 @@ describe('useDictation', () => {
     ).toHaveBeenCalled();
     expect(ExpoSpeechRecognitionModule.start).toHaveBeenCalledWith(
       expect.objectContaining({
-        lang: 'en-US',
+        addsPunctuation: true,
         continuous: true,
         interimResults: true,
-        addsPunctuation: true,
+        lang: 'en-US',
       }),
     );
     expect(result.current.isRecording).toBe(true);
@@ -43,10 +44,10 @@ describe('useDictation', () => {
     vi.mocked(
       ExpoSpeechRecognitionModule.requestPermissionsAsync,
     ).mockResolvedValue({
+      canAskAgain: true,
+      expires: 'never',
       granted: false,
       status: 'denied',
-      expires: 'never',
-      canAskAgain: true,
     } as any);
 
     const { result } = renderHook(() => useDictation());
@@ -86,7 +87,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: false,
-        results: [{ transcript: 'Hello', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Hello' }],
       });
     });
 
@@ -95,7 +96,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: false,
-        results: [{ transcript: 'Hello world', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Hello world' }],
       });
     });
 
@@ -112,7 +113,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: true,
-        results: [{ transcript: 'Hello', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Hello' }],
       });
     });
 
@@ -121,7 +122,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: false,
-        results: [{ transcript: 'world', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'world' }],
       });
     });
 
@@ -130,7 +131,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: true,
-        results: [{ transcript: 'world', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'world' }],
       });
     });
 
@@ -195,7 +196,7 @@ describe('useDictation', () => {
     act(() => {
       emitSpeechEvent('result', {
         isFinal: true,
-        results: [{ transcript: 'Old', confidence: 0.9, segments: [] }],
+        results: [{ confidence: 0.9, segments: [], transcript: 'Old' }],
       });
     });
 

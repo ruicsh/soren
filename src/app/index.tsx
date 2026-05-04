@@ -1,14 +1,14 @@
+import { Brain as IconBrain } from 'lucide-react-native';
+import { useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Brain as IconBrain } from 'lucide-react-native';
-import { useRef, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChatInput } from '@/components/chat-input/ChatInput';
 import { ChatMessageBubble } from '@/components/chat-message/ChatMessage';
@@ -16,7 +16,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { colors, spacing, typography } from '@/theme';
 
 export default function Home() {
-  const { messages, isStreaming, sendMessage } = useChatStream();
+  const { isStreaming, messages, sendMessage } = useChatStream();
   const scrollViewRef = useRef<any>(null);
 
   // Auto-scroll to bottom when messages change
@@ -33,21 +33,21 @@ export default function Home() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
         keyboardVerticalOffset={0}
+        style={styles.flex}
       >
         {/* Messages area */}
         {hasMessages ? (
           <ScrollView
+            contentContainerStyle={styles.scrollContent}
             ref={scrollViewRef}
             style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
           >
             {messages.map((msg) => (
               <ChatMessageBubble
+                isStreaming={isStreaming && msg.id === lastMessageId}
                 key={msg.id}
                 message={msg}
-                isStreaming={isStreaming && msg.id === lastMessageId}
               />
             ))}
           </ScrollView>
@@ -72,8 +72,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     flex: 1,
   },
+  empty: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing[6],
+  },
+  emptyText: {
+    color: colors.text2,
+    fontSize: typography.xl,
+    marginTop: spacing[2],
+  },
   flex: {
     flex: 1,
+  },
+  inputWrap: {
+    paddingBottom: spacing[4],
+    paddingHorizontal: spacing[4],
   },
   scroll: {
     flex: 1,
@@ -81,21 +96,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing[4],
   },
   scrollContent: {
-    paddingBottom: spacing[4],
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing[6],
-  },
-  emptyText: {
-    color: colors.text2,
-    marginTop: spacing[2],
-    fontSize: typography.xl,
-  },
-  inputWrap: {
-    paddingHorizontal: spacing[4],
     paddingBottom: spacing[4],
   },
 });

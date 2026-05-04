@@ -1,33 +1,34 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ChatMessage } from '@/lib/llm/types';
+
 import { TypingDots } from '@/components/typing-dots/TypingDots';
-import { colors, spacing, radius, typography } from '@/theme';
+import { colors, radius, spacing, typography } from '@/theme';
 
 interface ChatMessageProps {
-  message: ChatMessage;
   isStreaming?: boolean;
+  message: ChatMessage;
 }
 
-export function ChatMessageBubble({ message, isStreaming }: ChatMessageProps) {
+export function ChatMessageBubble({ isStreaming, message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const showTyping = isStreaming && !isUser && message.content.length === 0;
 
   return (
     <View
-      testID="chat-message-row"
       style={isUser ? styles.rowUser : styles.rowAssistant}
+      testID="chat-message-row"
     >
       <View
-        testID="chat-message-bubble"
         style={isUser ? styles.bubbleUser : styles.bubbleAssistant}
+        testID="chat-message-bubble"
       >
         {showTyping ? (
           <TypingDots />
         ) : (
           <Text
-            testID="chat-message-text"
             style={isUser ? styles.textUser : styles.textAssistant}
+            testID="chat-message-text"
           >
             {message.content}
             {isStreaming && !isUser && <Text style={styles.cursor}>▌</Text>}
@@ -39,41 +40,41 @@ export function ChatMessageBubble({ message, isStreaming }: ChatMessageProps) {
 }
 
 const styles = StyleSheet.create({
-  rowUser: {
-    marginBottom: spacing[3],
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  rowAssistant: {
-    marginBottom: spacing[3],
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
+  bubbleAssistant: {
+    backgroundColor: colors.bg2,
+    borderRadius: radius['2xl'],
+    justifyContent: 'center',
+    maxWidth: '85%',
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
   },
   bubbleUser: {
-    maxWidth: '85%',
-    justifyContent: 'center',
-    borderRadius: radius['2xl'],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
     backgroundColor: colors.accent,
-  },
-  bubbleAssistant: {
-    maxWidth: '85%',
-    justifyContent: 'center',
     borderRadius: radius['2xl'],
+    justifyContent: 'center',
+    maxWidth: '85%',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
-    backgroundColor: colors.bg2,
-  },
-  textUser: {
-    fontSize: typography.xl,
-    color: 'white',
-  },
-  textAssistant: {
-    fontSize: typography.xl,
-    color: colors.text,
   },
   cursor: {
     color: colors.text2,
+  },
+  rowAssistant: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: spacing[3],
+  },
+  rowUser: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: spacing[3],
+  },
+  textAssistant: {
+    color: colors.text,
+    fontSize: typography.base,
+  },
+  textUser: {
+    color: 'white',
+    fontSize: typography.base,
   },
 });

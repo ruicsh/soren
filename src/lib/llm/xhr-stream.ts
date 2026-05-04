@@ -2,44 +2,14 @@ import type { LLMProvider, StreamMetrics } from './types';
 
 const DEBUG = false;
 
-function dlog(...args: unknown[]) {
-  if (DEBUG) console.log(...args);
-}
-
 interface StreamQueue {
-  push: (value: string | null, error?: Error) => void;
-  next: () => Promise<{ value: string | null; error?: Error }>;
-}
-
-function createStreamQueue(): StreamQueue {
-  const queue: { value: string | null; error?: Error }[] = [];
-  let resolveNext:
-    | ((item: { value: string | null; error?: Error }) => void)
-    | null = null;
-
-  return {
-    push(value, error) {
-      if (resolveNext) {
-        resolveNext({ value, error });
-        resolveNext = null;
-      } else {
-        queue.push({ value, error });
-      }
-    },
-    next() {
-      if (queue.length > 0) {
-        return Promise.resolve(queue.shift()!);
-      }
-      return new Promise((resolve) => {
-        resolveNext = resolve;
-      });
-    },
-  };
+  next: () => Promise<{ error?: Error; value: null | string }>;
+  push: (value: null | string, error?: Error) => void;
 }
 
 export function createStreamChat(
   provider: LLMProvider,
-  messages: { role: string; content: string }[],
+  messages: { content: string; role: string }[],
   onAbort?: () => boolean,
 ): AsyncGenerator<string> & { metrics: StreamMetrics } {
   const queue = createStreamQueue();
@@ -48,11 +18,11 @@ export function createStreamChat(
   let progressCount = 0;
 
   const metrics: StreamMetrics = {
-    headersTime: null,
     firstTokenTime: null,
+    headersTime: null,
   };
 
-  const { url, headers, body } = provider.buildRequest(messages);
+  const { body, headers, url } = provider.buildRequest(messages);
   const t0 = performance.now();
   dlog(`[LLM] XHR send() at t=0ms`);
 
@@ -161,7 +131,7 @@ export function createStreamChat(
 
   const generator = (async function* () {
     while (true) {
-      const { value, error } = await queue.next();
+      const { error, value } = await queue.next();
       if (error) throw error;
       if (value === null) return;
       yield value;
@@ -169,4 +139,34 @@ export function createStreamChat(
   })();
 
   return Object.assign(generator, { metrics });
+}
+
+function createStreamQueue(): StreamQueue {
+  const queue: { error?: Error; value: null | string }[] = [];
+  let resolveNext:
+    | ((item: { error?: Error; value: null | string }) => void)
+    | null = null;
+
+  return {
+    next() {
+      if (queue.length > 0) {
+        return Promise.resolve(queue.shift()!);
+      }
+      return new Promise((resolve) => {
+        resolveNext = resolve;
+      });
+    },
+    push(value, error) {
+      if (resolveNext) {
+        resolveNext({ error, value });
+        resolveNext = null;
+      } else {
+        queue.push({ error, value });
+      }
+    },
+  };
+}
+
+function dlog(...args: unknown[]) {
+  if (DEBUG) console.log(...args);
 }

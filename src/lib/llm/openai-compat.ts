@@ -3,26 +3,36 @@ import type { LLMProvider } from './types';
 interface OpenAICompatConfig {
   apiKey: string;
   baseUrl: string;
-  model: string;
   extraBody?: Record<string, unknown>;
+  model: string;
 }
 
 export function openaiCompatProvider(config: OpenAICompatConfig): LLMProvider {
   return {
     buildRequest(messages) {
       return {
-        url: `${config.baseUrl}/chat/completions`,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.apiKey}`,
-        },
         body: JSON.stringify({
-          model: config.model,
           messages,
+          model: config.model,
           stream: true,
           ...config.extraBody,
         }),
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        url: `${config.baseUrl}/chat/completions`,
       };
+    },
+
+    isDone(lines) {
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ') && trimmed.slice(6) === '[DONE]') {
+          return true;
+        }
+      }
+      return false;
     },
 
     parseChunk(lines) {
@@ -44,16 +54,6 @@ export function openaiCompatProvider(config: OpenAICompatConfig): LLMProvider {
         }
       }
       return deltas;
-    },
-
-    isDone(lines) {
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('data: ') && trimmed.slice(6) === '[DONE]') {
-          return true;
-        }
-      }
-      return false;
     },
 
     warmup() {

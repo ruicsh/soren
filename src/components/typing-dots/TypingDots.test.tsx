@@ -1,4 +1,4 @@
-import { act, render, screen, cleanup } from '@testing-library/react-native';
+import { act, cleanup, render, screen } from '@testing-library/react-native';
 
 import { TypingDots } from './TypingDots';
 

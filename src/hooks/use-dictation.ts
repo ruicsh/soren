@@ -1,26 +1,26 @@
-import { useCallback, useRef, useState } from 'react';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
+import { useCallback, useRef, useState } from 'react';
 
 export interface UseDictationReturn {
+  /** Error message if something went wrong */
+  error: null | string;
   /** Whether speech recognition is currently active */
   isRecording: boolean;
-  /** The current transcript (final + interim) */
-  transcript: string;
   /** Start dictation (requests permissions if needed) */
   startDictation: () => Promise<void>;
   /** Stop dictation and finalize the transcript */
   stopDictation: () => void;
-  /** Error message if something went wrong */
-  error: string | null;
+  /** The current transcript (final + interim) */
+  transcript: string;
 }
 
 export function useDictation(): UseDictationReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<null | string>(null);
   const finalRef = useRef('');
   const interimRef = useRef('');
 
@@ -64,10 +64,10 @@ export function useDictation(): UseDictationReturn {
 
       setIsRecording(true);
       ExpoSpeechRecognitionModule.start({
-        lang: 'en-US',
+        addsPunctuation: true,
         continuous: true,
         interimResults: true,
-        addsPunctuation: true,
+        lang: 'en-US',
       });
     } catch (err) {
       setError(
@@ -80,5 +80,5 @@ export function useDictation(): UseDictationReturn {
     ExpoSpeechRecognitionModule.stop();
   }, []);
 
-  return { isRecording, transcript, startDictation, stopDictation, error };
+  return { error, isRecording, startDictation, stopDictation, transcript };
 }

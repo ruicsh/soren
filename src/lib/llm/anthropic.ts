@@ -2,8 +2,8 @@ import type { LLMProvider } from './types';
 
 interface AnthropicConfig {
   apiKey: string;
-  model: string;
   maxTokens?: number;
+  model: string;
 }
 
 export function anthropicProvider(config: AnthropicConfig): LLMProvider {
@@ -16,20 +16,28 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
       const chatMessages = messages.filter((m) => m.role !== 'system');
 
       return {
-        url: 'https://api.anthropic.com/v1/messages',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': config.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
         body: JSON.stringify({
-          model: config.model,
           max_tokens: maxTokens,
+          model: config.model,
           ...(systemMessage ? { system: systemMessage.content } : {}),
           messages: chatMessages,
           stream: true,
         }),
+        headers: {
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+          'x-api-key': config.apiKey,
+        },
+        url: 'https://api.anthropic.com/v1/messages',
       };
+    },
+
+    isDone(lines) {
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed === 'event: message_stop') return true;
+      }
+      return false;
     },
 
     parseChunk(lines) {
@@ -60,14 +68,6 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
       return deltas;
     },
 
-    isDone(lines) {
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed === 'event: message_stop') return true;
-      }
-      return false;
-    },
-
     warmup() {
       // Anthropic doesn't have a lightweight models endpoint,
       // so we send a minimal non-streaming request
@@ -78,9 +78,9 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
       xhr.setRequestHeader('anthropic-version', '2023-06-01');
       xhr.send(
         JSON.stringify({
-          model: config.model,
           max_tokens: 1,
-          messages: [{ role: 'user', content: 'hi' }],
+          messages: [{ content: 'hi', role: 'user' }],
+          model: config.model,
         }),
       );
     },

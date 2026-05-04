@@ -16,47 +16,28 @@
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run web` — Web via Metro
 
-## Dev Build Workflow
+Verify with: `npm run format && npm run lint && npm run typecheck && npm run test`
 
-This project uses **development builds** (not Expo Go). Native modules are compiled into the app.
+## Dev builds (not Expo Go)
 
-1. **Install dev client** on device/simulator (once, or after native changes):
-   ```bash
-   npm run ios          # simulator
-   npm run ios:device   # physical iPhone
-   ```
-2. **Day-to-day development** — just start Metro:
-
-   ```bash
-   npm start
-   ```
-
-   The installed dev client app auto-connects. Scan QR codes **from inside the dev client app**, not the phone's Camera app.
-
-3. **Rebuild native** only when installing/removing native modules or changing `app.json` / `Info.plist` / `AndroidManifest.xml`.
-
-### Physical device gotchas
-
-- Phone and computer must be on the **same WiFi** for LAN URL to work
-- `InvalidHostID` during install is a known Expo/`devicectl` issue; if it persists, open `ios/soren.xcworkspace` in Xcode, select the device, and press ▶ Run
-- EAS cloud builds are configured in `eas.json` but require an Expo account (`eas login`); local builds work without it
+This project uses **development builds** — native modules are compiled into the app. `ios/` and `android/` are gitignored generated directories (rebuild via `npm run ios`/`npm run android`). QR codes must be scanned **from inside the dev client app**, not the Camera app. Rebuild native only when installing/removing native modules or changing `app.json` / `Info.plist` / `AndroidManifest.xml`.
 
 ## Architecture
 
-Expo Router app (React 19, Expo 54, New Architecture enabled). Entry is `src/app/_layout.tsx` (NOT root `app/`). React Compiler enabled (`app.json` experiments.reactCompiler). Typed routes enabled.
+Expo Router app (React 19, Expo 54, New Architecture). Entry is `src/app/_layout.tsx` (**NOT** root `app/` — that directory does not exist, routes go in `src/app/`). React Compiler enabled, typed routes enabled.
 
 ## Styling — CRITICAL
 
 **Do NOT import View, Text, ScrollView etc. from `react-native`.** Import from `@/tw` instead.
 
-This project uses `react-native-css` `useCssElement` wrappers. NativeWind is present but `globalClassNamePolyfill` is disabled — className support is manual, per-component, via `useCssElement`.
+This project uses `react-native-css` `useCssElement` wrappers. NativeWind is present but `globalClassNamePolyfill: false` — className support is manual, per-component, via `useCssElement`.
 
 Available from `@/tw`: View, Text, ScrollView, SafeAreaView, KeyboardAvoidingView, Pressable, TextInput, TouchableHighlight, Link, AnimatedScrollView.
 
 Available from `@/tw/animated`: Animated.View (Reanimated-interoped View with CSS).
 Available from `@/tw`: `useCSSVariable` hook (uses `useNativeVariable` on native, `var()` on web).
 
-ScrollView supports `contentContainerClassName` prop (maps to `contentContainerStyle`).
+ScrollView supports `contentContainerClassName` prop (maps to `contentContainerStyle`). `AnimatedScrollView` also accepts `contentClassName` (same mapping).
 
 ### Metro config quirks
 
@@ -85,11 +66,13 @@ Run a single test file: `npx vitest run src/path/to/test.ts`
 
 ## LLM Layer
 
-`src/lib/llm/` — provider pattern (OpenAI-compat, Anthropic) with streaming XHR. Requires `EXPO_PUBLIC_GROQ_API_KEY` in `.env`. Provider interface in `types.ts`.
+`src/lib/llm/` — provider pattern (OpenAI-compat, Anthropic) with streaming XHR. Requires `EXPO_PUBLIC_GROQ_API_KEY` in `.env` (only required env var). Provider interface in `types.ts`.
 
 ## Conventions
 
 - Prettier: single quotes, trailing commas, tab width 2, `prettier-plugin-tailwindcss` for class sorting
+- `.npmrc`: `save-exact=true` — dependency versions are pinned exactly
+- `lightningcss` overridden to `1.30.1` in `package.json` `overrides`
 - Path aliases: `@/*` → `src/*`, `@/assets/*` → `assets/*`
 - Components: `src/components/<name>/<Name>.tsx` (PascalCase directory + file)
 - Hooks: `src/hooks/use-<name>.ts` (kebab-case)

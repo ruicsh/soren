@@ -1,20 +1,13 @@
-import { useState } from 'react';
-import type { TextInputContentSizeChangeEvent } from 'react-native';
-import { useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  useWindowDimensions,
+  type TextInputContentSizeChangeEvent,
+} from 'react-native';
 
-import { ArrowUp } from 'lucide-react-native';
-import { tv } from 'tailwind-variants';
-
-import { Pressable, TextInput, View } from '@/tw';
-
-const sendButtonCx = tv({
-  base: 'hidden bg-accent size-8 items-center justify-center rounded-full',
-  variants: {
-    hasText: {
-      true: 'flex',
-    },
-  },
-});
+import { useDictation } from '@/hooks/use-dictation';
+import { TextInput, View } from '@/tw';
+import { MicButton } from './MicButton';
+import { SendButton } from './SendButton';
 
 interface ChatInputProps {
   placeholder?: string;
@@ -29,9 +22,28 @@ export function ChatInput(props: ChatInputProps) {
     undefined,
   );
   const { height: screenHeight } = useWindowDimensions();
+  const { isRecording, transcript, startDictation, stopDictation } =
+    useDictation();
+  const pendingSendRef = useRef(false);
 
   const maxHeight = screenHeight * 0.5;
   const isAtMax = contentHeight !== undefined && contentHeight >= maxHeight;
+
+  // Track when a dictation session starts so we know to send once it ends
+  useEffect(() => {
+    if (isRecording) {
+      pendingSendRef.current = true;
+    }
+  }, [isRecording]);
+
+  // Auto-send exactly once when a dictation session ends with a transcript
+  useEffect(() => {
+    if (!isRecording && pendingSendRef.current && transcript.trim()) {
+      const trimmed = transcript.trim();
+      pendingSendRef.current = false;
+      onSend(trimmed);
+    }
+  }, [isRecording, transcript, onSend]);
 
   const handleContentSizeChange = (event: TextInputContentSizeChangeEvent) => {
     setContentHeight(event.nativeEvent.contentSize.height);
@@ -45,6 +57,14 @@ export function ChatInput(props: ChatInputProps) {
     setContentHeight(undefined);
   };
 
+  const handleMicPress = () => {
+    if (isRecording) {
+      stopDictation();
+    } else {
+      startDictation();
+    }
+  };
+
   const hasText = text.trim().length > 0;
 
   return (
@@ -55,7 +75,7 @@ export function ChatInput(props: ChatInputProps) {
         onChangeText={setText}
         onContentSizeChange={handleContentSizeChange}
         onSubmitEditing={handleSend}
-        placeholder={placeholder}
+        placeholder={isRecording ? 'Listening…' : placeholder}
         scrollEnabled={isAtMax}
         style={{
           height: isAtMax ? maxHeight : undefined,
@@ -63,13 +83,10 @@ export function ChatInput(props: ChatInputProps) {
         }}
         value={text}
       />
-      <Pressable
-        testID="send-button"
-        onPress={handleSend}
-        className={sendButtonCx({ hasText })}
-      >
-        <ArrowUp size={18} color="white" strokeWidth={2.5} />
-      </Pressable>
+      {hasText && !isRecording && <SendButton onPress={handleSend} />}
+      {(!hasText || isRecording) && (
+        <MicButton isRecording={isRecording} onPress={handleMicPress} />
+      )}
     </View>
   );
 }

@@ -107,5 +107,48 @@ vi.mock('lucide-react-native', () => {
   return {
     ArrowUp: createIconMock('ArrowUp'),
     Brain: createIconMock('Brain'),
+    Mic: createIconMock('Mic'),
   };
 });
+
+// expo-speech-recognition — mock module and hook
+const speechListeners = new Map<string, ((event: unknown) => void)[]>();
+
+vi.mock('expo-speech-recognition', () => ({
+  ExpoSpeechRecognitionModule: {
+    requestPermissionsAsync: vi.fn(() =>
+      Promise.resolve({
+        granted: true,
+        status: 'granted',
+        expires: 'never',
+        canAskAgain: true,
+      } as any),
+    ),
+    start: vi.fn(),
+    stop: vi.fn(),
+    abort: vi.fn(),
+  },
+  useSpeechRecognitionEvent: (
+    eventName: string,
+    listener: (event: unknown) => void,
+  ) => {
+    React.useEffect(() => {
+      const listeners = speechListeners.get(eventName) ?? [];
+      listeners.push(listener);
+      speechListeners.set(eventName, listeners);
+      return () => {
+        const updated = speechListeners.get(eventName) ?? [];
+        speechListeners.set(
+          eventName,
+          updated.filter((l) => l !== listener),
+        );
+      };
+    }, [eventName, listener]);
+  },
+}));
+
+// Helper to emit speech recognition events in tests
+export function emitSpeechEvent(eventName: string, event: unknown) {
+  const listeners = speechListeners.get(eventName) ?? [];
+  listeners.forEach((l) => l(event));
+}

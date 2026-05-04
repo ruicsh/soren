@@ -1,0 +1,209 @@
+import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { vi } from 'vitest';
+
+import { useDictation } from './use-dictation';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
+import { emitSpeechEvent } from '@/tests/test-setup';
+
+describe('useDictation', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('initializes with isRecording false and empty transcript', () => {
+    const { result } = renderHook(() => useDictation());
+
+    expect(result.current.isRecording).toBe(false);
+    expect(result.current.transcript).toBe('');
+    expect(result.current.error).toBeNull();
+  });
+
+  it('requests permissions and starts recording', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    expect(
+      ExpoSpeechRecognitionModule.requestPermissionsAsync,
+    ).toHaveBeenCalled();
+    expect(ExpoSpeechRecognitionModule.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lang: 'en-US',
+        continuous: true,
+        interimResults: true,
+        addsPunctuation: true,
+      }),
+    );
+    expect(result.current.isRecording).toBe(true);
+  });
+
+  it('does not start if permissions are denied', async () => {
+    vi.mocked(
+      ExpoSpeechRecognitionModule.requestPermissionsAsync,
+    ).mockResolvedValue({
+      granted: false,
+      status: 'denied',
+      expires: 'never',
+      canAskAgain: true,
+    } as any);
+
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    expect(ExpoSpeechRecognitionModule.start).not.toHaveBeenCalled();
+    expect(result.current.isRecording).toBe(false);
+    expect(result.current.error).toBe('Microphone permission denied');
+  });
+
+  it('handles module errors gracefully', async () => {
+    vi.mocked(
+      ExpoSpeechRecognitionModule.requestPermissionsAsync,
+    ).mockRejectedValue(new Error('Native module not available'));
+
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    expect(ExpoSpeechRecognitionModule.start).not.toHaveBeenCalled();
+    expect(result.current.isRecording).toBe(false);
+    expect(result.current.error).toBe('Native module not available');
+  });
+
+  it('accumulates interim results into transcript', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: false,
+        results: [{ transcript: 'Hello', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    expect(result.current.transcript).toBe('Hello');
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: false,
+        results: [{ transcript: 'Hello world', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    expect(result.current.transcript).toBe('Hello world');
+  });
+
+  it('accumulates final results and clears interim buffer', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: true,
+        results: [{ transcript: 'Hello', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    expect(result.current.transcript).toBe('Hello');
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: false,
+        results: [{ transcript: 'world', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    expect(result.current.transcript).toBe('Hello world');
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: true,
+        results: [{ transcript: 'world', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    expect(result.current.transcript).toBe('Hello world');
+  });
+
+  it('stops recording and calls module stop', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      result.current.stopDictation();
+    });
+
+    expect(ExpoSpeechRecognitionModule.stop).toHaveBeenCalled();
+  });
+
+  it('sets isRecording to false on end event', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      emitSpeechEvent('end', null);
+    });
+
+    await waitFor(() => expect(result.current.isRecording).toBe(false));
+  });
+
+  it('sets error and stops recording on error event', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      emitSpeechEvent('error', {
+        error: 'network',
+        message: 'Network error',
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isRecording).toBe(false);
+      expect(result.current.error).toBe('Network error');
+    });
+  });
+
+  it('clears previous transcript and error on new start', async () => {
+    const { result } = renderHook(() => useDictation());
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    act(() => {
+      emitSpeechEvent('result', {
+        isFinal: true,
+        results: [{ transcript: 'Old', confidence: 0.9, segments: [] }],
+      });
+    });
+
+    await act(async () => {
+      await result.current.startDictation();
+    });
+
+    expect(result.current.transcript).toBe('');
+    expect(result.current.error).toBeNull();
+  });
+});

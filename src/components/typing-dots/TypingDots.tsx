@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { View } from '@/tw';
+import { colors, spacing, radius } from '@/theme';
+
+const dotBase = {
+  backgroundColor: colors.text2,
+  borderRadius: radius.full,
+  width: 6,
+  height: 6,
+};
 
 export function TypingDots() {
   const [step, setStep] = useState(0);
@@ -11,19 +19,22 @@ export function TypingDots() {
   }, []);
 
   return (
-    <View className="flex-row items-center gap-1">
+    <View style={styles.container}>
       {[0, 1, 2].map((i) => (
         <View
           testID={`typing-dot-${i}`}
           key={i}
-          className="bg-text-2 rounded-full"
-          style={{
-            width: 6,
-            height: 6,
-            opacity: step === i ? 1 : 0.3,
-          }}
+          style={{ ...dotBase, opacity: step === i ? 1 : 0.3 }}
         />
       ))}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
+  },
+});

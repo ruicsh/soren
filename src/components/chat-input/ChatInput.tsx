@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   useWindowDimensions,
+  StyleSheet,
+  TextInput,
+  View,
   type TextInputContentSizeChangeEvent,
 } from 'react-native';
 
 import { useDictation } from '@/hooks/use-dictation';
-import { TextInput, View } from '@/tw';
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
+import { colors, spacing, radius, typography } from '@/theme';
 
 interface ChatInputProps {
   placeholder?: string;
@@ -68,19 +71,22 @@ export function ChatInput(props: ChatInputProps) {
   const hasText = text.trim().length > 0;
 
   return (
-    <View className="border-border bg-bg-2 flex-row items-end rounded-3xl border px-4 py-3">
+    <View style={styles.container}>
       <TextInput
-        className="text-text placeholder:text-text-2 min-h-8 flex-1 pt-0 pb-0 text-xl outline-none"
+        style={[
+          styles.input,
+          {
+            height: isAtMax ? maxHeight : undefined,
+            maxHeight,
+          },
+        ]}
         multiline
         onChangeText={setText}
         onContentSizeChange={handleContentSizeChange}
         onSubmitEditing={handleSend}
         placeholder={isRecording ? 'Listening…' : placeholder}
+        placeholderTextColor={colors.text2}
         scrollEnabled={isAtMax}
-        style={{
-          height: isAtMax ? maxHeight : undefined,
-          maxHeight,
-        }}
         value={text}
       />
       {hasText && !isRecording && <SendButton onPress={handleSend} />}
@@ -90,3 +96,24 @@ export function ChatInput(props: ChatInputProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderColor: colors.border,
+    backgroundColor: colors.bg2,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    borderRadius: radius['3xl'],
+    borderWidth: 1,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+  },
+  input: {
+    color: colors.text,
+    minHeight: spacing[8],
+    flex: 1,
+    paddingTop: 0,
+    paddingBottom: 0,
+    fontSize: typography.xl,
+  },
+});

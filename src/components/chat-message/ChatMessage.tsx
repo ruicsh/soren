@@ -1,38 +1,8 @@
-import { tv } from 'tailwind-variants';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { View, Text } from '@/tw';
 import type { ChatMessage } from '@/lib/llm/types';
 import { TypingDots } from '@/components/typing-dots/TypingDots';
-
-const messageRowCx = tv({
-  base: 'mb-3 flex-row',
-  variants: {
-    isUser: {
-      true: 'justify-end',
-      false: 'justify-start',
-    },
-  },
-});
-
-const messageBubbleCx = tv({
-  base: 'max-w-[85%] justify-center rounded-2xl px-4 py-3',
-  variants: {
-    isUser: {
-      true: 'bg-accent',
-      false: 'bg-bg-2',
-    },
-  },
-});
-
-const messageTextCx = tv({
-  base: 'text-xl',
-  variants: {
-    isUser: {
-      true: 'text-white',
-      false: 'text-text',
-    },
-  },
-});
+import { colors, spacing, radius, typography } from '@/theme';
 
 interface ChatMessageProps {
   message: ChatMessage;
@@ -44,23 +14,66 @@ export function ChatMessageBubble({ message, isStreaming }: ChatMessageProps) {
   const showTyping = isStreaming && !isUser && message.content.length === 0;
 
   return (
-    <View testID="chat-message-row" className={messageRowCx({ isUser })}>
+    <View
+      testID="chat-message-row"
+      style={isUser ? styles.rowUser : styles.rowAssistant}
+    >
       <View
         testID="chat-message-bubble"
-        className={messageBubbleCx({ isUser })}
+        style={isUser ? styles.bubbleUser : styles.bubbleAssistant}
       >
         {showTyping ? (
           <TypingDots />
         ) : (
           <Text
             testID="chat-message-text"
-            className={messageTextCx({ isUser })}
+            style={isUser ? styles.textUser : styles.textAssistant}
           >
             {message.content}
-            {isStreaming && !isUser && <Text className="text-text-2">▌</Text>}
+            {isStreaming && !isUser && <Text style={styles.cursor}>▌</Text>}
           </Text>
         )}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  rowUser: {
+    marginBottom: spacing[3],
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  rowAssistant: {
+    marginBottom: spacing[3],
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  bubbleUser: {
+    maxWidth: '85%',
+    justifyContent: 'center',
+    borderRadius: radius['2xl'],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    backgroundColor: colors.accent,
+  },
+  bubbleAssistant: {
+    maxWidth: '85%',
+    justifyContent: 'center',
+    borderRadius: radius['2xl'],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    backgroundColor: colors.bg2,
+  },
+  textUser: {
+    fontSize: typography.xl,
+    color: 'white',
+  },
+  textAssistant: {
+    fontSize: typography.xl,
+    color: colors.text,
+  },
+  cursor: {
+    color: colors.text2,
+  },
+});

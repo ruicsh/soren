@@ -1,27 +1,6 @@
 import React from 'react';
 import { vi } from 'vitest';
 
-// react-native-css — no CSS compilation in test env, pass components through
-vi.mock('react-native-css', () => ({
-  useCssElement: (
-    Component: React.ElementType,
-    props: Record<string, unknown>,
-  ) => {
-    const { className, contentContainerClassName, contentClassName, ...rest } =
-      props as Record<string, unknown>;
-    return React.createElement(Component, rest);
-  },
-  styled: (Component: React.ElementType) => Component,
-  cssInterop: (Component: React.ElementType) => Component,
-  useNativeVariable: () => ({}),
-}));
-
-// nativewind — passthrough wrappers
-vi.mock('nativewind', () => ({
-  styled: (Component: React.ElementType) => Component,
-  cssInterop: (Component: React.ElementType) => Component,
-}));
-
 // expo-router — mock navigation hooks
 vi.mock('expo-router', () => ({
   useRouter: () => ({

@@ -12,7 +12,7 @@
 - `npm run test` — Vitest single run
 - `npm run test:watch` — Vitest watch mode
 - `npm run test:coverage` — Vitest with coverage
-- `npm run format` — Prettier (single quotes, trailing commas, tailwind class sorting)
+- `npm run format` — Prettier (single quotes, trailing commas)
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run web` — Web via Metro
 
@@ -26,27 +26,16 @@ This project uses **development builds** — native modules are compiled into th
 
 Expo Router app (React 19, Expo 54, New Architecture). Entry is `src/app/_layout.tsx` (**NOT** root `app/` — that directory does not exist, routes go in `src/app/`). React Compiler enabled, typed routes enabled.
 
-## Styling — CRITICAL
+## Styling
 
-**Do NOT import View, Text, ScrollView etc. from `react-native`.** Import from `@/tw` instead.
+Standard React Native `StyleSheet.create`. Design tokens live in `src/theme.ts`:
 
-This project uses `react-native-css` `useCssElement` wrappers. NativeWind is present but `globalClassNamePolyfill: false` — className support is manual, per-component, via `useCssElement`.
+- `colors` — `PlatformColor()` on iOS (auto dark mode), hex fallbacks on Android/web
+- `spacing` — 4pt grid (`spacing[4] === 16`)
+- `radius` — corner radius tokens
+- `typography` — font size tokens
 
-Available from `@/tw`: View, Text, ScrollView, SafeAreaView, KeyboardAvoidingView, Pressable, TextInput, TouchableHighlight, Link, AnimatedScrollView.
-
-Available from `@/tw/animated`: Animated.View (Reanimated-interoped View with CSS).
-Available from `@/tw`: `useCSSVariable` hook (uses `useNativeVariable` on native, `var()` on web).
-
-ScrollView supports `contentContainerClassName` prop (maps to `contentContainerStyle`). `AnimatedScrollView` also accepts `contentClassName` (same mapping).
-
-### Metro config quirks
-
-- `inlineVariables: false` — inline variables break `platformColor()` in CSS
-- `globalClassNamePolyfill: false` — className wired up manually
-
-### Design tokens
-
-Tailwind v4 tokens in `src/styles/global.css`. Raw CSS vars use `--sf-*` prefix (iOS `platformColor()`, web/Android explicit light/dark), registered via `@theme { --color-* }`. Font families (`--font-*`) are platform-specific. Use `className="text-text bg-bg"` etc.
+Import primitives from `react-native` directly. No custom wrappers.
 
 ### React Compiler
 
@@ -56,7 +45,7 @@ Enabled. Use `.get()`/`.set()` on Reanimated shared values, NOT `.value`. Destru
 
 Vitest with `vitest-native` plugin and `@testing-library/react-native`. Globals enabled (no import needed for `describe`/`it`/`expect`).
 
-Test setup at `src/tests/test-setup.ts` — mocks `react-native-css`, `nativewind`, `expo-router`, `react-native-reanimated`, and `lucide-react-native`.
+Test setup at `src/tests/test-setup.ts` — mocks `expo-router`, `react-native-reanimated`, and `lucide-react-native`.
 
 Path alias `@/` → `src/` in both `tsconfig.json` and `vitest.config.mts` — they must stay in sync.
 
@@ -70,9 +59,8 @@ Run a single test file: `npx vitest run src/path/to/test.ts`
 
 ## Conventions
 
-- Prettier: single quotes, trailing commas, tab width 2, `prettier-plugin-tailwindcss` for class sorting
+- Prettier: single quotes, trailing commas, tab width 2
 - `.npmrc`: `save-exact=true` — dependency versions are pinned exactly
-- `lightningcss` overridden to `1.30.1` in `package.json` `overrides`
 - Path aliases: `@/*` → `src/*`, `@/assets/*` → `assets/*`
 - Components: `src/components/<name>/<Name>.tsx` (PascalCase directory + file)
 - Hooks: `src/hooks/use-<name>.ts` (kebab-case)

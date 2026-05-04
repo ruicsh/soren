@@ -92,10 +92,17 @@ export const ScrollView = React.forwardRef<
 ScrollView.displayName = 'CSS(ScrollView)';
 
 // Pressable
+const DEFAULT_HIT_SLOP = 8;
+
 export const Pressable = (
   props: React.ComponentProps<typeof RNPressable> & { className?: string },
 ) => {
-  return useCssElement(RNPressable, props, { className: 'style' });
+  const { hitSlop, ...rest } = props;
+  return useCssElement(
+    RNPressable,
+    { hitSlop: hitSlop ?? DEFAULT_HIT_SLOP, ...rest },
+    { className: 'style' },
+  );
 };
 Pressable.displayName = 'CSS(Pressable)';
 

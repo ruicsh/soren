@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: typography.base,
     minHeight: spacing[8],
-    paddingBottom: 0,
-    paddingTop: 0,
+    paddingBottom: spacing[2],
+    paddingTop: spacing[2],
     textAlignVertical: 'center',
   },
 });

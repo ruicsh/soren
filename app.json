@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Soren uses the microphone to transcribe your spoken messages into text."
-      }
+      },
+      "bundleIdentifier": "com.anonymous.soren"
     },
     "android": {
       "permissions": ["android.permission.RECORD_AUDIO"],

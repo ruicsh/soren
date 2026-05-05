@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-const SENTENCE_REGEX = /[.!?]+(?:\s+|$)/g;
+const SENTENCE_REGEX = /([.!?]+)(?:\s+|$)/g;
+const MIN_SENTENCE_LENGTH = 10;
+const MAX_CHUNK_LENGTH = 150;
 
 export interface UseSentenceBufferOptions {
   onSentence: (sentence: string) => void;
 }
 
 export interface UseSentenceBufferReturn {
-  /** Append streaming text; complete sentences are emitted via onSentence */
+  /** Append streaming text; complete sentences or long chunks are emitted via onSentence */
   append: (text: string) => void;
   /** Flush any remaining text as a final sentence */
   flush: () => void;
@@ -26,24 +28,33 @@ export function useSentenceBuffer(
   const append = useCallback((text: string) => {
     bufferRef.current += text;
 
-    const sentences: string[] = [];
     let lastIndex = 0;
-    let match: null | RegExpExecArray;
-
     SENTENCE_REGEX.lastIndex = 0;
 
+    let match: null | RegExpExecArray;
     while ((match = SENTENCE_REGEX.exec(bufferRef.current)) !== null) {
       const endIndex = match.index + match[0].length;
       const sentence = bufferRef.current.slice(lastIndex, endIndex).trim();
-      if (sentence) {
-        sentences.push(sentence);
+
+      // Only emit if it's a decent length or we've reached a hard punctuation
+      // This avoids emitting very short fragments like "Dr." or "St."
+      if (sentence.length >= MIN_SENTENCE_LENGTH || match[1].length > 1) {
+        onSentenceRef.current(sentence);
+        lastIndex = endIndex;
+        SENTENCE_REGEX.lastIndex = lastIndex; // Update search position
       }
-      lastIndex = endIndex;
     }
 
-    if (sentences.length > 0) {
+    // If buffer is getting too long without a sentence break, force a chunk
+    if (bufferRef.current.length - lastIndex > MAX_CHUNK_LENGTH) {
+      const chunk = bufferRef.current.slice(lastIndex).trim();
+      if (chunk) {
+        onSentenceRef.current(chunk);
+      }
+      bufferRef.current = '';
+      lastIndex = 0;
+    } else if (lastIndex > 0) {
       bufferRef.current = bufferRef.current.slice(lastIndex);
-      sentences.forEach((s) => onSentenceRef.current(s));
     }
   }, []);
 

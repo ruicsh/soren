@@ -30,13 +30,15 @@ export default function VoiceScreen() {
     state === 'connecting'
       ? 'Connecting…'
       : state === 'listening'
-        ? 'Listening…'
+        ? transcript.trim()
+          ? 'Listening…'
+          : "Go ahead, I'm listening"
         : state === 'processing'
           ? 'Thinking…'
           : state === 'speaking'
             ? 'Speaking…'
             : error
-              ? 'Error'
+              ? 'Connection Error'
               : 'Soren';
 
   const showWaveform = state === 'listening';
@@ -46,25 +48,37 @@ export default function VoiceScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.avatarWrap}>
-          <IconBrain color={colors.accent} size={80} />
+          <IconBrain
+            color={showPulse ? colors.text : colors.accent}
+            size={80}
+          />
         </View>
         <Text style={styles.name}>Soren</Text>
-        <Text style={styles.status}>{statusText}</Text>
+        <Text style={[styles.status, error ? styles.statusError : null]}>
+          {statusText}
+        </Text>
 
         <View style={styles.animation}>
           {showWaveform && <WaveformAnimation />}
           {showPulse && <PulseAnimation />}
         </View>
 
-        <Text numberOfLines={4} style={styles.transcript}>
-          {transcript}
-        </Text>
+        <View style={styles.transcriptContainer}>
+          <Text numberOfLines={4} style={styles.transcript}>
+            {transcript}
+          </Text>
+        </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.error}>{error}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.controls}>
         <CallButton onPress={handleDisconnect} />
+        <Text style={styles.endText}>End Call</Text>
       </View>
     </SafeAreaView>
   );
@@ -81,10 +95,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.bg2,
     borderRadius: radius.full,
-    height: 120,
+    height: 160,
     justifyContent: 'center',
     marginTop: spacing[12],
-    width: 120,
+    width: 160,
   },
   container: {
     backgroundColor: colors.bg,
@@ -98,28 +112,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[12],
   },
+  endText: {
+    color: colors.text2,
+    fontSize: typography.sm,
+    marginTop: spacing[2],
+  },
   error: {
     color: colors.error,
     fontSize: typography.sm,
-    marginTop: spacing[4],
     textAlign: 'center',
+  },
+  errorBox: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    borderRadius: radius.lg,
+    marginTop: spacing[8],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
   },
   name: {
     color: colors.text,
-    fontSize: typography['2xl'],
-    fontWeight: '600',
-    marginTop: spacing[4],
+    fontSize: typography['3xl'],
+    fontWeight: '700',
+    marginTop: spacing[6],
   },
   status: {
     color: colors.text2,
-    fontSize: typography.base,
-    marginTop: spacing[1],
+    fontSize: typography.lg,
+    marginTop: spacing[2],
+  },
+  statusError: {
+    color: colors.error,
   },
   transcript: {
     color: colors.text2,
-    fontSize: typography.lg,
-    marginTop: spacing[6],
-    paddingHorizontal: spacing[8],
+    fontSize: typography.xl,
     textAlign: 'center',
+  },
+  transcriptContainer: {
+    height: 120,
+    justifyContent: 'center',
+    marginTop: spacing[8],
+    paddingHorizontal: spacing[10],
   },
 });

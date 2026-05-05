@@ -1,6 +1,8 @@
 import * as Speech from 'expo-speech';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+
 export interface UseTTSOptions {
   language?: string;
   onDone?: () => void;
@@ -41,6 +43,16 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
     Speech.getAvailableVoicesAsync().then((voices) => {
       if (!mounted || voices.length === 0) return;
 
+      debugLog('voices_available', {
+        count: voices.length,
+        voices: voices.map((v) => ({
+          id: v.identifier,
+          lang: v.language,
+          name: v.name,
+          quality: v.quality,
+        })),
+      });
+
       let candidates = voices;
       const lang = languageRef.current;
       if (lang) {
@@ -50,18 +62,49 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
         }
       }
 
-      const qualityPriority = (q: string): number => {
+      const qualityPriority = (v: Speech.Voice): number => {
+        const q = v.quality as string;
         if (q === 'Premium') return 2;
-        if (q === 'Enhanced') return 1;
+        if (q === 'Enhanced' || v.quality === Speech.VoiceQuality.Enhanced) return 1;
+        // Heuristic for iOS: some premium voices report 'Default' quality but have 'premium' in ID/name
+        const lowerId = v.identifier.toLowerCase();
+        const lowerName = v.name.toLowerCase();
+        if (lowerId.includes('.premium.') || lowerName.includes('(premium)')) {
+          return 2;
+        }
+        if (lowerId.includes('.enhanced.') || lowerName.includes('(enhanced)')) {
+          return 1;
+        }
         return 0;
       };
 
-      const best = candidates.reduce((prev, curr) => {
-        const pQ = qualityPriority(prev.quality);
-        const cQ = qualityPriority(curr.quality);
-        return cQ > pQ ? curr : prev;
+      const ranked = [...candidates].sort((a, b) => {
+        const qA = qualityPriority(a);
+        const qB = qualityPriority(b);
+        if (qB !== qA) return qB - qA;
+        // Same quality, prefer exact language match if provided
+        if (lang) {
+          const matchA = a.language === lang ? 1 : 0;
+          const matchB = b.language === lang ? 1 : 0;
+          if (matchB !== matchA) return matchB - matchA;
+        }
+        return 0;
       });
+
+      debugLog('voice_candidates_ranked', {
+        top: ranked.slice(0, 3).map((v) => ({
+          id: v.identifier,
+          quality: v.quality,
+          lang: v.language,
+        })),
+      });
+
+      const best = ranked[0];
       voiceRef.current = best.identifier;
+      debugLog('voice_selected', {
+        id: best.identifier,
+        quality: best.quality,
+      });
     });
     return () => {
       mounted = false;
@@ -74,23 +117,41 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
 
     pendingRef.current++;
     setIsSpeaking(true);
+    debugLog('speak_enqueue', {
+      len: trimmed.length,
+      pending: pendingRef.current,
+    });
 
     Speech.speak(trimmed, {
       language: languageRef.current,
       onDone: () => {
         pendingRef.current--;
+        debugLog('speak_done', { pending: pendingRef.current });
         if (pendingRef.current <= 0) {
           pendingRef.current = 0;
           setIsSpeaking(false);
-          onDoneRef.current?.();
+          // Use a microtask/timeout to ensure state updates have propagated
+          setTimeout(() => {
+            if (pendingRef.current === 0) {
+              onDoneRef.current?.();
+            }
+          }, 0);
         }
       },
-      onError: () => {
+      onError: (err) => {
         pendingRef.current--;
+        debugLog('speak_error', {
+          err,
+          pending: pendingRef.current,
+        });
         if (pendingRef.current <= 0) {
           pendingRef.current = 0;
           setIsSpeaking(false);
-          onDoneRef.current?.();
+          setTimeout(() => {
+            if (pendingRef.current === 0) {
+              onDoneRef.current?.();
+            }
+          }, 0);
         }
       },
       pitch: pitchRef.current,
@@ -100,10 +161,17 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
   }, []);
 
   const stop = useCallback(() => {
+    debugLog('stop_call');
     Speech.stop();
     pendingRef.current = 0;
     setIsSpeaking(false);
   }, []);
 
   return { isSpeaking, speak, stop };
+}
+
+function debugLog(event: string, meta?: any) {
+  if (VOICE_DEBUG) {
+    console.log(`[TTS] ${Date.now()} ${event}`, meta || '');
+  }
 }

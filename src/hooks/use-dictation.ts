@@ -4,6 +4,8 @@ import {
 } from 'expo-speech-recognition';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+
 export interface UseDictationOptions {
   /** Callback fired after silenceMs of no transcript change while recording */
   onEndOfSpeech?: (transcript: string) => void;
@@ -35,9 +37,12 @@ export function useDictation(
   const silenceTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null);
   const isRecordingRef = useRef(false);
   const onEndOfSpeechFiredRef = useRef(false);
+  const recordingSessionIdRef = useRef(0);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     isRecordingRef.current = isRecording;
+    debugLog('isRecording_change', { isRecording });
   }, [isRecording]);
 
   useSpeechRecognitionEvent('result', (event) => {
@@ -50,9 +55,17 @@ export function useDictation(
       finalRef.current = (finalRef.current + ' ' + result.transcript).trim();
       interimRef.current = '';
       nextTranscript = finalRef.current;
+      debugLog('result_final', {
+        len: result.transcript.length,
+        totalLen: nextTranscript.length,
+      });
     } else {
       interimRef.current = result.transcript;
       nextTranscript = (finalRef.current + ' ' + result.transcript).trim();
+      debugLog('result_interim', {
+        len: result.transcript.length,
+        totalLen: nextTranscript.length,
+      });
     }
 
     setTranscript(nextTranscript);
@@ -63,6 +76,9 @@ export function useDictation(
       }
       silenceTimerRef.current = setTimeout(() => {
         if (isRecordingRef.current && nextTranscript.trim()) {
+          debugLog('silence_timer_fire', {
+            sessionId: recordingSessionIdRef.current,
+          });
           onEndOfSpeechFiredRef.current = true;
           options.onEndOfSpeech!(nextTranscript);
         }
@@ -71,6 +87,20 @@ export function useDictation(
   });
 
   useSpeechRecognitionEvent('error', (event) => {
+    // If we are intentionally stopping, suppress the error
+    if (isStoppingRef.current) {
+      debugLog('error_event_suppressed_during_stop', {
+        code: event.error,
+        msg: event.message,
+      });
+      return;
+    }
+
+    debugLog('error_event', {
+      code: event.error,
+      msg: event.message,
+      sessionId: recordingSessionIdRef.current,
+    });
     setError(event.message);
     setIsRecording(false);
     if (silenceTimerRef.current) {
@@ -80,6 +110,11 @@ export function useDictation(
   });
 
   useSpeechRecognitionEvent('end', () => {
+    debugLog('end_event', {
+      isStopping: isStoppingRef.current,
+      sessionId: recordingSessionIdRef.current,
+    });
+    isStoppingRef.current = false;
     setIsRecording(false);
     interimRef.current = '';
     const finalTranscript = finalRef.current;
@@ -95,11 +130,19 @@ export function useDictation(
       finalTranscript.trim() &&
       options?.onEndOfSpeech
     ) {
+      debugLog('end_event_fallback_fire', {
+        sessionId: recordingSessionIdRef.current,
+      });
       options.onEndOfSpeech(finalTranscript);
     }
   });
 
   const startDictation = useCallback(async () => {
+    recordingSessionIdRef.current++;
+    debugLog('startDictation_call', {
+      sessionId: recordingSessionIdRef.current,
+    });
+    isStoppingRef.current = false;
     setError(null);
     finalRef.current = '';
     interimRef.current = '';
@@ -112,12 +155,14 @@ export function useDictation(
 
     try {
       const perms = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      debugLog('permission_result', { granted: perms.granted });
       if (!perms.granted) {
         setError('Microphone permission denied');
-        return;
+        throw new Error('Microphone permission denied');
       }
 
       setIsRecording(true);
+      debugLog('module_start_call');
       ExpoSpeechRecognitionModule.start({
         addsPunctuation: true,
         continuous: true,
@@ -125,15 +170,29 @@ export function useDictation(
         lang: 'en-US',
       });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to start dictation',
-      );
+      debugLog('module_start_fail', {
+        err: err instanceof Error ? err.message : err,
+      });
+      const msg =
+        err instanceof Error ? err.message : 'Failed to start dictation';
+      setError(msg);
+      throw err;
     }
   }, []);
 
   const stopDictation = useCallback(() => {
+    debugLog('stopDictation_call', {
+      sessionId: recordingSessionIdRef.current,
+    });
+    isStoppingRef.current = true;
     ExpoSpeechRecognitionModule.stop();
   }, []);
 
   return { error, isRecording, startDictation, stopDictation, transcript };
+}
+
+function debugLog(event: string, meta?: any) {
+  if (VOICE_DEBUG) {
+    console.log(`[DICT] ${Date.now()} ${event}`, meta || '');
+  }
 }

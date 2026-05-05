@@ -39,7 +39,7 @@ describe('useTTS', () => {
     expect(Speech.speak).not.toHaveBeenCalled();
   });
 
-  it('calls onDone when speak finishes', () => {
+  it('calls onDone when speak finishes', async () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useTTS({ onDone }));
 
@@ -52,11 +52,13 @@ describe('useTTS', () => {
       options?.onDone?.();
     });
 
+    await act(() => new Promise((r) => setTimeout(r, 0)));
+
     expect(onDone).toHaveBeenCalled();
     expect(result.current.isSpeaking).toBe(false);
   });
 
-  it('calls onDone when speak errors', () => {
+  it('calls onDone when speak errors', async () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useTTS({ onDone }));
 
@@ -68,6 +70,8 @@ describe('useTTS', () => {
     act(() => {
       options?.onError?.(new Error('test'));
     });
+
+    await act(() => new Promise((r) => setTimeout(r, 0)));
 
     expect(onDone).toHaveBeenCalled();
     expect(result.current.isSpeaking).toBe(false);
@@ -131,6 +135,68 @@ describe('useTTS', () => {
     expect(Speech.speak).toHaveBeenCalledWith(
       'Hello',
       expect.objectContaining({ voice: 'com.apple.ttsbubble.Samantha' }),
+    );
+  });
+
+  it('prefers Premium over Enhanced', async () => {
+    const voices = [
+      {
+        identifier: 'en.enhanced',
+        language: 'en-US',
+        name: 'Enhanced',
+        quality: Speech.VoiceQuality.Enhanced,
+      },
+      {
+        identifier: 'en.premium',
+        language: 'en-US',
+        name: 'Premium',
+        quality: 'Premium' as any,
+      },
+    ];
+    vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue(voices);
+
+    const { result } = renderHook(() => useTTS({ language: 'en' }));
+    await act(() => Promise.resolve());
+    await act(() => Promise.resolve());
+
+    act(() => {
+      result.current.speak('Hello');
+    });
+
+    expect(Speech.speak).toHaveBeenCalledWith(
+      'Hello',
+      expect.objectContaining({ voice: 'en.premium' }),
+    );
+  });
+
+  it('prefers exact language match among same quality', async () => {
+    const voices = [
+      {
+        identifier: 'en-GB.enhanced',
+        language: 'en-GB',
+        name: 'GB',
+        quality: Speech.VoiceQuality.Enhanced,
+      },
+      {
+        identifier: 'en-US.enhanced',
+        language: 'en-US',
+        name: 'US',
+        quality: Speech.VoiceQuality.Enhanced,
+      },
+    ];
+    vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue(voices);
+
+    const { result } = renderHook(() => useTTS({ language: 'en-GB' }));
+    await act(() => Promise.resolve());
+    await act(() => Promise.resolve());
+
+    act(() => {
+      result.current.speak('Hello');
+    });
+
+    expect(Speech.speak).toHaveBeenCalledWith(
+      'Hello',
+      expect.objectContaining({ voice: 'en-GB.enhanced' }),
     );
   });
 

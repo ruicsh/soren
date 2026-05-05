@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ChatMessage } from '@/lib/llm/types';
@@ -10,7 +11,10 @@ interface ChatMessageProps {
   message: ChatMessage;
 }
 
-export function ChatMessageBubble({ isStreaming, message }: ChatMessageProps) {
+export const ChatMessageBubble = memo(function ChatMessageBubble({
+  isStreaming,
+  message,
+}: ChatMessageProps) {
   const isUser = message.role === 'user';
   const showTyping = isStreaming && !isUser && message.content.length === 0;
 
@@ -37,7 +41,7 @@ export function ChatMessageBubble({ isStreaming, message }: ChatMessageProps) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   bubbleAssistant: {
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
   },
   textUser: {
-    color: 'white',
+    color: '#ffffff',
     fontSize: typography.base,
   },
 });

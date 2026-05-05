@@ -34,6 +34,7 @@ export function useDictation(
   const interimRef = useRef('');
   const silenceTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null);
   const isRecordingRef = useRef(false);
+  const onEndOfSpeechFiredRef = useRef(false);
 
   useEffect(() => {
     isRecordingRef.current = isRecording;
@@ -62,6 +63,7 @@ export function useDictation(
       }
       silenceTimerRef.current = setTimeout(() => {
         if (isRecordingRef.current && nextTranscript.trim()) {
+          onEndOfSpeechFiredRef.current = true;
           options.onEndOfSpeech!(nextTranscript);
         }
       }, options.silenceMs);
@@ -80,10 +82,20 @@ export function useDictation(
   useSpeechRecognitionEvent('end', () => {
     setIsRecording(false);
     interimRef.current = '';
-    setTranscript(finalRef.current);
+    const finalTranscript = finalRef.current;
+    setTranscript(finalTranscript);
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
+    }
+    // Fire onEndOfSpeech with final transcript if there's pending text
+    // that wasn't captured by the silence timer (e.g. natural end or manual stop)
+    if (
+      !onEndOfSpeechFiredRef.current &&
+      finalTranscript.trim() &&
+      options?.onEndOfSpeech
+    ) {
+      options.onEndOfSpeech(finalTranscript);
     }
   });
 
@@ -92,6 +104,7 @@ export function useDictation(
     finalRef.current = '';
     interimRef.current = '';
     setTranscript('');
+    onEndOfSpeechFiredRef.current = false;
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;

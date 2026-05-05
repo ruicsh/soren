@@ -1,7 +1,7 @@
 import { PhoneOff } from 'lucide-react-native';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { colors } from '@/theme';
+import { colors, radius } from '@/theme';
 
 interface CallButtonProps {
   onPress: () => void;
@@ -9,13 +9,9 @@ interface CallButtonProps {
 
 export function CallButton({ onPress }: CallButtonProps) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={styles.button}
-      testID="call-button"
-    >
-      <PhoneOff color="white" pointerEvents="none" size={32} />
-    </TouchableOpacity>
+    <Pressable onPress={onPress} style={styles.button} testID="call-button">
+      <PhoneOff color="#ffffff" pointerEvents="none" size={32} />
+    </Pressable>
   );
 }
 
@@ -23,7 +19,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     backgroundColor: colors.error,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     height: 72,
     justifyContent: 'center',
     width: 72,

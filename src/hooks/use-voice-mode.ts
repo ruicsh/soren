@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ChatMessage } from '@/lib/llm/types';
 
-import { useChatStream } from './use-chat-stream';
-import { useDictation } from './use-dictation';
-import { useSentenceBuffer } from './use-sentence-buffer';
-import { useTTS } from './use-tts';
+import { useChatStream } from '@/hooks/use-chat-stream';
+import { useDictation } from '@/hooks/use-dictation';
+import { useSentenceBuffer } from '@/hooks/use-sentence-buffer';
+import { useTTS } from '@/hooks/use-tts';
 
 export interface UseVoiceModeReturn {
   activate: () => Promise<void>;
@@ -31,6 +31,7 @@ export function useVoiceMode(): UseVoiceModeReturn {
   const [state, setState] = useState<VoiceModeState>('idle');
   const [error, setError] = useState<null | string>(null);
   const streamDoneRef = useRef(false);
+  const ttsIsSpeakingRef = useRef(false);
 
   const {
     isSpeaking: ttsIsSpeaking,
@@ -72,13 +73,19 @@ export function useVoiceMode(): UseVoiceModeReturn {
       setState('processing');
       stopDictation();
       streamDoneRef.current = false;
-      sendMessage(text).then(() => {
-        streamDoneRef.current = true;
-        sentenceBuffer.flush();
-        if (!ttsIsSpeaking) {
-          startListeningRef.current();
-        }
-      });
+      sendMessage(text)
+        .then(() => {
+          streamDoneRef.current = true;
+          sentenceBuffer.flush();
+          if (!ttsIsSpeakingRef.current) {
+            startListeningRef.current();
+          }
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Request failed');
+          setState('error');
+          streamDoneRef.current = true;
+        });
     },
     silenceMs: SILENCE_MS,
   });
@@ -114,6 +121,11 @@ export function useVoiceMode(): UseVoiceModeReturn {
     setState('idle');
     streamDoneRef.current = false;
   }, [stopDictation, ttsStop]);
+
+  // Keep ref in sync with TTS speaking state to avoid stale closures
+  useEffect(() => {
+    ttsIsSpeakingRef.current = ttsIsSpeaking;
+  }, [ttsIsSpeaking]);
 
   // connecting → listening when recording starts
   useEffect(() => {

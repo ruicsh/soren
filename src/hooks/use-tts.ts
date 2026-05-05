@@ -37,8 +37,9 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
       return;
     }
 
+    let mounted = true;
     Speech.getAvailableVoicesAsync().then((voices) => {
-      if (voices.length === 0) return;
+      if (!mounted || voices.length === 0) return;
 
       let candidates = voices;
       const lang = languageRef.current;
@@ -62,6 +63,9 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
       });
       voiceRef.current = best.identifier;
     });
+    return () => {
+      mounted = false;
+    };
   }, [options?.voice, options?.language]);
 
   const speak = useCallback((text: string) => {

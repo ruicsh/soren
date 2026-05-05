@@ -26,7 +26,7 @@ const fallback = {
   accent: 'rgb(0, 122, 255)',
   bg: '#ffffff',
   bg2: '#f2f2f7',
-  bg3: '#ffffff',
+  bg3: '#e5e5ea',
   border: 'rgba(60, 60, 67, 0.29)',
   error: 'rgb(255, 59, 48)',
   fill: 'rgba(120, 120, 128, 0.2)',
@@ -56,7 +56,7 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  '2xl': 16,
+  '2xl': 20,
   '3xl': 24,
   full: 9999,
   lg: 12,

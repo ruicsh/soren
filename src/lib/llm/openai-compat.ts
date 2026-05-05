@@ -12,10 +12,10 @@ export function openaiCompatProvider(config: OpenAICompatConfig): LLMProvider {
     buildRequest(messages) {
       return {
         body: JSON.stringify({
+          ...config.extraBody,
           messages,
           model: config.model,
           stream: true,
-          ...config.extraBody,
         }),
         headers: {
           Authorization: `Bearer ${config.apiKey}`,

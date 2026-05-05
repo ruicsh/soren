@@ -1,6 +1,7 @@
 import type { LLMProvider, StreamMetrics } from './types';
 
 const DEBUG = false;
+const STREAM_TIMEOUT_MS = 60000;
 
 interface StreamQueue {
   next: () => Promise<{ error?: Error; value: null | string }>;
@@ -9,7 +10,7 @@ interface StreamQueue {
 
 export function createStreamChat(
   provider: LLMProvider,
-  messages: { content: string; role: string }[],
+  messages: { content: string; role: 'assistant' | 'system' | 'user' }[],
   onAbort?: () => boolean,
 ): AsyncGenerator<string> & { metrics: StreamMetrics } {
   const queue = createStreamQueue();
@@ -23,7 +24,11 @@ export function createStreamChat(
   };
 
   const { body, headers, url } = provider.buildRequest(messages);
-  const t0 = performance.now();
+  const getTime =
+    typeof performance !== 'undefined'
+      ? () => performance.now()
+      : () => Date.now();
+  const t0 = getTime();
   dlog(`[LLM] XHR send() at t=0ms`);
 
   const xhr = new XMLHttpRequest();
@@ -32,12 +37,22 @@ export function createStreamChat(
     xhr.setRequestHeader(key, value);
   }
 
+  // Timeout: if no progress for STREAM_TIMEOUT_MS, abort
+  let lastProgressTime = getTime();
+  const timeoutId = setInterval(() => {
+    if (getTime() - lastProgressTime > STREAM_TIMEOUT_MS) {
+      dlog(`[LLM] Stream timeout after ${STREAM_TIMEOUT_MS}ms`);
+      xhr.abort();
+      clearInterval(timeoutId);
+    }
+  }, 10000);
+
   xhr.onreadystatechange = () => {
-    const t = performance.now() - t0;
+    const t = getTime() - t0;
     if (xhr.readyState === 1) {
       dlog(`[LLM] readyState=OPENED at t=${t.toFixed(0)}ms`);
     } else if (xhr.readyState === 2 && metrics.headersTime === null) {
-      metrics.headersTime = performance.now();
+      metrics.headersTime = getTime();
       dlog(`[LLM] readyState=HEADERS_RECEIVED at t=${t.toFixed(0)}ms`);
     } else if (xhr.readyState === 3) {
       dlog(`[LLM] readyState=LOADING at t=${t.toFixed(0)}ms`);
@@ -47,8 +62,9 @@ export function createStreamChat(
   };
 
   xhr.onprogress = () => {
+    lastProgressTime = getTime();
     progressCount++;
-    const t = performance.now() - t0;
+    const t = getTime() - t0;
     const newText = xhr.responseText.slice(responsePos);
     const newTextLen = newText.length;
     responsePos = xhr.responseText.length;
@@ -79,8 +95,9 @@ export function createStreamChat(
       const deltas = provider.parseChunk(lines);
       for (const delta of deltas) {
         if (metrics.firstTokenTime === null) {
-          metrics.firstTokenTime = performance.now();
-          const tt = metrics.firstTokenTime - t0;
+          const ft = getTime();
+          metrics.firstTokenTime = ft;
+          const tt = ft - t0;
           dlog(`[LLM] First token at t=${tt.toFixed(0)}ms`);
         }
         queue.push(delta);
@@ -91,7 +108,8 @@ export function createStreamChat(
   };
 
   xhr.onload = () => {
-    const t = performance.now() - t0;
+    clearInterval(timeoutId);
+    const t = getTime() - t0;
     dlog(`[LLM] onload at t=${t.toFixed(0)}ms, status=${xhr.status}`);
 
     if (xhr.status < 200 || xhr.status >= 300) {
@@ -107,7 +125,7 @@ export function createStreamChat(
       const deltas = provider.parseChunk(lines);
       for (const delta of deltas) {
         if (metrics.firstTokenTime === null) {
-          metrics.firstTokenTime = performance.now();
+          metrics.firstTokenTime = getTime();
         }
         queue.push(delta);
       }
@@ -116,13 +134,15 @@ export function createStreamChat(
   };
 
   xhr.onerror = () => {
-    const t = performance.now() - t0;
+    clearInterval(timeoutId);
+    const t = getTime() - t0;
     dlog(`[LLM] onerror at t=${t.toFixed(0)}ms`);
     queue.push(null, new Error('Network request failed'));
   };
 
   xhr.onabort = () => {
-    const t = performance.now() - t0;
+    clearInterval(timeoutId);
+    const t = getTime() - t0;
     dlog(`[LLM] onabort at t=${t.toFixed(0)}ms`);
     queue.push(null);
   };

@@ -19,7 +19,7 @@ export function PulseAnimation() {
   }, [scale]);
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.get() }],
   }));
 
   return (

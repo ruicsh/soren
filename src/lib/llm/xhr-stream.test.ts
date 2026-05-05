@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import type { LLMProvider } from './types';
 
 function createMockProvider(): LLMProvider {
@@ -44,6 +42,7 @@ function createMockProvider(): LLMProvider {
       }
       return deltas;
     },
+    warmup: () => {},
   };
 }
 
@@ -51,8 +50,8 @@ describe('createStreamChat', () => {
   it('builds correct request from provider config', () => {
     const provider = createMockProvider();
     const messages = [
-      { content: 'Be brief.', role: 'system' },
-      { content: 'Hello', role: 'user' },
+      { content: 'Be brief.', role: 'system' as const },
+      { content: 'Hello', role: 'user' as const },
     ];
 
     const { body, headers, url } = provider.buildRequest(messages);

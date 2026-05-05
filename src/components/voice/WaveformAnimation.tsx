@@ -40,7 +40,7 @@ function Bar({ delay }: { delay: number }) {
   }, [delay, height]);
 
   const style = useAnimatedStyle(() => ({
-    height: height.value,
+    height: height.get(),
   }));
 
   return <Animated.View style={[styles.bar, style]} />;

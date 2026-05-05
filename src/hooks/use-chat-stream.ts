@@ -28,8 +28,13 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const abortRef = useRef(false);
   const pendingRef = useRef('');
   const flushTimerRef = useRef<null | ReturnType<typeof setInterval>>(null);
+  const isStreamingRef = useRef(false);
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
   onStreamingChunkRef.current = options?.onStreamingChunk;
+
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
 
   const flush = useCallback(() => {
     const delta = pendingRef.current;
@@ -49,7 +54,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!text.trim() || isStreaming) return;
+      if (!text.trim() || isStreamingRef.current) return;
 
       abortRef.current = false;
       pendingRef.current = '';
@@ -108,8 +113,18 @@ export function useChatStream(options?: UseChatStreamOptions) {
         setIsStreaming(false);
       }
     },
-    [messages, isStreaming, flush],
+    [messages, flush],
   );
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (flushTimerRef.current) {
+        clearInterval(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const stop = useCallback(() => {
     abortRef.current = true;

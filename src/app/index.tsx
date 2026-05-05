@@ -18,9 +18,9 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { colors, spacing, typography } from '@/theme';
 
 export default function Home() {
-  const router = useRouter();
+  const { push } = useRouter();
   const { isStreaming, messages, sendMessage } = useChatStream();
-  const scrollViewRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Home() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Soren</Text>
           <TouchableOpacity
-            onPress={() => router.push('/voice' as any)}
+            onPress={() => push('/voice')}
             testID="voice-call-button"
           >
             <Phone color={colors.accent} pointerEvents="none" size={24} />
@@ -67,7 +67,7 @@ export default function Home() {
           </ScrollView>
         ) : (
           <View style={styles.empty}>
-            <IconBrain color="white" size={40} />
+            <IconBrain color="#ffffff" size={40} />
             <Text style={styles.emptyText}>How can I help you today?</Text>
           </View>
         )}

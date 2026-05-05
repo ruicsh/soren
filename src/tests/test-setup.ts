@@ -63,6 +63,10 @@ vi.mock('react-native-reanimated', () => {
     useSharedValue: (initialValue: unknown) => {
       let value = initialValue;
       return {
+        get: () => value,
+        set: (v: unknown) => {
+          value = v;
+        },
         get value() {
           return value;
         },
@@ -102,10 +106,19 @@ vi.mock('expo-speech', () => ({
 }));
 
 // XMLHttpRequest — not available in Node test environment
-global.XMLHttpRequest = class MockXMLHttpRequest {
+(globalThis as any).XMLHttpRequest = class MockXMLHttpRequest {
+  abort = vi.fn();
+  onabort: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onload: (() => void) | null = null;
+  onprogress: (() => void) | null = null;
+  onreadystatechange: (() => void) | null = null;
   open = vi.fn();
+  readyState = 0;
+  responseText = '';
   send = vi.fn();
   setRequestHeader = vi.fn();
+  status = 0;
 } as any;
 
 // expo-speech-recognition — mock module and hook

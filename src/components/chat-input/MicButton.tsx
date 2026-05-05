@@ -19,7 +19,7 @@ export function MicButton({ isRecording, onPress }: MicButtonProps) {
       testID="mic-button"
     >
       <Mic
-        color={isRecording ? 'white' : colors.text2}
+        color={isRecording ? '#ffffff' : colors.text2}
         pointerEvents="none"
         size={20}
         strokeWidth={2}

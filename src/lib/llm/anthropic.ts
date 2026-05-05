@@ -24,7 +24,7 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
           stream: true,
         }),
         headers: {
-          'anthropic-version': '2023-06-01',
+          'anthropic-version': '2024-01-01',
           'Content-Type': 'application/json',
           'x-api-key': config.apiKey,
         },
@@ -75,7 +75,7 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
       xhr.open('POST', 'https://api.anthropic.com/v1/messages');
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('x-api-key', config.apiKey);
-      xhr.setRequestHeader('anthropic-version', '2023-06-01');
+      xhr.setRequestHeader('anthropic-version', '2024-01-01');
       xhr.send(
         JSON.stringify({
           max_tokens: 1,

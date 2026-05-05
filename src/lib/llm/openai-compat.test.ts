@@ -9,7 +9,7 @@ describe('openaiCompatProvider', () => {
 
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
-      const messages = [{ content: 'Hello', role: 'user' }];
+      const messages = [{ content: 'Hello', role: 'user' as const }];
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.example.com/v1/chat/completions');
@@ -31,7 +31,7 @@ describe('openaiCompatProvider', () => {
       });
 
       const req = providerWithExtra.buildRequest([
-        { content: 'hi', role: 'user' },
+        { content: 'hi', role: 'user' as const },
       ]);
       const body = JSON.parse(req.body);
 
@@ -40,7 +40,9 @@ describe('openaiCompatProvider', () => {
     });
 
     it('does not include extraBody when not provided', () => {
-      const req = provider.buildRequest([{ content: 'hi', role: 'user' }]);
+      const req = provider.buildRequest([
+        { content: 'hi', role: 'user' as const },
+      ]);
       const body = JSON.parse(req.body);
 
       expect(body).not.toHaveProperty('thinking');

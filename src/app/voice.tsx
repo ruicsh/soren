@@ -8,10 +8,10 @@ import { CallButton } from '@/components/voice/CallButton';
 import { PulseAnimation } from '@/components/voice/PulseAnimation';
 import { WaveformAnimation } from '@/components/voice/WaveformAnimation';
 import { useVoiceMode } from '@/hooks/use-voice-mode';
-import { colors, spacing, typography } from '@/theme';
+import { colors, radius, spacing, typography } from '@/theme';
 
 export default function VoiceScreen() {
-  const router = useRouter();
+  const { back } = useRouter();
   const { activate, deactivate, error, state, transcript } = useVoiceMode();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function VoiceScreen() {
 
   const handleDisconnect = () => {
     deactivate();
-    router.back();
+    back();
   };
 
   const statusText =
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   avatarWrap: {
     alignItems: 'center',
     backgroundColor: colors.bg2,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     height: 120,
     justifyContent: 'center',
     marginTop: spacing[12],

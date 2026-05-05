@@ -8,13 +8,13 @@ describe('anthropicProvider', () => {
 
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
-      const messages = [{ content: 'Hello', role: 'user' }];
+      const messages = [{ content: 'Hello', role: 'user' as const }];
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.anthropic.com/v1/messages');
       expect(req.headers['Content-Type']).toBe('application/json');
       expect(req.headers['x-api-key']).toBe('sk-ant-test');
-      expect(req.headers['anthropic-version']).toBe('2023-06-01');
+      expect(req.headers['anthropic-version']).toBe('2024-01-01');
 
       const body = JSON.parse(req.body);
       expect(body.model).toBe('claude-sonnet-4-20250514');
@@ -36,7 +36,7 @@ describe('anthropicProvider', () => {
     });
 
     it('omits system param when no system message', () => {
-      const messages = [{ content: 'Hi', role: 'user' }];
+      const messages = [{ content: 'Hi', role: 'user' as const }];
       const req = provider.buildRequest(messages);
       const body = JSON.parse(req.body);
 
@@ -51,7 +51,7 @@ describe('anthropicProvider', () => {
         model: 'claude-sonnet-4-20250514',
       });
       const req = customProvider.buildRequest([
-        { content: 'Hi', role: 'user' },
+        { content: 'Hi', role: 'user' as const },
       ]);
       const body = JSON.parse(req.body);
 
@@ -59,7 +59,9 @@ describe('anthropicProvider', () => {
     });
 
     it('defaults maxTokens to 4096', () => {
-      const req = provider.buildRequest([{ content: 'Hi', role: 'user' }]);
+      const req = provider.buildRequest([
+        { content: 'Hi', role: 'user' as const },
+      ]);
       const body = JSON.parse(req.body);
 
       expect(body.max_tokens).toBe(4096);

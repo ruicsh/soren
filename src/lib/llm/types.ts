@@ -1,11 +1,13 @@
 export interface ChatMessage {
   content: string;
   id: string;
-  role: 'assistant' | 'user';
+  role: 'assistant' | 'system' | 'user';
 }
 
 export interface LLMProvider {
-  buildRequest(messages: { content: string; role: string }[]): {
+  buildRequest(
+    messages: { content: string; role: 'assistant' | 'system' | 'user' }[],
+  ): {
     body: string;
     headers: Record<string, string>;
     url: string;

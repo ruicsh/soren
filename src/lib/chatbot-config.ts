@@ -2,12 +2,16 @@ import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 
 export interface ChatbotConfig {
+  llmModel: string;
+  llmProvider: string;
   name: string;
   uuid: string;
   voiceId: null | string;
 }
 
 const DEFAULT_NAME = 'Soren';
+const DEFAULT_PROVIDER = 'groq';
+const DEFAULT_MODEL = 'llama-3.1-8b-instant';
 
 export const getChatbotsRootPath = () => Paths.document.uri + 'chatbots/';
 
@@ -32,7 +36,15 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
     if (configFile.exists) {
       try {
         const content = await configFile.text();
-        return JSON.parse(content) as ChatbotConfig;
+        const parsed = JSON.parse(content) as Partial<ChatbotConfig>;
+        // Migration/Defaults
+        return {
+          llmModel: parsed.llmModel ?? DEFAULT_MODEL,
+          llmProvider: parsed.llmProvider ?? DEFAULT_PROVIDER,
+          name: parsed.name ?? DEFAULT_NAME,
+          uuid: parsed.uuid ?? Crypto.randomUUID(),
+          voiceId: parsed.voiceId ?? null,
+        };
       } catch (err) {
         console.warn('Failed to load bot config, recreating:', err);
       }
@@ -42,6 +54,8 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
   // Create new default bot
   const uuid = Crypto.randomUUID();
   const config: ChatbotConfig = {
+    llmModel: DEFAULT_MODEL,
+    llmProvider: DEFAULT_PROVIDER,
     name: DEFAULT_NAME,
     uuid,
     voiceId: null,

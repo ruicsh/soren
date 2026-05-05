@@ -19,11 +19,16 @@ import { colors, radius, spacing, typography } from '@/theme';
 export default function ChatbotSettingsScreen() {
   const { back } = useRouter();
   const {
+    availableModels,
+    availableProviders,
     availableVoices,
     config,
     error,
     isLoading,
     isSaving,
+    modelsError,
+    modelsLoading,
+    refreshModels,
     save,
     updateConfig,
   } = useChatbotConfig();
@@ -70,6 +75,72 @@ export default function ChatbotSettingsScreen() {
                 <Text selectable style={styles.value}>
                   {config.uuid}
                 </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Intelligence</Text>
+            <View style={styles.card}>
+              <View style={styles.column}>
+                <Text style={styles.label}>Provider</Text>
+                <View style={styles.pickerWrap}>
+                  <Picker
+                    onValueChange={(llmProvider) => updateConfig({ llmProvider })}
+                    selectedValue={config.llmProvider}
+                    style={styles.picker}
+                  >
+                    {availableProviders.map((p) => (
+                      <Picker.Item key={p.id} label={p.label} value={p.id} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+
+              <View style={styles.separator} />
+
+              <View style={styles.column}>
+                <View style={styles.rowInline}>
+                  <Text style={styles.label}>Model</Text>
+                  {modelsLoading && (
+                    <ActivityIndicator
+                      color={colors.text3}
+                      size="small"
+                      style={styles.loader}
+                    />
+                  )}
+                </View>
+
+                {modelsError ? (
+                  <TouchableOpacity
+                    onPress={refreshModels}
+                    style={styles.errorRetry}
+                  >
+                    <Text style={styles.errorTextSmall}>
+                      {modelsError}. Tap to retry.
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.pickerWrap}>
+                    <Picker
+                      enabled={!modelsLoading}
+                      onValueChange={(llmModel) => updateConfig({ llmModel })}
+                      selectedValue={config.llmModel}
+                      style={styles.picker}
+                    >
+                      {availableModels.length > 0 ? (
+                        availableModels.map((m) => (
+                          <Picker.Item key={m.id} label={m.name} value={m.id} />
+                        ))
+                      ) : (
+                        <Picker.Item
+                          label={config.llmModel}
+                          value={config.llmModel}
+                        />
+                      )}
+                    </Picker>
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -139,6 +210,13 @@ const styles = StyleSheet.create({
     marginTop: spacing[4],
     textAlign: 'center',
   },
+  errorRetry: {
+    paddingVertical: spacing[2],
+  },
+  errorTextSmall: {
+    color: colors.error,
+    fontSize: typography.xs,
+  },
   flex: {
     flex: 1,
   },
@@ -177,6 +255,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: spacing[1],
   },
+  loader: {
+    marginLeft: spacing[2],
+  },
   loading: {
     alignItems: 'center',
     backgroundColor: colors.bg,
@@ -195,6 +276,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: spacing[4],
+  },
+  rowInline: {
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   rowInput: {
     paddingVertical: spacing[2],

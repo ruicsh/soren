@@ -30,6 +30,8 @@ const LISTEN_TIMEOUT_MS = 10000;
 const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
 export interface UseVoiceModeOptions {
+  llmModel?: string;
+  llmProvider?: string;
   voiceId?: null | string;
 }
 
@@ -101,6 +103,8 @@ export function useVoiceMode(
     onStreamingChunk: (chunk) => {
       sentenceBuffer.append(chunk);
     },
+    providerId: options?.llmProvider,
+    providerModel: options?.llmModel,
   });
 
   const {

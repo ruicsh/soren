@@ -15,6 +15,8 @@ vi.mock('@/lib/chatbot-config', () => ({
 
 describe('useChatbotConfig', () => {
   const mockConfig = {
+    llmModel: 'llama-3.1-8b-instant',
+    llmProvider: 'groq',
     name: 'Soren',
     uuid: 'uuid-123',
     voiceId: null,

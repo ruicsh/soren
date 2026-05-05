@@ -53,7 +53,9 @@ describe('useDictation', () => {
     const { result } = renderHook(() => useDictation());
 
     await act(async () => {
-      await result.current.startDictation();
+      await expect(result.current.startDictation()).rejects.toThrow(
+        'Microphone permission denied',
+      );
     });
 
     expect(ExpoSpeechRecognitionModule.start).not.toHaveBeenCalled();
@@ -69,7 +71,9 @@ describe('useDictation', () => {
     const { result } = renderHook(() => useDictation());
 
     await act(async () => {
-      await result.current.startDictation();
+      await expect(result.current.startDictation()).rejects.toThrow(
+        'Native module not available',
+      );
     });
 
     expect(ExpoSpeechRecognitionModule.start).not.toHaveBeenCalled();

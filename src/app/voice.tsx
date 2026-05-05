@@ -15,6 +15,8 @@ export default function VoiceScreen() {
   const { back } = useRouter();
   const { config } = useChatbotConfig();
   const { activate, deactivate, error, state, transcript } = useVoiceMode({
+    llmModel: config?.llmModel,
+    llmProvider: config?.llmProvider,
     voiceId: config?.voiceId,
   });
 

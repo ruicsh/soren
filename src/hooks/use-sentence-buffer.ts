@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 const SENTENCE_REGEX = /([.!?]+)(?:\s+|$)/g;
-const MIN_SENTENCE_LENGTH = 10;
+const MIN_SENTENCE_LENGTH = 1;
 const MAX_CHUNK_LENGTH = 150;
 
 export interface UseSentenceBufferOptions {

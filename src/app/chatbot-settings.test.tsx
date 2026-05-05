@@ -21,6 +21,8 @@ describe('ChatbotSettingsScreen', () => {
   const mockBack = vi.fn();
 
   const mockConfig = {
+    llmModel: 'llama-3.1-8b-instant',
+    llmProvider: 'groq',
     name: 'Soren',
     uuid: 'uuid-123',
     voiceId: null,
@@ -32,11 +34,16 @@ describe('ChatbotSettingsScreen', () => {
     vi.mocked(router.back).mockImplementation(mockBack);
 
     vi.mocked(useChatbotConfig).mockReturnValue({
+      availableModels: [],
+      availableProviders: [],
       availableVoices: [],
       config: mockConfig,
       error: null,
       isLoading: false,
       isSaving: false,
+      modelsError: null,
+      modelsLoading: false,
+      refreshModels: vi.fn(),
       save: mockSave,
       updateConfig: mockUpdateConfig,
     });

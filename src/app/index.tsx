@@ -21,7 +21,10 @@ import { colors, spacing, typography } from '@/theme';
 export default function Home() {
   const { push } = useRouter();
   const { config } = useChatbotConfig();
-  const { isStreaming, messages, sendMessage } = useChatStream();
+  const { isStreaming, messages, sendMessage } = useChatStream({
+    providerId: config?.llmProvider,
+    providerModel: config?.llmModel,
+  });
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when messages change

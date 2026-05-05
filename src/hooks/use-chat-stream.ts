@@ -1,25 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ChatMessage } from '@/lib/llm/types';
 
-import { openaiCompatProvider } from '@/lib/llm/openai-compat';
+import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
-
-const API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? '';
-const BASE_URL = 'https://api.groq.com/openai/v1';
-const MODEL = 'llama-3.1-8b-instant';
-
-const provider = openaiCompatProvider({
-  apiKey: API_KEY,
-  baseUrl: BASE_URL,
-  model: MODEL,
-});
 
 const BATCH_MS = 50;
 
 export interface UseChatStreamOptions {
   /** Fired with each flushed batch of streaming text */
   onStreamingChunk?: (chunk: string) => void;
+  providerId?: string;
+  providerModel?: string;
 }
 
 export function useChatStream(options?: UseChatStreamOptions) {
@@ -31,6 +23,13 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const isStreamingRef = useRef(false);
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
   onStreamingChunkRef.current = options?.onStreamingChunk;
+
+  const { providerId, providerModel } = options || {};
+
+  const provider = useMemo(() => {
+    if (!providerId || !providerModel) return null;
+    return createProvider(providerId, providerModel);
+  }, [providerId, providerModel]);
 
   useEffect(() => {
     isStreamingRef.current = isStreaming;
@@ -49,12 +48,22 @@ export function useChatStream(options?: UseChatStreamOptions) {
   }, []);
 
   useEffect(() => {
-    provider.warmup?.();
-  }, []);
+    provider?.warmup?.();
+  }, [provider]);
 
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isStreamingRef.current) return;
+
+      if (!provider) {
+        const errorMsg = 'LLM Provider not configured.';
+        setMessages((prev) => [
+          ...prev,
+          { content: text.trim(), id: generateId(), role: 'user' },
+          { content: errorMsg, id: generateId(), role: 'assistant' },
+        ]);
+        return;
+      }
 
       abortRef.current = false;
       pendingRef.current = '';
@@ -79,7 +88,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
       try {
         const history = [...messages, userMessage].map((m) => ({
           content: m.content,
-          role: m.role as 'assistant' | 'user',
+          role: m.role as 'assistant' | 'user' | 'system',
         }));
 
         const historyWithSystem = [
@@ -113,7 +122,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
         setIsStreaming(false);
       }
     },
-    [messages, flush],
+    [messages, flush, provider],
   );
 
   // Cleanup interval on unmount

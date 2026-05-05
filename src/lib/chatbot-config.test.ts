@@ -20,10 +20,12 @@ describe('chatbot-config', () => {
     expect(config.name).toBe('Soren');
     expect(config.uuid).toBe('test-uuid-1234');
     expect(config.voiceId).toBeNull();
+    expect(config.llmProvider).toBe('groq');
+    expect(config.llmModel).toBe('llama-3.1-8b-instant');
   });
 
-  it('loads existing config', async () => {
-    const existingConfig = {
+  it('loads existing config and applies migration defaults', async () => {
+    const legacyConfig = {
       name: 'Custom Bot',
       uuid: 'existing-uuid',
       voiceId: 'voice-1',
@@ -34,17 +36,21 @@ describe('chatbot-config', () => {
 
     // Use mockImplementation to avoid issues with spyOn prototype
     vi.mocked(File.prototype.text).mockResolvedValue(
-      JSON.stringify(existingConfig),
+      JSON.stringify(legacyConfig),
     );
 
     const config = await loadOrCreateDefaultChatbotConfig();
 
     expect(config.name).toBe('Custom Bot');
     expect(config.uuid).toBe('existing-uuid');
+    expect(config.llmProvider).toBe('groq');
+    expect(config.llmModel).toBe('llama-3.1-8b-instant');
   });
 
   it('saves config to correct path', async () => {
     const config = {
+      llmModel: 'llama-3.1-70b-versatile',
+      llmProvider: 'groq',
       name: 'New Name',
       uuid: 'uuid-to-save',
       voiceId: 'voice-2',

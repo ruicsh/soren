@@ -4,7 +4,7 @@ import {
 } from 'expo-speech-recognition';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
 export interface UseDictationOptions {
   /** Callback fired after silenceMs of no transcript change while recording */

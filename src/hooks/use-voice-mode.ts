@@ -27,7 +27,7 @@ export type VoiceModeState =
 
 const SILENCE_MS = 1500;
 const LISTEN_TIMEOUT_MS = 10000;
-const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
 export interface UseVoiceModeOptions {
   voiceId?: null | string;

@@ -1,6 +1,6 @@
 import type { LLMProvider, StreamMetrics } from './types';
 
-const DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+const DEBUG = process.env.EXPO_PUBLIC_DEBUG_XHR_STREAM === '1';
 const STREAM_TIMEOUT_MS = 60000;
 
 interface StreamQueue {

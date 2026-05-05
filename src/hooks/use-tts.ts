@@ -1,7 +1,7 @@
 import * as Speech from 'expo-speech';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
+const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
 export interface UseTTSOptions {
   language?: string;

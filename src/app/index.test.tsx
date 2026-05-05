@@ -2,9 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 import { vi } from 'vitest';
 
-import Home from './index';
-import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { useChatStream } from '@/hooks/use-chat-stream';
+import { useChatbotConfig } from '@/hooks/use-chatbot-config';
+
+import Home from './index';
 
 vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: vi.fn(),

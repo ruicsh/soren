@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatInput } from '@/components/chat-input/ChatInput';
 import { ChatMessageBubble } from '@/components/chat-message/ChatMessage';
 import { useChatStream } from '@/hooks/use-chat-stream';
+import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { colors, spacing, typography } from '@/theme';
 
 export default function Home() {
   const { push } = useRouter();
+  const { config } = useChatbotConfig();
   const { isStreaming, messages, sendMessage } = useChatStream();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -41,7 +43,9 @@ export default function Home() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Soren</Text>
+          <TouchableOpacity onPress={() => push('/settings')}>
+            <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => push('/voice')}
             testID="voice-call-button"

@@ -9,6 +9,7 @@ import { useTTS } from '@/hooks/use-tts';
 
 export interface UseVoiceModeReturn {
   activate: () => Promise<void>;
+  availableVoices: import('expo-speech').Voice[];
   deactivate: () => void;
   error: null | string;
   messages: ChatMessage[];
@@ -28,7 +29,13 @@ const SILENCE_MS = 1500;
 const LISTEN_TIMEOUT_MS = 10000;
 const VOICE_DEBUG = process.env.EXPO_PUBLIC_VOICE_DEBUG === '1';
 
-export function useVoiceMode(): UseVoiceModeReturn {
+export interface UseVoiceModeOptions {
+  voiceId?: null | string;
+}
+
+export function useVoiceMode(
+  options?: UseVoiceModeOptions,
+): UseVoiceModeReturn {
   const [state, setState] = useState<VoiceModeState>('idle');
   const [error, setError] = useState<null | string>(null);
   const streamDoneRef = useRef(false);
@@ -36,6 +43,7 @@ export function useVoiceMode(): UseVoiceModeReturn {
   const turnRef = useRef(0);
 
   const {
+    availableVoices,
     isSpeaking: ttsIsSpeaking,
     speak: ttsSpeak,
     stop: ttsStop,
@@ -64,6 +72,7 @@ export function useVoiceMode(): UseVoiceModeReturn {
     },
     pitch: 0.95,
     rate: 0.9,
+    voice: options?.voiceId ?? undefined,
   });
 
   const stateRef = useRef<VoiceModeState>('idle');
@@ -276,6 +285,7 @@ export function useVoiceMode(): UseVoiceModeReturn {
 
   return {
     activate,
+    availableVoices,
     deactivate,
     error,
     messages,

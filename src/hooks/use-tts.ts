@@ -12,6 +12,7 @@ export interface UseTTSOptions {
 }
 
 export interface UseTTSReturn {
+  availableVoices: Speech.Voice[];
   isSpeaking: boolean;
   speak: (text: string) => void;
   stop: () => void;
@@ -19,6 +20,7 @@ export interface UseTTSReturn {
 
 export function useTTS(options?: UseTTSOptions): UseTTSReturn {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<Speech.Voice[]>([]);
   const pendingRef = useRef(0);
   const onDoneRef = useRef(options?.onDone);
   const voiceRef = useRef<string | undefined>(options?.voice);
@@ -34,14 +36,17 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
   });
 
   useEffect(() => {
-    if (options?.voice) {
-      voiceRef.current = options.voice;
-      return;
-    }
-
     let mounted = true;
     Speech.getAvailableVoicesAsync().then((voices) => {
-      if (!mounted || voices.length === 0) return;
+      if (!mounted) return;
+      setAvailableVoices(voices);
+
+      if (options?.voice) {
+        voiceRef.current = options.voice;
+        return;
+      }
+
+      if (voices.length === 0) return;
 
       debugLog('voices_available', {
         count: voices.length,
@@ -65,14 +70,18 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
       const qualityPriority = (v: Speech.Voice): number => {
         const q = v.quality as string;
         if (q === 'Premium') return 2;
-        if (q === 'Enhanced' || v.quality === Speech.VoiceQuality.Enhanced) return 1;
+        if (q === 'Enhanced' || v.quality === Speech.VoiceQuality.Enhanced)
+          return 1;
         // Heuristic for iOS: some premium voices report 'Default' quality but have 'premium' in ID/name
         const lowerId = v.identifier.toLowerCase();
         const lowerName = v.name.toLowerCase();
         if (lowerId.includes('.premium.') || lowerName.includes('(premium)')) {
           return 2;
         }
-        if (lowerId.includes('.enhanced.') || lowerName.includes('(enhanced)')) {
+        if (
+          lowerId.includes('.enhanced.') ||
+          lowerName.includes('(enhanced)')
+        ) {
           return 1;
         }
         return 0;
@@ -94,8 +103,8 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
       debugLog('voice_candidates_ranked', {
         top: ranked.slice(0, 3).map((v) => ({
           id: v.identifier,
-          quality: v.quality,
           lang: v.language,
+          quality: v.quality,
         })),
       });
 
@@ -167,7 +176,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
     setIsSpeaking(false);
   }, []);
 
-  return { isSpeaking, speak, stop };
+  return { availableVoices, isSpeaking, speak, stop };
 }
 
 function debugLog(event: string, meta?: any) {

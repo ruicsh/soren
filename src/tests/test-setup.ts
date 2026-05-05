@@ -2,41 +2,37 @@ import React from 'react';
 import { vi } from 'vitest';
 
 // expo-router — mock navigation hooks
-vi.mock('expo-router', () => ({
-  Link: ({
-    children,
-    ...props
-  }: {
-    [key: string]: unknown;
-    children: React.ReactNode;
-  }) => children,
-  Redirect: () => null,
-  router: {
+vi.mock('expo-router', () => {
+  const mockRouter = {
     back: vi.fn(),
     canGoBack: () => true,
     navigate: vi.fn(),
     push: vi.fn(),
     replace: vi.fn(),
     setParams: vi.fn(),
-  },
-  Slot: ({ children }: { children?: React.ReactNode }) => children || null,
-  Stack: { Screen: () => null },
-  Tabs: { Screen: () => null },
-  useFocusEffect: (cb: () => void) => cb(),
-  useGlobalSearchParams: () => ({}),
-  useLocalSearchParams: () => ({}),
-  useNavigation: () => ({ goBack: vi.fn(), navigate: vi.fn() }),
-  usePathname: () => '/',
-  useRouter: () => ({
-    back: vi.fn(),
-    canGoBack: () => true,
-    navigate: vi.fn(),
-    push: vi.fn(),
-    replace: vi.fn(),
-    setParams: vi.fn(),
-  }),
-  useSegments: () => [],
-}));
+  };
+  return {
+    Link: ({
+      children,
+      ...props
+    }: {
+      [key: string]: unknown;
+      children: React.ReactNode;
+    }) => children,
+    Redirect: () => null,
+    router: mockRouter,
+    Slot: ({ children }: { children?: React.ReactNode }) => children || null,
+    Stack: { Screen: () => null },
+    Tabs: { Screen: () => null },
+    useFocusEffect: (cb: () => void) => cb(),
+    useGlobalSearchParams: () => ({}),
+    useLocalSearchParams: () => ({}),
+    useNavigation: () => ({ goBack: vi.fn(), navigate: vi.fn() }),
+    usePathname: () => '/',
+    useRouter: vi.fn(() => mockRouter),
+    useSegments: () => [],
+  };
+});
 
 // react-native-reanimated — passthrough for tests
 vi.mock('react-native-reanimated', () => {
@@ -93,6 +89,49 @@ vi.mock('lucide-react-native', () => {
     Mic: createIconMock('Mic'),
     Phone: createIconMock('Phone'),
     PhoneOff: createIconMock('PhoneOff'),
+  };
+});
+
+// expo-crypto — mock for randomUUID
+vi.mock('expo-crypto', () => ({
+  randomUUID: () => 'test-uuid-1234',
+}));
+
+// expo-file-system — mock for new API
+vi.mock('expo-file-system', () => {
+  const MockFile = vi.fn().mockImplementation(function (
+    this: any,
+    ...args: any[]
+  ) {
+    this.uri = args.join('/');
+  });
+  MockFile.prototype.text = vi.fn(() => Promise.resolve('{}'));
+  MockFile.prototype.write = vi.fn();
+  Object.defineProperty(MockFile.prototype, 'exists', {
+    configurable: true,
+    get: vi.fn(() => true),
+  });
+
+  const MockDirectory = vi.fn().mockImplementation(function (
+    this: any,
+    ...args: any[]
+  ) {
+    this.uri = args.join('/');
+  });
+  MockDirectory.prototype.create = vi.fn();
+  MockDirectory.prototype.list = vi.fn(() => []);
+  Object.defineProperty(MockDirectory.prototype, 'exists', {
+    configurable: true,
+    get: vi.fn(() => true),
+  });
+
+  return {
+    Directory: MockDirectory,
+    File: MockFile,
+    Paths: {
+      cache: { uri: 'file:///mock/cache/' },
+      document: { uri: 'file:///mock/document/' },
+    },
   };
 });
 

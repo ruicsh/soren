@@ -9,11 +9,19 @@ const mockDeactivate = vi.fn();
 vi.mock('@/hooks/use-voice-mode', () => ({
   useVoiceMode: () => ({
     activate: mockActivate,
+    availableVoices: [],
     deactivate: mockDeactivate,
     error: null,
     messages: [],
     state: 'connecting',
     transcript: '',
+  }),
+}));
+
+vi.mock('@/hooks/use-chatbot-config', () => ({
+  useChatbotConfig: () => ({
+    config: { name: 'Soren', voiceId: 'voice-1' },
+    isLoading: false,
   }),
 }));
 

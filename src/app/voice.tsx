@@ -7,12 +7,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CallButton } from '@/components/voice/CallButton';
 import { PulseAnimation } from '@/components/voice/PulseAnimation';
 import { WaveformAnimation } from '@/components/voice/WaveformAnimation';
+import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { useVoiceMode } from '@/hooks/use-voice-mode';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function VoiceScreen() {
   const { back } = useRouter();
-  const { activate, deactivate, error, state, transcript } = useVoiceMode();
+  const { config } = useChatbotConfig();
+  const { activate, deactivate, error, state, transcript } = useVoiceMode({
+    voiceId: config?.voiceId,
+  });
 
   useEffect(() => {
     activate();
@@ -21,10 +25,7 @@ export default function VoiceScreen() {
     };
   }, [activate, deactivate]);
 
-  const handleDisconnect = () => {
-    deactivate();
-    back();
-  };
+  const chatbotName = config?.name ?? 'Soren';
 
   const statusText =
     state === 'connecting'
@@ -39,10 +40,15 @@ export default function VoiceScreen() {
             ? 'Speaking…'
             : error
               ? 'Connection Error'
-              : 'Soren';
+              : chatbotName;
 
   const showWaveform = state === 'listening';
   const showPulse = state === 'processing' || state === 'speaking';
+
+  const handleDisconnect = () => {
+    deactivate();
+    back();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -53,7 +59,7 @@ export default function VoiceScreen() {
             size={80}
           />
         </View>
-        <Text style={styles.name}>Soren</Text>
+        <Text style={styles.name}>{chatbotName}</Text>
         <Text style={[styles.status, error ? styles.statusError : null]}>
           {statusText}
         </Text>

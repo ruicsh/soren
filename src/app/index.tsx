@@ -43,7 +43,7 @@ export default function Home() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => push('/settings')}>
+          <TouchableOpacity onPress={() => push('/chatbot-settings')}>
             <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
           </TouchableOpacity>
           <TouchableOpacity

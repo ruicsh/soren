@@ -37,11 +37,11 @@ describe('Home', () => {
     expect(screen.getByText('Soren')).toBeTruthy();
   });
 
-  it('navigates to settings when name is pressed', () => {
+  it('navigates to chatbot settings when name is pressed', () => {
     render(<Home />);
     const nameBtn = screen.getByText('Soren');
     fireEvent.press(nameBtn);
-    expect(mockPush).toHaveBeenCalledWith('/settings');
+    expect(mockPush).toHaveBeenCalledWith('/chatbot-settings');
   });
 
   it('navigates to voice when phone is pressed', () => {

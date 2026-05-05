@@ -25,7 +25,7 @@ Full verify order:
 - Expo Router app on React 19 / Expo 55 / RN 0.83
 - Real routes live in `src/app/` (no root `app/` directory here)
 - Root layout entry: `src/app/_layout.tsx`
-- Main screens: `src/app/index.tsx` (chat), `src/app/voice.tsx`, `src/app/settings.tsx`
+- Main screens: `src/app/index.tsx` (chat), `src/app/voice.tsx`, `src/app/chatbot-settings.tsx`
 - LLM/provider layer: `src/lib/llm/` (`openai-compat`, `anthropic`, `xhr-stream`)
 
 ## Env Vars

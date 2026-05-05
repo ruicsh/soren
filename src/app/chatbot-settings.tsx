@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { colors, radius, spacing, typography } from '@/theme';
 
-export default function SettingsScreen() {
+export default function ChatbotSettingsScreen() {
   const { back } = useRouter();
   const {
     availableVoices,

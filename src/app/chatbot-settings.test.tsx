@@ -9,13 +9,13 @@ import { vi } from 'vitest';
 
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 
-import SettingsScreen from './settings';
+import ChatbotSettingsScreen from './chatbot-settings';
 
 vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: vi.fn(),
 }));
 
-describe('SettingsScreen', () => {
+describe('ChatbotSettingsScreen', () => {
   const mockSave = vi.fn();
   const mockUpdateConfig = vi.fn();
   const mockBack = vi.fn();
@@ -43,20 +43,20 @@ describe('SettingsScreen', () => {
   });
 
   it('renders config data', () => {
-    render(<SettingsScreen />);
+    render(<ChatbotSettingsScreen />);
     expect(screen.getByDisplayValue('Soren')).toBeTruthy();
     expect(screen.getByText('uuid-123')).toBeTruthy();
   });
 
   it('calls updateConfig when name changes', () => {
-    render(<SettingsScreen />);
+    render(<ChatbotSettingsScreen />);
     const input = screen.getByDisplayValue('Soren');
     fireEvent.changeText(input, 'New Bot');
     expect(mockUpdateConfig).toHaveBeenCalledWith({ name: 'New Bot' });
   });
 
   it('calls save and navigates back on save press', async () => {
-    render(<SettingsScreen />);
+    render(<ChatbotSettingsScreen />);
     const saveBtn = screen.getByText('Save');
     fireEvent.press(saveBtn);
 
@@ -65,7 +65,7 @@ describe('SettingsScreen', () => {
   });
 
   it('navigates back on cancel', () => {
-    render(<SettingsScreen />);
+    render(<ChatbotSettingsScreen />);
     const cancelBtn = screen.getByText('Cancel');
     fireEvent.press(cancelBtn);
     expect(mockBack).toHaveBeenCalled();

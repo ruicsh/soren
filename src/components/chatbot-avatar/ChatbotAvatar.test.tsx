@@ -14,6 +14,16 @@ describe('ChatbotAvatar', () => {
     expect(screen.getByTestId(/icon-claude/)).toBeOnTheScreen();
   });
 
+  it('renders OpenAI icon for deepseek models', () => {
+    render(<ChatbotAvatar modelId="deepseek-v4" />);
+    expect(screen.getByTestId(/icon-deepseek/)).toBeOnTheScreen();
+  });
+
+  it('renders OpenAI icon for opencode-go provider', () => {
+    render(<ChatbotAvatar providerId="opencode-go" />);
+    expect(screen.getByTestId('icon-opencode-go')).toBeOnTheScreen();
+  });
+
   it('renders Groq icon for groq provider', () => {
     render(<ChatbotAvatar providerId="groq" />);
     expect(screen.getByTestId('icon-groq')).toBeOnTheScreen();

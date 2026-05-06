@@ -83,6 +83,11 @@ function isChatModel(model: LLMModel): boolean {
     'mixtral',
     'gemma',
     'qwen',
+    'deepseek',
+    'glm',
+    'kimi',
+    'mimo',
+    'minimax',
   ];
   const exclude = [
     'embed',

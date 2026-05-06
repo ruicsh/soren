@@ -2,31 +2,49 @@ import { createProvider, PROVIDERS } from './catalog';
 
 describe('catalog', () => {
   describe('PROVIDERS', () => {
-    it('includes groq and anthropic', () => {
-      expect(PROVIDERS).toHaveLength(2);
-      expect(PROVIDERS[0].id).toBe('groq');
-      expect(PROVIDERS[1].id).toBe('anthropic');
+    it('includes required providers', () => {
+      expect(PROVIDERS.map((p) => p.id)).toContain('groq');
+      expect(PROVIDERS.map((p) => p.id)).toContain('anthropic');
+      expect(PROVIDERS.map((p) => p.id)).toContain('opencode-go');
     });
 
     it('groq has correct config', () => {
-      const groq = PROVIDERS[0];
-      expect(groq.baseUrl).toBe('https://api.groq.com/openai/v1');
-      expect(groq.defaultModel).toBe('llama-3.1-8b-instant');
-      expect(groq.modelsUrl).toBe('https://api.groq.com/openai/v1/models');
-      expect(groq.type).toBe('openai-compat');
+      const groq = PROVIDERS.find((p) => p.id === 'groq');
+      expect(groq?.baseUrl).toBe('https://api.groq.com/openai/v1');
+      expect(groq?.defaultModel).toBe('llama-3.1-8b-instant');
+      expect(groq?.modelsUrl).toBe('https://api.groq.com/openai/v1/models');
+      expect(groq?.type).toBe('openai-compat');
+    });
+
+    it('opencode-go has correct config', () => {
+      const go = PROVIDERS.find((p) => p.id === 'opencode-go');
+      expect(go?.baseUrl).toBe('https://opencode.ai/zen/go/v1');
+      expect(go?.defaultModel).toBe('deepseek-v4-flash');
+      expect(go?.modelsUrl).toBe('https://opencode.ai/zen/go/v1/models');
+      expect(go?.type).toBe('openai-compat');
     });
 
     it('anthropic has correct config', () => {
-      const anthropic = PROVIDERS[1];
-      expect(anthropic.defaultModel).toBe('claude-3-5-sonnet-20240620');
-      expect(anthropic.modelsUrl).toBe('https://api.anthropic.com/v1/models');
-      expect(anthropic.type).toBe('anthropic');
+      const anthropic = PROVIDERS.find((p) => p.id === 'anthropic');
+      expect(anthropic?.defaultModel).toBe('claude-3-5-sonnet-20240620');
+      expect(anthropic?.modelsUrl).toBe('https://api.anthropic.com/v1/models');
+      expect(anthropic?.type).toBe('anthropic');
     });
   });
 
   describe('createProvider', () => {
     it('creates groq provider', () => {
       const provider = createProvider('groq', 'llama-3.1-8b-instant', 'key');
+      expect(provider).toBeTruthy();
+      expect(provider?.buildRequest).toBeDefined();
+    });
+
+    it('creates opencode-go provider', () => {
+      const provider = createProvider(
+        'opencode-go',
+        'deepseek-v4-flash',
+        'key',
+      );
       expect(provider).toBeTruthy();
       expect(provider?.buildRequest).toBeDefined();
     });

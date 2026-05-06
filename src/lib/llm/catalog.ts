@@ -22,6 +22,14 @@ export const PROVIDERS: ProviderEntry[] = [
     type: 'openai-compat',
   },
   {
+    baseUrl: 'https://opencode.ai/zen/go/v1',
+    defaultModel: 'deepseek-v4-flash',
+    id: 'opencode-go',
+    label: 'OpenCode Go',
+    modelsUrl: 'https://opencode.ai/zen/go/v1/models',
+    type: 'openai-compat',
+  },
+  {
     defaultModel: 'claude-3-5-sonnet-20240620',
     id: 'anthropic',
     label: 'Anthropic',

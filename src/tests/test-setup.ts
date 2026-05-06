@@ -124,10 +124,17 @@ vi.mock('@lobehub/icons-rn', () => {
 
   return {
     Anthropic: createIconMock('Anthropic'),
+    DeepSeek: createIconMock('DeepSeek'),
     Groq: createIconMock('Groq'),
+    Kimi: createIconMock('Kimi'),
     Meta: createIconMock('Meta'),
+    Minimax: createIconMock('Minimax'),
     Ollama: createIconMock('Ollama'),
     OpenAI: createIconMock('OpenAI'),
+    OpenCode: createIconMock('OpenCode'),
+    Qwen: createIconMock('Qwen'),
+    ZAI: createIconMock('ZAI'),
+    Zhipu: createIconMock('Zhipu'),
   };
 });
 

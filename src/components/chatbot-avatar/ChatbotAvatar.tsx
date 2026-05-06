@@ -1,4 +1,15 @@
-import { Anthropic, Groq, Ollama, OpenAI } from '@lobehub/icons-rn';
+import {
+  Anthropic,
+  DeepSeek,
+  Groq,
+  Kimi,
+  Minimax,
+  Ollama,
+  OpenAI,
+  OpenCode,
+  Qwen,
+  ZAI,
+} from '@lobehub/icons-rn';
 import { Brain as IconBrain } from 'lucide-react-native';
 import React from 'react';
 import { View } from 'react-native';
@@ -9,6 +20,7 @@ export type AvatarProvider =
   | 'meta'
   | 'mistral'
   | 'openai'
+  | 'opencode'
   | string;
 
 interface ChatbotAvatarProps {
@@ -24,25 +36,41 @@ export const ChatbotAvatar = ({
 }: ChatbotAvatarProps) => {
   let icon = null;
 
+  const mid = modelId?.toLowerCase() || '';
+  const iconSize = size * 0.75;
+
   // Try model specific icons first
-  if (modelId?.toLowerCase().includes('llama')) {
-    icon = <Ollama size={size} />;
-  } else if (modelId?.toLowerCase().includes('claude')) {
-    icon = <Anthropic size={size} />;
+  if (mid.includes('llama')) {
+    icon = <Ollama size={iconSize} />;
+  } else if (mid.includes('claude')) {
+    icon = <Anthropic size={iconSize} />;
+  } else if (mid.includes('deepseek')) {
+    icon = <DeepSeek size={iconSize} />;
+  } else if (mid.includes('qwen')) {
+    icon = <Qwen size={iconSize} />;
+  } else if (mid.includes('glm')) {
+    icon = <ZAI size={iconSize} />;
+  } else if (mid.includes('kimi')) {
+    icon = <Kimi size={iconSize} />;
+  } else if (mid.includes('minimax')) {
+    icon = <Minimax size={iconSize} />;
   } else {
     // Fallback to provider icons
     switch (providerId?.toLowerCase()) {
       case 'anthropic':
-        icon = <Anthropic size={size} />;
+        icon = <Anthropic size={iconSize} />;
         break;
       case 'groq':
-        icon = <Groq size={size} />;
+        icon = <Groq size={iconSize} />;
         break;
       case 'ollama':
-        icon = <Ollama size={size} />;
+        icon = <Ollama size={iconSize} />;
         break;
       case 'openai':
-        icon = <OpenAI size={size} />;
+        icon = <OpenAI size={iconSize} />;
+        break;
+      case 'opencode-go':
+        icon = <OpenCode size={iconSize} />;
         break;
     }
   }
@@ -57,6 +85,7 @@ export const ChatbotAvatar = ({
           height: size,
           justifyContent: 'center',
           overflow: 'hidden',
+          padding: size * 0.1,
           width: size,
         }}
         testID="avatar-container"

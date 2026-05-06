@@ -2,8 +2,12 @@ import { render, screen } from '@testing-library/react-native';
 
 import { ChatMessageBubble, type ChatMessageProps } from './ChatMessage';
 
-function makeMessage(role: 'assistant' | 'user', content: string) {
-  return { content, id: '1', role };
+function makeMessage(
+  role: 'assistant' | 'user',
+  content: string,
+  timestamp?: number,
+) {
+  return { content, id: '1', role, timestamp };
 }
 
 const DEFAULT_PROPS: ChatMessageProps = {
@@ -92,5 +96,22 @@ describe('ChatMessageBubble', () => {
     const children = text.props.children;
     expect(children[0]).toBe('My message');
     expect(children[1]).toBeFalsy();
+  });
+
+  it('renders timestamp if provided', () => {
+    // 10:30 AM
+    const timestamp = new Date('2026-05-06T10:30:00').getTime();
+    renderChatMessageBubble({
+      message: makeMessage('user', 'Hello', timestamp),
+    });
+
+    expect(screen.getByTestId('chat-message-time')).toBeTruthy();
+    // Use regex to match 10:30 (regardless of AM/PM or leading zero)
+    expect(screen.getByText(/10:30/)).toBeTruthy();
+  });
+
+  it('does not render timestamp if not provided', () => {
+    renderChatMessageBubble({ message: makeMessage('user', 'Hello') });
+    expect(screen.queryByTestId('chat-message-time')).toBeNull();
   });
 });

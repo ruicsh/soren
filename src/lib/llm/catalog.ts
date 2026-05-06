@@ -9,7 +9,7 @@ export interface ProviderEntry {
   id: string;
   label: string;
   modelsUrl: string;
-  type: 'anthropic' | 'openai-compat' | 'openai';
+  type: 'anthropic' | 'openai' | 'openai-compat';
 }
 
 export const PROVIDERS: ProviderEntry[] = [

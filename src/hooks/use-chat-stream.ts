@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/lib/llm/types';
 
 import { getApiKey } from '@/lib/byok-keys';
+import { loadChatMessagesForDate } from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
@@ -29,6 +30,24 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const { chatbotUuid, providerId, providerModel } = options || {};
 
   const [provider, setProvider] = useState<any>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!chatbotUuid) {
+      setMessages([]);
+
+      return;
+    }
+
+    loadChatMessagesForDate(chatbotUuid).then((history) => {
+      if (!active) return;
+      setMessages(history);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [chatbotUuid]);
 
   useEffect(() => {
     let active = true;
@@ -87,8 +106,18 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
         setMessages((prev) => [
           ...prev,
-          { content: text.trim(), id: generateId(), role: 'user' },
-          { content: errorMsg, id: generateId(), role: 'assistant' },
+          {
+            content: text.trim(),
+            id: generateId(),
+            role: 'user',
+            timestamp: Date.now(),
+          },
+          {
+            content: errorMsg,
+            id: generateId(),
+            role: 'assistant',
+            timestamp: Date.now(),
+          },
         ]);
 
         return;
@@ -97,16 +126,19 @@ export function useChatStream(options?: UseChatStreamOptions) {
       abortRef.current = false;
       pendingRef.current = '';
 
+      const now = Date.now();
       const userMessage: ChatMessage = {
         content: text.trim(),
         id: generateId(),
         role: 'user',
+        timestamp: now,
       };
 
       const assistantMessage: ChatMessage = {
         content: '',
         id: generateId(),
         role: 'assistant',
+        timestamp: now,
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);

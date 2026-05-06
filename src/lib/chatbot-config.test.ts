@@ -2,6 +2,7 @@ import { Directory, File } from 'expo-file-system';
 import { vi } from 'vitest';
 
 import {
+  loadChatMessagesForDate,
   loadOrCreateDefaultChatbotConfig,
   saveChatbotConfig,
 } from './chatbot-config';
@@ -82,5 +83,33 @@ describe('chatbot-config', () => {
     expect(File.prototype.write).toHaveBeenCalledWith(
       JSON.stringify(config, null, 2),
     );
+  });
+
+  describe('loadChatMessagesForDate', () => {
+    it('returns empty array if file does not exist', async () => {
+      vi.spyOn(File.prototype, 'exists', 'get').mockReturnValue(false);
+      const messages = await loadChatMessagesForDate('u1');
+      expect(messages).toEqual([]);
+    });
+
+    it('parses multiline messages that were broken across lines (legacy support)', async () => {
+      const mockMarkdown = `## 22:45:33
+- [22:45:33] User: Who is king?
+- [22:45:33] Assistant: HTTP 429: {
+    "error": {
+        "message": "quota"
+    }
+}
+`;
+      vi.spyOn(File.prototype, 'exists', 'get').mockReturnValue(true);
+      vi.spyOn(File.prototype, 'text').mockResolvedValue(mockMarkdown);
+
+      const messages = await loadChatMessagesForDate('u1');
+
+      expect(messages).toHaveLength(2);
+      expect(messages[1].content).toContain('HTTP 429: {');
+      expect(messages[1].content).toContain('"error": {');
+      expect(messages[1].content).toContain('"message": "quota"');
+    });
   });
 });

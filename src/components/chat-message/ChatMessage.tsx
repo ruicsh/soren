@@ -19,6 +19,13 @@ export const ChatMessageBubble = memo(function ChatMessageBubble(
   const isUser = message.role === 'user';
   const showTyping = isStreaming && !isUser && message.content.length === 0;
 
+  const timeStr = message.timestamp
+    ? new Date(message.timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+
   return (
     <View
       style={isUser ? styles.rowUser : styles.rowAssistant}
@@ -31,13 +38,23 @@ export const ChatMessageBubble = memo(function ChatMessageBubble(
         {showTyping ? (
           <TypingDots />
         ) : (
-          <Text
-            style={isUser ? styles.textUser : styles.textAssistant}
-            testID="chat-message-text"
-          >
-            {message.content}
-            {isStreaming && !isUser && <Text style={styles.cursor}>▌</Text>}
-          </Text>
+          <>
+            <Text
+              style={isUser ? styles.textUser : styles.textAssistant}
+              testID="chat-message-text"
+            >
+              {message.content}
+              {isStreaming && !isUser && <Text style={styles.cursor}>▌</Text>}
+            </Text>
+            {timeStr && (
+              <Text
+                style={isUser ? styles.timeUser : styles.timeAssistant}
+                testID="chat-message-time"
+              >
+                {timeStr}
+              </Text>
+            )}
+          </>
         )}
       </View>
     </View>
@@ -50,16 +67,18 @@ const styles = StyleSheet.create({
     borderRadius: radius['2xl'],
     justifyContent: 'center',
     maxWidth: '85%',
+    paddingBottom: spacing[2],
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
+    paddingTop: spacing[3],
   },
   bubbleUser: {
     backgroundColor: colors.accent,
     borderRadius: radius['2xl'],
     justifyContent: 'center',
     maxWidth: '85%',
+    paddingBottom: spacing[2],
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
+    paddingTop: spacing[3],
   },
   cursor: {
     color: colors.text2,
@@ -81,5 +100,17 @@ const styles = StyleSheet.create({
   textUser: {
     color: '#ffffff',
     fontSize: typography.base,
+  },
+  timeAssistant: {
+    alignSelf: 'flex-end',
+    color: colors.text2,
+    fontSize: 10,
+    marginTop: spacing[1],
+  },
+  timeUser: {
+    alignSelf: 'flex-end',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 10,
+    marginTop: spacing[1],
   },
 });

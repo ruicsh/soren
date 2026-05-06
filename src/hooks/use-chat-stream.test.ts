@@ -312,9 +312,14 @@ describe('useChatStream', () => {
     vi.mocked(getApiKey).mockResolvedValue(null);
     const { result } = renderUseChatStream();
 
+    // Wait for provider/history effect
+    await waitFor(() => expect(getApiKey).toHaveBeenCalled());
+
     await act(async () => {
       await result.current.sendMessage('Hi');
     });
+
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
 
     const assistant =
       result.current.messages[result.current.messages.length - 1];

@@ -2,6 +2,7 @@ export interface ChatMessage {
   content: string;
   id: string;
   role: 'assistant' | 'system' | 'user';
+  timestamp?: number;
 }
 
 export interface LLMProvider {

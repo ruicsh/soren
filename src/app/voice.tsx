@@ -29,6 +29,7 @@ export default function VoiceScreen() {
   }, [activate, deactivate]);
 
   const chatbotName = config?.name ?? 'Soren';
+  const modelName = config?.llmModel ?? '';
 
   const statusText =
     state === 'connecting'
@@ -64,6 +65,7 @@ export default function VoiceScreen() {
           />
         </View>
         <Text style={styles.name}>{chatbotName}</Text>
+        {modelName ? <Text style={styles.modelName}>{modelName}</Text> : null}
         <Text style={[styles.status, error ? styles.statusError : null]}>
           {statusText}
         </Text>
@@ -144,6 +146,11 @@ const styles = StyleSheet.create({
     fontSize: typography['3xl'],
     fontWeight: '700',
     marginTop: spacing[6],
+  },
+  modelName: {
+    color: colors.text3,
+    fontSize: typography.sm,
+    marginTop: spacing[1],
   },
   status: {
     color: colors.text2,

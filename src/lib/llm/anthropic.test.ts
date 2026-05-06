@@ -9,6 +9,7 @@ describe('anthropicProvider', () => {
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
       const messages = [{ content: 'Hello', role: 'user' as const }];
+
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.anthropic.com/v1/messages');
@@ -28,18 +29,20 @@ describe('anthropicProvider', () => {
         { content: 'You are helpful.', role: 'system' as const },
         { content: 'Hi', role: 'user' as const },
       ];
-      const req = provider.buildRequest(messages);
-      const body = JSON.parse(req.body);
 
+      const req = provider.buildRequest(messages);
+
+      const body = JSON.parse(req.body);
       expect(body.system).toBe('You are helpful.');
       expect(body.messages).toEqual([{ content: 'Hi', role: 'user' }]);
     });
 
     it('omits system param when no system message', () => {
       const messages = [{ content: 'Hi', role: 'user' as const }];
-      const req = provider.buildRequest(messages);
-      const body = JSON.parse(req.body);
 
+      const req = provider.buildRequest(messages);
+
+      const body = JSON.parse(req.body);
       expect(body).not.toHaveProperty('system');
       expect(body.messages).toEqual(messages);
     });
@@ -50,11 +53,12 @@ describe('anthropicProvider', () => {
         maxTokens: 1024,
         model: 'claude-sonnet-4-20250514',
       });
+
       const req = customProvider.buildRequest([
         { content: 'Hi', role: 'user' as const },
       ]);
-      const body = JSON.parse(req.body);
 
+      const body = JSON.parse(req.body);
       expect(body.max_tokens).toBe(1024);
     });
 
@@ -62,8 +66,8 @@ describe('anthropicProvider', () => {
       const req = provider.buildRequest([
         { content: 'Hi', role: 'user' as const },
       ]);
-      const body = JSON.parse(req.body);
 
+      const body = JSON.parse(req.body);
       expect(body.max_tokens).toBe(4096);
     });
   });
@@ -78,6 +82,7 @@ describe('anthropicProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['Hello', ' world']);
     });
 
@@ -90,6 +95,7 @@ describe('anthropicProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['Hi']);
     });
 
@@ -102,6 +108,7 @@ describe('anthropicProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['ok']);
     });
 
@@ -114,6 +121,7 @@ describe('anthropicProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['good']);
     });
 
@@ -126,13 +134,16 @@ describe('anthropicProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['yes']);
     });
 
     it('returns empty array for no content', () => {
       const lines = ['event: message_start', 'data: {"type":"message_start"}'];
 
-      expect(provider.parseChunk(lines)).toEqual([]);
+      const deltas = provider.parseChunk(lines);
+
+      expect(deltas).toEqual([]);
     });
 
     it('resets event type across chunks', () => {
@@ -147,6 +158,7 @@ describe('anthropicProvider', () => {
 
       // message_start and message_stop events should not yield deltas
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['first']);
     });
   });

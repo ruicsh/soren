@@ -42,6 +42,7 @@ Full verify order:
 - Run one file: `npx vitest run src/path/to/file.test.ts`
 - Keep alias mapping in sync between `tsconfig.json` and `vitest.config.mts` (`@/*`, `@/assets/*`)
 - Use `renderComponentName({ overrides })` helper pattern with `DEFAULT_PROPS` in tests (import component props type directly)
+- Organize tests using Arrange/Act/Assert (AAA) structure with empty lines between sections, but omit the `// Arrange/Act/Assert` comments.
 
 ## Conventions That Break Easily
 

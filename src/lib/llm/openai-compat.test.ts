@@ -10,6 +10,7 @@ describe('openaiCompatProvider', () => {
   describe('buildRequest', () => {
     it('returns correct URL, headers, and body', () => {
       const messages = [{ content: 'Hello', role: 'user' as const }];
+
       const req = provider.buildRequest(messages);
 
       expect(req.url).toBe('https://api.example.com/v1/chat/completions');
@@ -29,22 +30,21 @@ describe('openaiCompatProvider', () => {
         extraBody: { thinking: { type: 'disabled' } },
         model: 'deepseek-v4-flash',
       });
+      const messages = [{ content: 'hi', role: 'user' as const }];
 
-      const req = providerWithExtra.buildRequest([
-        { content: 'hi', role: 'user' as const },
-      ]);
+      const req = providerWithExtra.buildRequest(messages);
+
       const body = JSON.parse(req.body);
-
       expect(body.thinking).toEqual({ type: 'disabled' });
       expect(body.model).toBe('deepseek-v4-flash');
     });
 
     it('does not include extraBody when not provided', () => {
-      const req = provider.buildRequest([
-        { content: 'hi', role: 'user' as const },
-      ]);
-      const body = JSON.parse(req.body);
+      const messages = [{ content: 'hi', role: 'user' as const }];
 
+      const req = provider.buildRequest(messages);
+
+      const body = JSON.parse(req.body);
       expect(body).not.toHaveProperty('thinking');
     });
   });
@@ -57,6 +57,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['Hi', ' there']);
     });
 
@@ -68,6 +69,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['Ok']);
     });
 
@@ -80,6 +82,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['yes']);
     });
 
@@ -90,6 +93,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['good']);
     });
 
@@ -100,6 +104,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['end']);
     });
 
@@ -110,6 +115,7 @@ describe('openaiCompatProvider', () => {
       ];
 
       const deltas = provider.parseChunk(lines);
+
       expect(deltas).toEqual(['answer']);
     });
 
@@ -119,7 +125,9 @@ describe('openaiCompatProvider', () => {
         'data: [DONE]',
       ];
 
-      expect(provider.parseChunk(lines)).toEqual([]);
+      const result = provider.parseChunk(lines);
+
+      expect(result).toEqual([]);
     });
   });
 

@@ -1,23 +1,34 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { MicButton } from './MicButton';
+import { MicButton, type MicButtonProps } from './MicButton';
+
+const DEFAULT_PROPS: MicButtonProps = {
+  isRecording: false,
+  onPress: vi.fn(),
+};
+
+function renderMicButton(overrides: Partial<MicButtonProps> = {}) {
+  const props = { ...DEFAULT_PROPS, ...overrides };
+
+  return render(<MicButton {...props} />);
+}
 
 describe('MicButton', () => {
   it('renders mic icon when idle', () => {
-    render(<MicButton isRecording={false} onPress={vi.fn()} />);
+    renderMicButton({ isRecording: false });
     expect(screen.getByTestId('mic-button')).toBeTruthy();
   });
 
   it('calls onPress when tapped', () => {
     const onPressSpy = vi.fn();
-    render(<MicButton isRecording={false} onPress={onPressSpy} />);
+    renderMicButton({ onPress: onPressSpy });
 
     fireEvent.press(screen.getByTestId('mic-button'));
     expect(onPressSpy).toHaveBeenCalledTimes(1);
   });
 
   it('renders when recording', () => {
-    render(<MicButton isRecording={true} onPress={vi.fn()} />);
+    renderMicButton({ isRecording: true });
     expect(screen.getByTestId('mic-button')).toBeTruthy();
   });
 });

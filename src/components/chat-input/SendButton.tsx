@@ -5,7 +5,7 @@ import { colors } from '@/theme';
 
 import { BTN_SIZE } from './const';
 
-interface SendButtonProps {
+export interface SendButtonProps {
   onPress: () => void;
 }
 

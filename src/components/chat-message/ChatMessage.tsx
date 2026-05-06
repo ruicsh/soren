@@ -6,7 +6,7 @@ import type { ChatMessage } from '@/lib/llm/types';
 import { TypingDots } from '@/components/typing-dots/TypingDots';
 import { colors, radius, spacing, typography } from '@/theme';
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   isStreaming?: boolean;
   message: ChatMessage;
 }

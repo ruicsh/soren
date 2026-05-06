@@ -8,17 +8,27 @@ import {
 
 import { emitSpeechEvent } from '@/tests/test-setup';
 
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatInputProps } from './ChatInput';
+
+const DEFAULT_PROPS: ChatInputProps = {
+  onSend: vi.fn(),
+};
+
+function renderChatInput(overrides: Partial<ChatInputProps> = {}) {
+  const props = { ...DEFAULT_PROPS, ...overrides };
+
+  return render(<ChatInput {...props} />);
+}
 
 describe('ChatInput', () => {
   it('renders placeholder text', () => {
-    render(<ChatInput onSend={vi.fn()} />);
+    renderChatInput();
     expect(screen.getByPlaceholderText('Message…')).toBeTruthy();
   });
 
   it('calls onSend with trimmed text when send is pressed', () => {
     const onSendSpy = vi.fn();
-    render(<ChatInput onSend={onSendSpy} />);
+    renderChatInput({ onSend: onSendSpy });
 
     const input = screen.getByPlaceholderText('Message…');
     fireEvent.changeText(input, '  Hello world  ');
@@ -32,7 +42,7 @@ describe('ChatInput', () => {
 
   it('clears text after send', () => {
     const onSendSpy = vi.fn();
-    render(<ChatInput onSend={onSendSpy} />);
+    renderChatInput({ onSend: onSendSpy });
 
     const input = screen.getByPlaceholderText('Message…');
     fireEvent.changeText(input, 'Test');
@@ -46,8 +56,7 @@ describe('ChatInput', () => {
   });
 
   it('hides send button for whitespace-only text', () => {
-    const onSendSpy = vi.fn();
-    render(<ChatInput onSend={onSendSpy} />);
+    renderChatInput();
 
     const input = screen.getByPlaceholderText('Message…');
     fireEvent.changeText(input, '   ');
@@ -58,13 +67,13 @@ describe('ChatInput', () => {
   });
 
   it('shows mic button when input is empty', () => {
-    render(<ChatInput onSend={vi.fn()} />);
+    renderChatInput();
     expect(screen.getByTestId('mic-button')).toBeTruthy();
   });
 
   it('auto-sends transcript when dictation stops', async () => {
     const onSendSpy = vi.fn();
-    render(<ChatInput onSend={onSendSpy} />);
+    renderChatInput({ onSend: onSendSpy });
 
     const micButton = screen.getByTestId('mic-button');
     fireEvent.press(micButton);
@@ -92,9 +101,7 @@ describe('ChatInput', () => {
 
   it('does not send duplicate transcript on re-render', async () => {
     const onSendSpy = vi.fn();
-    const { rerender } = render(
-      <ChatInput onSend={onSendSpy} placeholder="Message…" />,
-    );
+    const { rerender } = renderChatInput({ onSend: onSendSpy });
 
     const micButton = screen.getByTestId('mic-button');
     fireEvent.press(micButton);
@@ -117,7 +124,7 @@ describe('ChatInput', () => {
     await waitFor(() => expect(onSendSpy).toHaveBeenCalledTimes(1));
 
     // Force a re-render while transcript is still "Once"
-    rerender(<ChatInput onSend={onSendSpy} placeholder="Message…" />);
+    rerender(<ChatInput {...DEFAULT_PROPS} onSend={onSendSpy} />);
 
     // onSend should still have been called only once
     expect(onSendSpy).toHaveBeenCalledTimes(1);

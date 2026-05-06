@@ -41,6 +41,7 @@ Full verify order:
 - Shared test setup: `src/tests/test-setup.ts` (mocks expo-router, reanimated, expo modules, speech modules, XHR)
 - Run one file: `npx vitest run src/path/to/file.test.ts`
 - Keep alias mapping in sync between `tsconfig.json` and `vitest.config.mts` (`@/*`, `@/assets/*`)
+- Use `renderComponentName({ overrides })` helper pattern with `DEFAULT_PROPS` in tests (import component props type directly)
 
 ## Conventions That Break Easily
 

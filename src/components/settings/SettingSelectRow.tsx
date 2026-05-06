@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { colors, spacing, typography } from '@/theme';
 
-interface SettingSelectRowProps {
+export interface SettingSelectRowProps {
   disabled?: boolean;
   label: string;
   onPress: () => void;

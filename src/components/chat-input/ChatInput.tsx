@@ -14,7 +14,7 @@ import { BTN_SIZE } from './const';
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
 
-interface ChatInputProps {
+export interface ChatInputProps {
   onSend: (text: string) => void;
   placeholder?: string;
 }

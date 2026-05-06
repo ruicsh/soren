@@ -35,6 +35,8 @@ interface ChatbotConfigContextType {
   save: () => Promise<void>;
   updateApiKeyDraft: (key: string) => void;
   updateConfig: (updates: Partial<ChatbotConfig>) => void;
+  updateLastConversation: (snippet: string) => void;
+  updateLastConversationAt: () => void;
 }
 
 const ChatbotConfigContext = createContext<ChatbotConfigContextType | null>(
@@ -125,6 +127,38 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
     [fetchModelsForProvider],
   );
 
+  const updateLastConversationAt = useCallback(() => {
+    if (!config) return;
+    const now = Date.now();
+    updateConfig({ lastConversationAt: now });
+    saveChatbotConfig({ ...config, lastConversationAt: now });
+  }, [config, updateConfig]);
+
+  const updateLastConversation = useCallback(
+    (snippet: string) => {
+      if (!config) return;
+      const now = Date.now();
+      const firstSentence =
+        snippet.split(/[.!?]/).find((s) => s.trim().length > 0)?.trim() ||
+        snippet.trim();
+      const finalSnippet =
+        firstSentence.length > 60
+          ? firstSentence.slice(0, 57) + '...'
+          : firstSentence;
+
+      updateConfig({
+        lastConversationAt: now,
+        lastConversationSnippet: finalSnippet,
+      });
+      saveChatbotConfig({
+        ...config,
+        lastConversationAt: now,
+        lastConversationSnippet: finalSnippet,
+      });
+    },
+    [config, updateConfig],
+  );
+
   const save = useCallback(async () => {
     if (!config) return;
     setIsSaving(true);
@@ -197,6 +231,8 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
         save,
         updateApiKeyDraft: setApiKeyDraft,
         updateConfig,
+        updateLastConversation,
+        updateLastConversationAt,
       }}
     >
       {children}

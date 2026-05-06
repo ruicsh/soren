@@ -113,6 +113,48 @@ vi.mock('lucide-react-native', () => {
   };
 });
 
+// @lobehub/icons-rn — mock AI logos
+vi.mock('@lobehub/icons-rn', () => {
+  const createIconMock = (name: string) => {
+    const IconMock = () => null;
+    IconMock.displayName = `Icon(${name})`;
+
+    return IconMock;
+  };
+
+  return {
+    Anthropic: createIconMock('Anthropic'),
+    Groq: createIconMock('Groq'),
+    Meta: createIconMock('Meta'),
+    Ollama: createIconMock('Ollama'),
+    OpenAI: createIconMock('OpenAI'),
+  };
+});
+
+// expo-linear-gradient — mock for @lobehub/icons-rn
+vi.mock('expo-linear-gradient', () => ({
+  LinearGradient: ({ children }: { children?: React.ReactNode }) =>
+    children || null,
+}));
+
+// react-native-svg — mock for @lobehub/icons-rn
+vi.mock('react-native-svg', () => {
+  const SvgMock = ({ children }: { children?: React.ReactNode }) =>
+    children || null;
+
+  return {
+    Circle: SvgMock,
+    Defs: SvgMock,
+    G: SvgMock,
+    LinearGradient: SvgMock,
+    Path: SvgMock,
+    Rect: SvgMock,
+    Stop: SvgMock,
+    Svg: SvgMock,
+    default: SvgMock,
+  };
+});
+
 // expo-localization — mock for device locale
 vi.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'en', regionCode: 'US' }],

@@ -14,18 +14,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChatInput } from '@/components/chat-input/ChatInput';
 import { ChatMessageBubble } from '@/components/chat-message/ChatMessage';
+import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
-import { colors, spacing, typography } from '@/theme';
+import { colors, radius, spacing, typography } from '@/theme';
 
 export default function Home() {
   const { push } = useRouter();
-  const { config } = useChatbotConfig();
+  const { config, updateLastConversation } = useChatbotConfig();
   const { isStreaming, messages, sendMessage } = useChatStream({
     chatbotUuid: config?.uuid,
+    onStreamingChunk: (chunk) => {
+      // Logic for capturing snippet usually happens on first chunk or completion
+      // But updateLastConversation handles splitting and updating
+    },
     providerId: config?.llmProvider,
     providerModel: config?.llmModel,
   });
+
+  const lastUpdateRef = useRef(false);
+  useEffect(() => {
+    if (!isStreaming && lastUpdateRef.current) {
+      const assistantMsgs = messages.filter((m) => m.role === 'assistant');
+      const lastAssistantMsg = assistantMsgs[assistantMsgs.length - 1];
+      if (lastAssistantMsg?.content) {
+        updateLastConversation(lastAssistantMsg.content);
+      }
+      lastUpdateRef.current = false;
+    } else if (isStreaming) {
+      lastUpdateRef.current = true;
+    }
+  }, [isStreaming, messages, updateLastConversation]);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when messages change
@@ -38,6 +57,10 @@ export default function Home() {
   const hasMessages = messages.length > 0;
   const lastMessageId = messages[messages.length - 1]?.id;
 
+  const lastConversationText = config?.lastConversationAt
+    ? `Last active: ${new Date(config.lastConversationAt).toLocaleString()}${config.lastConversationSnippet ? ` - ${config.lastConversationSnippet}` : ''}`
+    : '';
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -47,8 +70,23 @@ export default function Home() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => push('/chatbot-settings')}>
-            <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
+          <TouchableOpacity
+            onPress={() => push('/chatbot-settings')}
+            style={styles.headerLeft}
+          >
+            <View style={styles.avatarContainer}>
+              <ChatbotAvatar
+                modelId={config?.llmModel}
+                providerId={config?.llmProvider}
+                size={32}
+              />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
+              {lastConversationText ? (
+                <Text style={styles.headerSubtitle}>{lastConversationText}</Text>
+              ) : null}
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => push('/voice')}
@@ -115,10 +153,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingTop: spacing[4],
   },
+  headerLeft: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.full,
+    height: 40,
+    justifyContent: 'center',
+    marginRight: spacing[3],
+    width: 40,
+  },
   headerTitle: {
     color: colors.text,
     fontSize: typography.lg,
     fontWeight: '600',
+  },
+  headerSubtitle: {
+    color: colors.text2,
+    fontSize: 10,
+    marginTop: 2,
   },
   inputWrap: {
     paddingBottom: spacing[4],

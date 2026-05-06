@@ -8,6 +8,8 @@ export interface ChatbotConfig {
   providerKeyStatus?: Record<string, boolean>;
   uuid: string;
   voiceId: null | string;
+  lastConversationAt?: number;
+  lastConversationSnippet?: string;
 }
 
 const DEFAULT_NAME = 'Soren';
@@ -46,6 +48,8 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
           name: parsed.name ?? DEFAULT_NAME,
           uuid: parsed.uuid ?? Crypto.randomUUID(),
           voiceId: parsed.voiceId ?? null,
+          lastConversationAt: parsed.lastConversationAt,
+          lastConversationSnippet: parsed.lastConversationSnippet,
         };
       } catch (err) {
         console.warn('Failed to load bot config, recreating:', err);

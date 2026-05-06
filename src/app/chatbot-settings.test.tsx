@@ -51,6 +51,8 @@ describe('ChatbotSettingsScreen', () => {
       save: mockSave,
       updateApiKeyDraft: vi.fn(),
       updateConfig: mockUpdateConfig,
+      updateLastConversation: vi.fn(),
+      updateLastConversationAt: vi.fn(),
     });
   });
 
@@ -105,6 +107,8 @@ describe('ChatbotSettingsScreen', () => {
       save: mockSave,
       updateApiKeyDraft: vi.fn(),
       updateConfig: mockUpdateConfig,
+      updateLastConversation: vi.fn(),
+      updateLastConversationAt: vi.fn(),
     });
 
     render(<ChatbotSettingsScreen />);

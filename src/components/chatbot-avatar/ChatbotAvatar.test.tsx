@@ -1,0 +1,39 @@
+import { render, screen } from '@testing-library/react-native';
+import React from 'react';
+
+import { ChatbotAvatar } from './ChatbotAvatar';
+
+describe('ChatbotAvatar', () => {
+  it('renders Ollama icon for llama models', () => {
+    render(<ChatbotAvatar modelId="llama-3.1" />);
+    expect(screen.getByTestId(/icon-llama/)).toBeOnTheScreen();
+  });
+
+  it('renders Anthropic icon for claude models', () => {
+    render(<ChatbotAvatar modelId="claude-3-opus" />);
+    expect(screen.getByTestId(/icon-claude/)).toBeOnTheScreen();
+  });
+
+  it('renders Groq icon for groq provider', () => {
+    render(<ChatbotAvatar providerId="groq" />);
+    expect(screen.getByTestId('icon-groq')).toBeOnTheScreen();
+  });
+
+  it('renders OpenAI icon for openai provider', () => {
+    render(<ChatbotAvatar providerId="openai" />);
+    expect(screen.getByTestId('icon-openai')).toBeOnTheScreen();
+  });
+
+  it('renders Brain icon as fallback', () => {
+    render(<ChatbotAvatar modelId="unknown" providerId="unknown" />);
+    expect(screen.getByTestId('icon-fallback')).toBeOnTheScreen();
+  });
+
+  it('wraps icons in a white background View', () => {
+    render(<ChatbotAvatar modelId="llama-3.1" />);
+    const container = screen.getByTestId('avatar-container');
+    expect(container.props.style).toMatchObject({
+      backgroundColor: '#ffffff',
+    });
+  });
+});

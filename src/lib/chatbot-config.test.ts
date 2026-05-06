@@ -47,6 +47,23 @@ describe('chatbot-config', () => {
     expect(config.llmModel).toBe('llama-3.1-8b-instant');
   });
 
+  it('persists lastConversationAt', async () => {
+    const config = {
+      llmModel: 'm1',
+      llmProvider: 'p1',
+      name: 'Bot',
+      uuid: 'u1',
+      voiceId: null,
+      lastConversationAt: 123456789,
+    };
+
+    await saveChatbotConfig(config);
+
+    expect(File.prototype.write).toHaveBeenCalledWith(
+      JSON.stringify(config, null, 2),
+    );
+  });
+
   it('saves config to correct path', async () => {
     const config = {
       llmModel: 'llama-3.1-70b-versatile',

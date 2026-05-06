@@ -22,7 +22,7 @@ describe('Home', () => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
     vi.mocked(useChatbotConfig).mockReturnValue({
-      config: { name: 'Soren' },
+      config: { lastConversationAt: 1714992000000, name: 'Soren' },
       isLoading: false,
     } as any);
     vi.mocked(useChatStream).mockReturnValue({
@@ -35,6 +35,26 @@ describe('Home', () => {
   it('renders chatbot name from config', () => {
     render(<Home />);
     expect(screen.getByText('Soren')).toBeTruthy();
+  });
+
+  it('renders last active timestamp if available', () => {
+    render(<Home />);
+    // 1714992000000 = May 6, 2024 (depending on locale, but checking prefix)
+    expect(screen.getByText(/Last active:/)).toBeTruthy();
+  });
+
+  it('renders last conversation snippet if available', () => {
+    vi.mocked(useChatbotConfig).mockReturnValue({
+      config: { 
+        lastConversationAt: 1714992000000, 
+        lastConversationSnippet: 'Hello there',
+        name: 'Soren' 
+      },
+      isLoading: false,
+    } as any);
+    
+    render(<Home />);
+    expect(screen.getByText(/Hello there/)).toBeTruthy();
   });
 
   it('navigates to chatbot settings when name is pressed', () => {

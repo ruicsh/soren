@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { SettingSelectRow } from '@/components/settings/SettingSelectRow';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { colors, radius, spacing, typography } from '@/theme';
@@ -98,6 +99,17 @@ export default function ChatbotSettingsScreen() {
 
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.section}>
+              <View style={styles.avatarSection}>
+                <View style={styles.avatarContainer}>
+                  <ChatbotAvatar
+                    modelId={config.llmModel}
+                    providerId={config.llmProvider}
+                    size={48}
+                  />
+                </View>
+                <Text style={styles.avatarName}>{config.name}</Text>
+              </View>
+
               <Text style={styles.sectionTitle}>Identification</Text>
               <View style={styles.card}>
                 <View style={styles.row}>
@@ -225,6 +237,25 @@ export default function ChatbotSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  avatarContainer: {
+    alignItems: 'center',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.full,
+    height: 64,
+    justifyContent: 'center',
+    marginBottom: spacing[2],
+    width: 64,
+  },
+  avatarName: {
+    color: colors.text,
+    fontSize: typography.xl,
+    fontWeight: '700',
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: spacing[6],
+    marginTop: spacing[2],
+  },
   card: {
     backgroundColor: colors.bg2,
     borderRadius: radius.lg,

@@ -1,4 +1,3 @@
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -13,11 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SettingSelectRow } from '@/components/settings/SettingSelectRow';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function ChatbotSettingsScreen() {
-  const { back } = useRouter();
+  const { back, push } = useRouter();
   const {
     availableModels,
     availableProviders,
@@ -38,6 +38,20 @@ export default function ChatbotSettingsScreen() {
     back();
   };
 
+  const providerLabel =
+    availableProviders.find((p) => p.id === config?.llmProvider)?.label ??
+    config?.llmProvider;
+
+  const modelLabel =
+    availableModels.find((m) => m.id === config?.llmModel)?.name ??
+    config?.llmModel;
+
+  const voiceLabel =
+    config?.voiceId === null
+      ? 'Auto (Default)'
+      : (availableVoices.find((v) => v.identifier === config?.voiceId)?.name ??
+        config?.voiceId);
+
   if (isLoading || !config) {
     return (
       <View style={styles.loading}>
@@ -47,7 +61,7 @@ export default function ChatbotSettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -82,67 +96,29 @@ export default function ChatbotSettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Intelligence</Text>
             <View style={styles.card}>
-              <View style={styles.column}>
-                <Text style={styles.label}>Provider</Text>
-                <View style={styles.pickerWrap}>
-                  <Picker
-                    onValueChange={(llmProvider) => updateConfig({ llmProvider })}
-                    selectedValue={config.llmProvider}
-                    style={styles.picker}
-                  >
-                    {availableProviders.map((p) => (
-                      <Picker.Item key={p.id} label={p.label} value={p.id} />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
-
+              <SettingSelectRow
+                label="Provider"
+                onPress={() => push('/settings-selection/provider')}
+                value={providerLabel ?? null}
+              />
               <View style={styles.separator} />
-
-              <View style={styles.column}>
-                <View style={styles.rowInline}>
-                  <Text style={styles.label}>Model</Text>
-                  {modelsLoading && (
-                    <ActivityIndicator
-                      color={colors.text3}
-                      size="small"
-                      style={styles.loader}
-                    />
-                  )}
-                </View>
-
-                {modelsError ? (
-                  <TouchableOpacity
-                    onPress={refreshModels}
-                    style={styles.errorRetry}
-                  >
-                    <Text style={styles.errorTextSmall}>
-                      {modelsError}. Tap to retry.
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.pickerWrap}>
-                    <Picker
-                      enabled={!modelsLoading}
-                      onValueChange={(llmModel) => updateConfig({ llmModel })}
-                      selectedValue={config.llmModel}
-                      style={styles.picker}
-                    >
-                      {availableModels.length > 0 ? (
-                        availableModels.map((m) => (
-                          <Picker.Item key={m.id} label={m.name} value={m.id} />
-                        ))
-                      ) : (
-                        <Picker.Item
-                          label={config.llmModel}
-                          value={config.llmModel}
-                        />
-                      )}
-                    </Picker>
-                  </View>
-                )}
-              </View>
+              <SettingSelectRow
+                disabled={modelsLoading}
+                label="Model"
+                onPress={() => push('/settings-selection/model')}
+                value={modelLabel ?? null}
+              />
             </View>
+            {modelsError && (
+              <TouchableOpacity
+                onPress={refreshModels}
+                style={styles.errorRetry}
+              >
+                <Text style={styles.errorTextSmall}>
+                  {modelsError}. Tap to retry.
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.section}>
@@ -159,25 +135,11 @@ export default function ChatbotSettingsScreen() {
                 />
               </View>
               <View style={styles.separator} />
-              <View style={styles.column}>
-                <Text style={styles.label}>Voice</Text>
-                <View style={styles.pickerWrap}>
-                  <Picker
-                    onValueChange={(voiceId) => updateConfig({ voiceId })}
-                    selectedValue={config.voiceId}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Auto (Default)" value={null} />
-                    {availableVoices.map((v) => (
-                      <Picker.Item
-                        key={v.identifier}
-                        label={`${v.name} (${v.language})`}
-                        value={v.identifier}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
+              <SettingSelectRow
+                label="Voice"
+                onPress={() => push('/settings-selection/voice')}
+                value={voiceLabel ?? null}
+              />
             </View>
           </View>
 
@@ -250,10 +212,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   label: {
-    color: colors.text2,
-    fontSize: typography.sm,
-    fontWeight: '500',
-    marginBottom: spacing[1],
+    color: colors.text,
+    fontSize: typography.base,
   },
   loader: {
     marginLeft: spacing[2],

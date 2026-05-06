@@ -281,4 +281,3 @@ describe('useChatStream', () => {
     expect(assistant.content).toBe('LLM Provider not configured.');
   });
 });
-

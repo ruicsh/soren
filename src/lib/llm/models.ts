@@ -1,4 +1,4 @@
-import { PROVIDERS } from './catalog';
+import { getApiKey, PROVIDERS } from './catalog';
 
 export interface LLMModel {
   id: string;
@@ -7,13 +7,17 @@ export interface LLMModel {
 
 const modelCache: Record<string, LLMModel[]> = {};
 
+export function clearModelCache() {
+  for (const key in modelCache) delete modelCache[key];
+}
+
 export async function fetchModels(providerId: string): Promise<LLMModel[]> {
   const entry = PROVIDERS.find((p) => p.id === providerId);
   if (!entry) return [];
 
   if (modelCache[providerId]) return modelCache[providerId];
 
-  const apiKey = process.env[entry.apiKeyEnv];
+  const apiKey = getApiKey(entry);
   if (!apiKey) {
     throw new Error(`Missing API Key: ${entry.apiKeyEnv}`);
   }
@@ -58,7 +62,9 @@ export async function fetchModels(providerId: string): Promise<LLMModel[]> {
     modelCache[providerId] = models;
   }
 
-  return models.length > 0 ? models : rawModels.map((m: any) => ({ id: m.id, name: m.id }));
+  return models.length > 0
+    ? models
+    : rawModels.map((m: any) => ({ id: m.id, name: m.id }));
 }
 
 function isChatModel(model: LLMModel): boolean {
@@ -93,8 +99,4 @@ function isChatModel(model: LLMModel): boolean {
   const hasExclude = exclude.some((term) => id.includes(term));
 
   return hasInclude && !hasExclude;
-}
-
-export function clearModelCache() {
-  for (const key in modelCache) delete modelCache[key];
 }

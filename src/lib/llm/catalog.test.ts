@@ -48,7 +48,10 @@ describe('catalog', () => {
     });
 
     it('creates anthropic provider', () => {
-      const provider = createProvider('anthropic', 'claude-3-5-sonnet-20240620');
+      const provider = createProvider(
+        'anthropic',
+        'claude-3-5-sonnet-20240620',
+      );
       expect(provider).toBeTruthy();
       expect(provider?.buildRequest).toBeDefined();
     });

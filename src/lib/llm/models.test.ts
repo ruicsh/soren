@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+
 import { clearModelCache, fetchModels } from './models';
 
 describe('models', () => {

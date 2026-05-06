@@ -86,6 +86,9 @@ vi.mock('lucide-react-native', () => {
   return {
     ArrowUp: createIconMock('ArrowUp'),
     Brain: createIconMock('Brain'),
+    Check: createIconMock('Check'),
+    ChevronLeft: createIconMock('ChevronLeft'),
+    ChevronRight: createIconMock('ChevronRight'),
     Mic: createIconMock('Mic'),
     Phone: createIconMock('Phone'),
     PhoneOff: createIconMock('PhoneOff'),

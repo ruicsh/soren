@@ -88,7 +88,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
       try {
         const history = [...messages, userMessage].map((m) => ({
           content: m.content,
-          role: m.role as 'assistant' | 'user' | 'system',
+          role: m.role as 'assistant' | 'system' | 'user',
         }));
 
         const historyWithSystem = [

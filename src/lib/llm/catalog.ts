@@ -1,6 +1,7 @@
+import type { LLMProvider } from './types';
+
 import { anthropicProvider } from './anthropic';
 import { openaiCompatProvider } from './openai-compat';
-import type { LLMProvider } from './types';
 
 export interface ProviderEntry {
   apiKeyEnv: string;
@@ -36,7 +37,7 @@ export function createProvider(id: string, model: string): LLMProvider | null {
   const entry = PROVIDERS.find((p) => p.id === id);
   if (!entry) return null;
 
-  const apiKey = process.env[entry.apiKeyEnv] || '';
+  const apiKey = getApiKey(entry) || '';
   if (!apiKey) return null;
 
   if (entry.type === 'openai-compat') {
@@ -55,4 +56,14 @@ export function createProvider(id: string, model: string): LLMProvider | null {
   }
 
   return null;
+}
+
+export function getApiKey(provider: ProviderEntry): string | undefined {
+  if (provider.apiKeyEnv === 'EXPO_PUBLIC_GROQ_API_KEY') {
+    return process.env.EXPO_PUBLIC_GROQ_API_KEY;
+  }
+  if (provider.apiKeyEnv === 'EXPO_PUBLIC_ANTHROPIC_API_KEY') {
+    return process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
+  }
+  return undefined;
 }

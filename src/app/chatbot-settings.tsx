@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -67,8 +68,8 @@ export default function ChatbotSettingsScreen() {
         style={styles.flex}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => back()}>
-            <Text style={styles.headerBtn}>Cancel</Text>
+          <TouchableOpacity accessibilityLabel="Go back" onPress={() => back()}>
+            <ArrowLeft color={colors.text} size={24} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <TouchableOpacity disabled={isSaving} onPress={handleSave}>
@@ -190,10 +191,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
-  },
-  headerBtn: {
-    color: colors.text,
-    fontSize: typography.base,
   },
   headerBtnPrimary: {
     color: colors.accent,

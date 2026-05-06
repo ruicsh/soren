@@ -71,10 +71,10 @@ describe('ChatbotSettingsScreen', () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
-  it('navigates back on cancel', () => {
+  it('navigates back on back button press', () => {
     render(<ChatbotSettingsScreen />);
-    const cancelBtn = screen.getByText('Cancel');
-    fireEvent.press(cancelBtn);
+    const backBtn = screen.getByLabelText('Go back');
+    fireEvent.press(backBtn);
     expect(mockBack).toHaveBeenCalled();
   });
 });

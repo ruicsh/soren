@@ -141,16 +141,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
   },
+  modelName: {
+    color: colors.text3,
+    fontSize: typography.sm,
+    marginTop: spacing[1],
+  },
   name: {
     color: colors.text,
     fontSize: typography['3xl'],
     fontWeight: '700',
     marginTop: spacing[6],
-  },
-  modelName: {
-    color: colors.text3,
-    fontSize: typography.sm,
-    marginTop: spacing[1],
   },
   status: {
     color: colors.text2,

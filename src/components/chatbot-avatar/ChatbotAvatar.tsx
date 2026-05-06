@@ -1,4 +1,4 @@
-import { Anthropic, Groq, Meta, Ollama, OpenAI } from '@lobehub/icons-rn';
+import { Anthropic, Groq, Ollama, OpenAI } from '@lobehub/icons-rn';
 import { Brain as IconBrain } from 'lucide-react-native';
 import React from 'react';
 import { View } from 'react-native';

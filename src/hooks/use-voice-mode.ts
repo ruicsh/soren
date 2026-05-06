@@ -15,6 +15,10 @@ export interface UseVoiceModeReturn {
   messages: ChatMessage[];
   state: VoiceModeState;
   transcript: string;
+  updateLastConversation?: (
+    userText: string,
+    assistantText: string,
+  ) => Promise<void>;
 }
 
 export type VoiceModeState =
@@ -33,6 +37,10 @@ export interface UseVoiceModeOptions {
   chatbotUuid?: string;
   llmModel?: string;
   llmProvider?: string;
+  updateLastConversation?: (
+    userText: string,
+    assistantText: string,
+  ) => Promise<void>;
   voiceId?: null | string;
 }
 
@@ -109,6 +117,36 @@ export function useVoiceMode(
     providerModel: options?.llmModel,
   });
 
+  const lastUserTextRef = useRef<null | string>(null);
+  const lastUpdateRef = useRef(false);
+
+  const updateLastConversation = options?.updateLastConversation;
+
+  useEffect(() => {
+    const isStreaming =
+      messages.length > 0 && stateRef.current === 'processing';
+
+    if (!isStreaming && lastUpdateRef.current) {
+      const assistantMsgs = messages.filter((m) => m.role === 'assistant');
+      const lastAssistantMsg = assistantMsgs[assistantMsgs.length - 1];
+
+      if (
+        lastAssistantMsg?.content &&
+        lastUserTextRef.current &&
+        updateLastConversation
+      ) {
+        updateLastConversation(
+          lastUserTextRef.current,
+          lastAssistantMsg.content,
+        );
+        lastUserTextRef.current = null;
+      }
+      lastUpdateRef.current = false;
+    } else if (isStreaming) {
+      lastUpdateRef.current = true;
+    }
+  }, [messages, updateLastConversation]);
+
   const {
     error: dictationError,
     isRecording,
@@ -133,6 +171,7 @@ export function useVoiceMode(
       setState('processing');
       stopDictation();
       streamDoneRef.current = false;
+      lastUserTextRef.current = text;
       sendMessage(text)
         .then(() => {
           debugLog('llm_stream_done', { turn: turnRef.current });
@@ -303,6 +342,7 @@ export function useVoiceMode(
     messages,
     state,
     transcript,
+    updateLastConversation: options?.updateLastConversation,
   };
 }
 

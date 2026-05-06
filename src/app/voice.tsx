@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
@@ -12,12 +12,13 @@ import { useVoiceMode } from '@/hooks/use-voice-mode';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function VoiceScreen() {
-  const { back } = useRouter();
-  const { config } = useChatbotConfig();
+  const { back, push } = useRouter();
+  const { config, updateLastConversation } = useChatbotConfig();
   const { activate, deactivate, error, state, transcript } = useVoiceMode({
     chatbotUuid: config?.uuid,
     llmModel: config?.llmModel,
     llmProvider: config?.llmProvider,
+    updateLastConversation,
     voiceId: config?.voiceId,
   });
 
@@ -58,14 +59,19 @@ export default function VoiceScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.avatarWrap}>
+        <TouchableOpacity
+          onPress={() => push('/chatbot-settings')}
+          style={styles.avatarWrap}
+        >
           <ChatbotAvatar
             modelId={config?.llmModel}
             providerId={config?.llmProvider}
             size={120}
           />
-        </View>
-        <Text style={styles.name}>{chatbotName}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => push('/chatbot-settings')}>
+          <Text style={styles.name}>{chatbotName}</Text>
+        </TouchableOpacity>
         {modelName ? <Text style={styles.modelName}>{modelName}</Text> : null}
         <Text style={[styles.status, error ? styles.statusError : null]}>
           {statusText}

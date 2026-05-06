@@ -10,7 +10,10 @@ import React, {
 import { useTTS } from '@/hooks/use-tts';
 import { deleteApiKey, getApiKey, setApiKey } from '@/lib/byok-keys';
 import {
+  appendChatTurn,
   ChatbotConfig,
+  deleteChatbot as deleteChatbotFs,
+  listChatbotConfigs,
   loadOrCreateDefaultChatbotConfig,
   saveChatbotConfig,
 } from '@/lib/chatbot-config';
@@ -22,20 +25,28 @@ interface ChatbotConfigContextType {
   availableModels: LLMModel[];
   availableProviders: typeof PROVIDERS;
   availableVoices: any[];
+  chatbots: ChatbotConfig[];
   clearProviderApiKey: () => void;
   config: ChatbotConfig | null;
+  createChatbot: () => Promise<ChatbotConfig>;
+  deleteChatbot: (uuid: string) => Promise<void>;
   error: null | string;
   hasProviderKey: boolean;
   isLoading: boolean;
   isSaving: boolean;
   modelsError: null | string;
   modelsLoading: boolean;
+  refreshChatbots: () => Promise<ChatbotConfig[] | void>;
   refreshModels: () => void;
   revealKey: () => Promise<void>;
   save: () => Promise<void>;
+  selectChatbot: (uuid: string) => void;
   updateApiKeyDraft: (key: string) => void;
   updateConfig: (updates: Partial<ChatbotConfig>) => void;
-  updateLastConversation: (snippet: string) => void;
+  updateLastConversation: (
+    userText: string,
+    assistantText: string,
+  ) => Promise<void>;
   updateLastConversationAt: () => void;
 }
 
@@ -46,7 +57,8 @@ const ChatbotConfigContext = createContext<ChatbotConfigContextType | null>(
 export function ChatbotConfigProvider(props: PropsWithChildren) {
   const { children } = props;
 
-  const [config, setConfig] = useState<ChatbotConfig | null>(null);
+  const [chatbots, setChatbots] = useState<ChatbotConfig[]>([]);
+  const [activeUuid, setActiveUuid] = useState<null | string>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,6 +72,23 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
 
   const { availableVoices } = useTTS();
 
+  const config = React.useMemo(() => {
+    return chatbots.find((c) => c.uuid === activeUuid) || null;
+  }, [chatbots, activeUuid]);
+
+  const refreshChatbots = useCallback(async () => {
+    try {
+      const configs = await listChatbotConfigs();
+      setChatbots(configs);
+
+      return configs;
+    } catch (err) {
+      console.error('Failed to list chatbots:', err);
+
+      return [];
+    }
+  }, []);
+
   const fetchModelsForProvider = useCallback(
     async (providerId: string, apiKey?: string) => {
       setModelsLoading(true);
@@ -67,8 +96,8 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
       try {
         // Use provided key or try to load from secure store
         let key = apiKey;
-        if (!key && config?.uuid) {
-          key = (await getApiKey(config.uuid, providerId)) || undefined;
+        if (!key && activeUuid) {
+          key = (await getApiKey(activeUuid, providerId)) || undefined;
         }
 
         if (!key) {
@@ -86,106 +115,228 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
         setModelsLoading(false);
       }
     },
-    [config?.uuid],
+    [activeUuid],
   );
 
   useEffect(() => {
+    let isMounted = true;
+
     loadOrCreateDefaultChatbotConfig()
       .then(async (cfg) => {
-        setConfig(cfg);
-        const hasKey = !!(await getApiKey(cfg.uuid, cfg.llmProvider));
-        setHasProviderKey(hasKey);
-        fetchModelsForProvider(cfg.llmProvider);
+        const configs = await refreshChatbots();
+        if (!isMounted) return;
+
+        const initial = configs.find((c) => c.uuid === cfg.uuid) || cfg;
+
+        setActiveUuid((prev) => {
+          if (prev) {
+            return prev;
+          }
+
+          return initial.uuid;
+        });
+
+        const hasKey = !!(await getApiKey(initial.uuid, initial.llmProvider));
+        if (isMounted) {
+          setHasProviderKey(hasKey);
+          fetchModelsForProvider(initial.llmProvider);
+        }
       })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : String(err)),
-      )
-      .finally(() => setIsLoading(false));
-  }, [fetchModelsForProvider]);
+      .catch((err) => {
+        if (isMounted)
+          setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshChatbots, fetchModelsForProvider]);
+
+  const createChatbot = useCallback(async () => {
+    const uuid = (await import('expo-crypto')).randomUUID();
+    const newBot: ChatbotConfig = {
+      llmModel: 'llama-3.1-8b-instant',
+      llmProvider: 'groq',
+      name: 'New Chatbot',
+      uuid,
+      voiceId: null,
+    };
+    await saveChatbotConfig(newBot);
+    await refreshChatbots();
+    setActiveUuid(uuid);
+
+    return newBot;
+  }, [refreshChatbots]);
+
+  const deleteChatbot = useCallback(
+    async (uuid: string) => {
+      // Cleanup provider keys
+      const bot = chatbots.find((c) => c.uuid === uuid);
+      if (bot && bot.providerKeyStatus) {
+        for (const pId in bot.providerKeyStatus) {
+          await deleteApiKey(uuid, pId);
+        }
+      }
+
+      await deleteChatbotFs(uuid);
+      const remaining = await refreshChatbots();
+
+      if (activeUuid === uuid) {
+        if (remaining.length > 0) {
+          setActiveUuid(remaining[0].uuid);
+        } else {
+          const def = await loadOrCreateDefaultChatbotConfig();
+          await refreshChatbots();
+          setActiveUuid(def.uuid);
+        }
+      }
+    },
+    [activeUuid, chatbots, refreshChatbots],
+  );
+
+  const selectChatbot = useCallback(
+    (uuid: string) => {
+      const target = chatbots.find((c) => c.uuid === uuid);
+      if (target) {
+        setActiveUuid(uuid);
+        setApiKeyDraft('');
+        getApiKey(uuid, target.llmProvider).then((key) => {
+          setHasProviderKey(!!key);
+          fetchModelsForProvider(target.llmProvider, key || undefined);
+        });
+      }
+    },
+    [chatbots, fetchModelsForProvider],
+  );
 
   const updateConfig = useCallback(
     (updates: Partial<ChatbotConfig>) => {
-      setConfig((prev) => {
-        if (!prev) return null;
-        const next = { ...prev, ...updates };
+      setChatbots((prev) => {
+        return prev.map((c) => {
+          if (c.uuid === activeUuid) {
+            const next = { ...c, ...updates };
+            if (updates.llmProvider && updates.llmProvider !== c.llmProvider) {
+              const entry = PROVIDERS.find((p) => p.id === updates.llmProvider);
+              if (entry) {
+                next.llmModel = entry.defaultModel;
+              }
+            }
 
-        if (updates.llmProvider && updates.llmProvider !== prev.llmProvider) {
-          const entry = PROVIDERS.find((p) => p.id === updates.llmProvider);
-          if (entry) {
-            next.llmModel = entry.defaultModel;
-            setApiKeyDraft('');
-            getApiKey(prev.uuid, entry.id).then((key) => {
-              setHasProviderKey(!!key);
-              fetchModelsForProvider(entry.id, key || undefined);
-            });
+            return next;
           }
-        }
 
-        return next;
+          return c;
+        });
       });
+
+      if (updates.llmProvider && activeUuid) {
+        const entry = PROVIDERS.find((p) => p.id === updates.llmProvider);
+        if (entry) {
+          setApiKeyDraft('');
+          getApiKey(activeUuid, entry.id).then((key) => {
+            setHasProviderKey(!!key);
+            fetchModelsForProvider(entry.id, key || undefined);
+          });
+        }
+      }
     },
-    [fetchModelsForProvider],
+    [activeUuid, fetchModelsForProvider],
   );
 
   const updateLastConversationAt = useCallback(() => {
-    if (!config) return;
+    const configToSave = chatbots.find((c) => c.uuid === activeUuid);
+    if (!configToSave) return;
     const now = Date.now();
     updateConfig({ lastConversationAt: now });
-    saveChatbotConfig({ ...config, lastConversationAt: now });
-  }, [config, updateConfig]);
+    saveChatbotConfig({ ...configToSave, lastConversationAt: now });
+  }, [activeUuid, chatbots, updateConfig]);
 
   const updateLastConversation = useCallback(
-    (snippet: string) => {
+    async (userText: string, assistantText: string) => {
       if (!config) return;
       const now = Date.now();
       const firstSentence =
-        snippet
+        assistantText
           .split(/[.!?]/)
           .find((s) => s.trim().length > 0)
-          ?.trim() || snippet.trim();
+          ?.trim() || assistantText.trim();
       const finalSnippet =
         firstSentence.length > 60
           ? firstSentence.slice(0, 57) + '...'
           : firstSentence;
 
+      const updated = {
+        ...config,
+        lastConversationAt: now,
+        lastConversationSnippet: finalSnippet,
+      };
+
       updateConfig({
         lastConversationAt: now,
         lastConversationSnippet: finalSnippet,
       });
-      saveChatbotConfig({
-        ...config,
-        lastConversationAt: now,
-        lastConversationSnippet: finalSnippet,
+
+      await appendChatTurn({
+        assistantText,
+        timestamp: now,
+        userText,
+        uuid: config.uuid,
       });
+
+      await saveChatbotConfig(updated);
+      await refreshChatbots();
     },
-    [config, updateConfig],
+    [config, updateConfig, refreshChatbots],
   );
 
   const save = useCallback(async () => {
-    if (!config) return;
+    const configToSave = chatbots.find((c) => c.uuid === activeUuid);
+    if (!configToSave) return;
+
+    const targetConfig = { ...configToSave };
     setIsSaving(true);
     try {
       if (apiKeyDraft) {
-        await setApiKey(config.uuid, config.llmProvider, apiKeyDraft);
+        await setApiKey(
+          targetConfig.uuid,
+          targetConfig.llmProvider,
+          apiKeyDraft,
+        );
         setHasProviderKey(true);
         setApiKeyDraft('');
 
-        // Update config status map
-        const status = { ...config.providerKeyStatus };
-        status[config.llmProvider] = true;
-        config.providerKeyStatus = status;
+        const status = { ...targetConfig.providerKeyStatus };
+        status[targetConfig.llmProvider] = true;
+        targetConfig.providerKeyStatus = status;
 
-        // Refresh models now that we have a key
-        fetchModelsForProvider(config.llmProvider, apiKeyDraft);
+        setChatbots((prev) =>
+          prev.map((c) =>
+            c.uuid === targetConfig.uuid
+              ? { ...c, providerKeyStatus: status }
+              : c,
+          ),
+        );
+
+        fetchModelsForProvider(targetConfig.llmProvider, apiKeyDraft);
       }
 
-      await saveChatbotConfig(config);
+      await saveChatbotConfig(targetConfig);
+      await refreshChatbots();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsSaving(false);
     }
-  }, [config, apiKeyDraft, fetchModelsForProvider]);
+  }, [
+    activeUuid,
+    apiKeyDraft,
+    chatbots,
+    fetchModelsForProvider,
+    refreshChatbots,
+  ]);
 
   const clearProviderApiKey = useCallback(async () => {
     if (!config) return;
@@ -220,17 +371,22 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
         availableModels,
         availableProviders: PROVIDERS,
         availableVoices,
+        chatbots,
         clearProviderApiKey,
         config,
+        createChatbot,
+        deleteChatbot,
         error,
         hasProviderKey,
         isLoading,
         isSaving,
         modelsError,
         modelsLoading,
+        refreshChatbots,
         refreshModels,
         revealKey,
         save,
+        selectChatbot,
         updateApiKeyDraft: setApiKeyDraft,
         updateConfig,
         updateLastConversation,

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff, Key, Trash2 } from 'lucide-react-native';
 import React from 'react';
 import {
@@ -22,7 +22,12 @@ import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function ChatbotSettingsScreen() {
-  const { back, push } = useRouter();
+  const { back, push, replace } = useRouter();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isCreateMode = mode === 'create';
+
+  const [nameDraft, setNameDraft] = React.useState('');
+
   const {
     apiKeyDraft,
     availableModels,
@@ -30,6 +35,7 @@ export default function ChatbotSettingsScreen() {
     availableVoices,
     clearProviderApiKey,
     config,
+    createChatbot,
     error,
     hasProviderKey,
     isLoading,
@@ -45,10 +51,35 @@ export default function ChatbotSettingsScreen() {
 
   const [showKey, setShowKey] = React.useState(false);
 
+  const hasCreated = React.useRef(false);
+
   const handleSave = async () => {
+    // Merge nameDraft into config before saving to ensure it's not lost
+    updateConfig({ name: nameDraft });
     await save();
-    back();
+
+    if (isCreateMode) {
+      replace('/');
+    } else {
+      back();
+    }
   };
+
+  React.useEffect(() => {
+    if (isCreateMode && !isLoading && !hasCreated.current) {
+      hasCreated.current = true;
+      createChatbot();
+    }
+  }, [isCreateMode, isLoading, createChatbot]);
+
+  // Only sync name from config when bot UUID changes
+  const lastUuid = React.useRef<string | undefined>(undefined);
+  React.useEffect(() => {
+    if (config?.uuid !== lastUuid.current) {
+      lastUuid.current = config?.uuid;
+      setNameDraft(config?.name ?? '');
+    }
+  }, [config?.uuid, config?.name]);
 
   const providerEntry = availableProviders.find(
     (p) => p.id === config?.llmProvider,
@@ -87,12 +118,16 @@ export default function ChatbotSettingsScreen() {
             >
               <ArrowLeft color={colors.text} size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Settings</Text>
+            <Text style={styles.headerTitle}>
+              {isCreateMode ? 'New Chatbot' : 'Settings'}
+            </Text>
             <TouchableOpacity disabled={isSaving} onPress={handleSave}>
               {isSaving ? (
                 <ActivityIndicator color={colors.accent} size="small" />
               ) : (
-                <Text style={styles.headerBtnPrimary}>Save</Text>
+                <Text style={styles.headerBtnPrimary}>
+                  {isCreateMode ? 'Create' : 'Save'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -107,7 +142,9 @@ export default function ChatbotSettingsScreen() {
                     size={48}
                   />
                 </View>
-                <Text style={styles.avatarName}>{config.name}</Text>
+                <Text style={styles.avatarName}>
+                  {nameDraft || config.name}
+                </Text>
               </View>
 
               <Text style={styles.sectionTitle}>Identification</Text>
@@ -212,11 +249,11 @@ export default function ChatbotSettingsScreen() {
                 <View style={[styles.row, styles.rowInput]}>
                   <Text style={styles.label}>Name</Text>
                   <TextInput
-                    onChangeText={(name) => updateConfig({ name })}
+                    onChangeText={setNameDraft}
                     placeholder="Enter name"
                     placeholderTextColor={colors.text3}
                     style={styles.input}
-                    value={config.name}
+                    value={nameDraft}
                   />
                 </View>
                 <View style={styles.separator} />

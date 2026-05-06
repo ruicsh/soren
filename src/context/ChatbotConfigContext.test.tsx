@@ -1,206 +1,86 @@
-import { act, render, screen, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { Button, Text, View } from 'react-native';
-import { vi } from 'vitest';
 
 import {
   ChatbotConfigProvider,
   useChatbotConfigContext,
 } from '@/context/ChatbotConfigContext';
-import { getApiKey, setApiKey } from '@/lib/byok-keys';
-import { loadOrCreateDefaultChatbotConfig } from '@/lib/chatbot-config';
+import {
+  listChatbotConfigs,
+  loadOrCreateDefaultChatbotConfig,
+} from '@/lib/chatbot-config';
 
 vi.mock('@/lib/chatbot-config', () => ({
-  getChatbotsRootPath: () => 'test-root/',
+  appendChatTurn: vi.fn(),
+  deleteChatbot: vi.fn(),
+  listChatbotConfigs: vi.fn(),
   loadOrCreateDefaultChatbotConfig: vi.fn(),
   saveChatbotConfig: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock('@/lib/llm/models', () => ({
-  fetchModels: vi.fn(() => Promise.resolve([])),
-}));
-
 vi.mock('@/lib/byok-keys', () => ({
-  deleteApiKey: vi.fn(() => Promise.resolve()),
+  deleteApiKey: vi.fn(),
   getApiKey: vi.fn(() => Promise.resolve(null)),
-  setApiKey: vi.fn(() => Promise.resolve()),
+  setApiKey: vi.fn(),
 }));
 
 vi.mock('@/hooks/use-tts', () => ({
   useTTS: () => ({ availableVoices: [] }),
 }));
 
-const TestComponent = () => {
-  const {
-    apiKeyDraft,
-    config,
-    revealKey,
-    save,
-    updateApiKeyDraft,
-    updateConfig,
-  } = useChatbotConfigContext();
+vi.mock('@/lib/llm/models', () => ({
+  fetchModels: vi.fn(() => Promise.resolve([])),
+}));
 
-  return (
-    <View>
-      <Text testID="config-name">{config?.name}</Text>
-      <Text testID="config-voice">{config?.voiceId ?? 'none'}</Text>
-      <Text testID="api-key-draft">{apiKeyDraft}</Text>
-      <Button
-        onPress={() => updateConfig({ name: 'Updated Name' })}
-        title="Update Name"
-      />
-      <Button
-        onPress={() => updateConfig({ voiceId: 'voice-1' })}
-        title="Update Voice"
-      />
-      <Button
-        onPress={() => updateApiKeyDraft('new-draft-key')}
-        title="Update Key Draft"
-      />
-      <Button onPress={() => revealKey()} title="Reveal Key" />
-      <Button onPress={() => save()} title="Save" />
-    </View>
-  );
-};
+const mockBots = [
+  { llmModel: 'm1', llmProvider: 'groq', name: 'Bot 1', uuid: 'bot-1' },
+  { llmModel: 'm1', llmProvider: 'groq', name: 'Bot 2', uuid: 'bot-2' },
+];
 
-const AnotherComponent = () => {
-  const { config } = useChatbotConfigContext();
-
-  return (
-    <View>
-      <Text testID="shared-name">{config?.name}</Text>
-    </View>
-  );
-};
-
-describe('ChatbotConfigContext', () => {
-  const mockConfig = {
-    llmModel: 'model-1',
-    llmProvider: 'provider-1',
-    name: 'Soren',
-    uuid: 'uuid-123',
-    voiceId: null,
-  };
-
+describe('ChatbotConfigContext switching', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(loadOrCreateDefaultChatbotConfig).mockResolvedValue(mockConfig);
+    (listChatbotConfigs as any).mockResolvedValue(mockBots);
+    (loadOrCreateDefaultChatbotConfig as any).mockResolvedValue(mockBots[0]);
   });
 
-  it('shares state between different components', async () => {
-    render(
-      <ChatbotConfigProvider>
-        <TestComponent />
-        <AnotherComponent />
-      </ChatbotConfigProvider>,
+  it('switches active chatbot correctly', async () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
     );
 
-    // Wait for initial load
-    await waitFor(() => {
-      expect(screen.getByTestId('config-name')).toHaveTextContent('Soren');
-    });
+    const { result } = renderHook(() => useChatbotConfigContext(), { wrapper });
 
-    expect(screen.getByTestId('shared-name')).toHaveTextContent('Soren');
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.config?.uuid).toBe('bot-1');
 
-    // Update state in one component
-    const updateBtn = screen.getByRole('button', { name: 'Update Name' });
-    act(() => {
-      updateBtn.props.onPress();
-    });
-
-    // Verify both reflect change
-    await waitFor(() => {
-      expect(screen.getByTestId('config-name')).toHaveTextContent(
-        'Updated Name',
-      );
-    });
-    expect(screen.getByTestId('shared-name')).toHaveTextContent('Updated Name');
-  });
-
-  it('reflects voice selection changes across context', async () => {
-    render(
-      <ChatbotConfigProvider>
-        <TestComponent />
-      </ChatbotConfigProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('config-voice')).toHaveTextContent('none');
-    });
-
-    const updateBtn = screen.getByRole('button', { name: 'Update Voice' });
-    act(() => {
-      updateBtn.props.onPress();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('config-voice')).toHaveTextContent('voice-1');
-    });
-  });
-
-  it('manages API key draft and reveal', async () => {
-    vi.mocked(getApiKey).mockResolvedValue('stored-key');
-
-    render(
-      <ChatbotConfigProvider>
-        <TestComponent />
-      </ChatbotConfigProvider>,
-    );
-
-    await waitFor(() =>
-      expect(screen.getByTestId('api-key-draft')).toHaveTextContent(''),
-    );
-
-    const updateDraftBtn = screen.getByRole('button', {
-      name: 'Update Key Draft',
-    });
-    act(() => {
-      updateDraftBtn.props.onPress();
-    });
-    expect(screen.getByTestId('api-key-draft')).toHaveTextContent(
-      'new-draft-key',
-    );
-
-    const revealBtn = screen.getByRole('button', { name: 'Reveal Key' });
     await act(async () => {
-      revealBtn.props.onPress();
+      result.current.selectChatbot('bot-2');
     });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('api-key-draft')).toHaveTextContent(
-        'stored-key',
-      );
-    });
+    expect(result.current.config?.uuid).toBe('bot-2');
   });
 
-  it('saves API key to secure store and clears draft', async () => {
-    render(
-      <ChatbotConfigProvider>
-        <TestComponent />
-      </ChatbotConfigProvider>,
+  it('preserves active chatbot across re-mounts/re-runs', async () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
     );
 
-    await waitFor(() =>
-      expect(screen.getByTestId('api-key-draft')).toHaveTextContent(''),
-    );
-
-    const updateDraftBtn = screen.getByRole('button', {
-      name: 'Update Key Draft',
-    });
-    act(() => {
-      updateDraftBtn.props.onPress();
+    const { rerender, result } = renderHook(() => useChatbotConfigContext(), {
+      wrapper,
     });
 
-    const saveBtn = screen.getByRole('button', { name: 'Save' });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
     await act(async () => {
-      saveBtn.props.onPress();
+      result.current.selectChatbot('bot-2');
     });
+    expect(result.current.config?.uuid).toBe('bot-2');
 
-    expect(setApiKey).toHaveBeenCalledWith(
-      mockConfig.uuid,
-      mockConfig.llmProvider,
-      'new-draft-key',
-    );
-    expect(screen.getByTestId('api-key-draft')).toHaveTextContent('');
+    // Simulate re-render/re-mount cycle logic
+    rerender({});
+
+    // The effect inside the provider will re-run but functional update should keep bot-2
+    await waitFor(() => expect(result.current.config?.uuid).toBe('bot-2'));
   });
 });

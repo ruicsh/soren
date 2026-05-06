@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Brain as IconBrain, Phone } from 'lucide-react-native';
+import { ChevronLeft, Brain as IconBrain, Phone } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
@@ -32,19 +32,30 @@ export default function Home() {
     providerModel: config?.llmModel,
   });
 
+  const lastUserTextRef = useRef<null | string>(null);
+
   const lastUpdateRef = useRef(false);
   useEffect(() => {
     if (!isStreaming && lastUpdateRef.current) {
       const assistantMsgs = messages.filter((m) => m.role === 'assistant');
       const lastAssistantMsg = assistantMsgs[assistantMsgs.length - 1];
-      if (lastAssistantMsg?.content) {
-        updateLastConversation(lastAssistantMsg.content);
+      if (lastAssistantMsg?.content && lastUserTextRef.current) {
+        updateLastConversation(
+          lastUserTextRef.current,
+          lastAssistantMsg.content,
+        );
+        lastUserTextRef.current = null;
       }
       lastUpdateRef.current = false;
     } else if (isStreaming) {
       lastUpdateRef.current = true;
     }
   }, [isStreaming, messages, updateLastConversation]);
+
+  const handleSendMessage = async (text: string) => {
+    lastUserTextRef.current = text;
+    await sendMessage(text);
+  };
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when messages change
@@ -57,10 +68,6 @@ export default function Home() {
   const hasMessages = messages.length > 0;
   const lastMessageId = messages[messages.length - 1]?.id;
 
-  const lastConversationText = config?.lastConversationAt
-    ? `Last active: ${new Date(config.lastConversationAt).toLocaleString()}${config.lastConversationSnippet ? ` - ${config.lastConversationSnippet}` : ''}`
-    : '';
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -70,26 +77,37 @@ export default function Home() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => push('/chatbot-settings')}
-            style={styles.headerLeft}
-          >
-            <View style={styles.avatarContainer}>
-              <ChatbotAvatar
-                modelId={config?.llmModel}
-                providerId={config?.llmProvider}
-                size={32}
-              />
-            </View>
-            <View>
-              <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
-              {lastConversationText ? (
-                <Text style={styles.headerSubtitle}>
-                  {lastConversationText}
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => push('/chatbots')}
+              style={styles.backButton}
+            >
+              <ChevronLeft color={colors.accent} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => push('/chatbot-settings')}
+              style={styles.headerProfile}
+            >
+              <View style={styles.avatarContainer}>
+                <ChatbotAvatar
+                  modelId={config?.llmModel}
+                  providerId={config?.llmProvider}
+                  size={32}
+                />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>
+                  {config?.name ?? 'Soren'}
                 </Text>
-              ) : null}
-            </View>
-          </TouchableOpacity>
+                {config?.lastConversationAt && (
+                  <Text style={styles.headerSubtitle}>
+                    Last active:{' '}
+                    {new Date(config.lastConversationAt).toLocaleDateString()}
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             onPress={() => push('/voice')}
             testID="voice-call-button"
@@ -115,14 +133,21 @@ export default function Home() {
           </ScrollView>
         ) : (
           <View style={styles.empty}>
-            <IconBrain color="#ffffff" size={40} />
-            <Text style={styles.emptyText}>How can I help you today?</Text>
+            <TouchableOpacity
+              onPress={() => push('/chatbot-settings')}
+              style={styles.emptyIcon}
+            >
+              <IconBrain color="#ffffff" size={40} />
+            </TouchableOpacity>
+            <Text style={styles.emptyText}>
+              {config?.lastConversationSnippet || 'How can I help you today?'}
+            </Text>
           </View>
         )}
 
         {/* Input bar at bottom */}
         <View style={styles.inputWrap}>
-          <ChatInput onSend={sendMessage} />
+          <ChatInput onSend={handleSendMessage} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -136,8 +161,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     height: 40,
     justifyContent: 'center',
-    marginRight: spacing[3],
+    marginRight: spacing[2],
     width: 40,
+  },
+  backButton: {
+    alignItems: 'center',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.full,
+    height: 36,
+    justifyContent: 'center',
+    marginRight: spacing[4],
+    width: 36,
   },
   container: {
     backgroundColor: colors.bg,
@@ -148,6 +182,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing[6],
+  },
+  emptyIcon: {
+    marginBottom: spacing[2],
   },
   emptyText: {
     color: colors.text2,
@@ -161,11 +198,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[2],
     paddingTop: spacing[4],
   },
   headerLeft: {
     alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+  },
+  headerProfile: {
+    alignItems: 'center',
+    flex: 1,
     flexDirection: 'row',
   },
   headerSubtitle: {

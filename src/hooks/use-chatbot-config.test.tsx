@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 
 import { ChatbotConfigProvider } from '@/context/ChatbotConfigContext';
 import {
+  listChatbotConfigs,
   loadOrCreateDefaultChatbotConfig,
   saveChatbotConfig,
 } from '@/lib/chatbot-config';
@@ -11,6 +12,12 @@ import {
 import { useChatbotConfig } from './use-chatbot-config';
 
 vi.mock('@/lib/chatbot-config', () => ({
+  appendChatTurn: vi.fn(),
+  deleteChatbot: vi.fn(),
+  getChatbotConfigPath: vi.fn(),
+  getChatbotsRootPath: vi.fn(),
+  listChatbotConfigs: vi.fn(() => Promise.resolve([])),
+  loadChatbotConfig: vi.fn(),
   loadOrCreateDefaultChatbotConfig: vi.fn(),
   saveChatbotConfig: vi.fn(),
 }));
@@ -45,6 +52,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('loads config on mount', async () => {
+    vi.mocked(listChatbotConfigs).mockResolvedValue([mockConfig]);
     const { result } = renderUseChatbotConfig();
 
     expect(result.current.isLoading).toBe(true);
@@ -54,6 +62,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('updates local config state', async () => {
+    vi.mocked(listChatbotConfigs).mockResolvedValue([mockConfig]);
     const { result } = renderUseChatbotConfig();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -65,6 +74,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('calls saveChatbotConfig when saving', async () => {
+    vi.mocked(listChatbotConfigs).mockResolvedValue([mockConfig]);
     const { result } = renderUseChatbotConfig();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 

@@ -9,10 +9,18 @@ export interface ProviderEntry {
   id: string;
   label: string;
   modelsUrl: string;
-  type: 'anthropic' | 'openai-compat';
+  type: 'anthropic' | 'openai-compat' | 'openai';
 }
 
 export const PROVIDERS: ProviderEntry[] = [
+  {
+    baseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-4o',
+    id: 'openai',
+    label: 'OpenAI',
+    modelsUrl: 'https://api.openai.com/v1/models',
+    type: 'openai-compat',
+  },
   {
     baseUrl: 'https://api.groq.com/openai/v1',
     defaultModel: 'llama-3.1-8b-instant',

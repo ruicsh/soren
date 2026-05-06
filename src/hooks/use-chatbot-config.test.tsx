@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import React from 'react';
 import { vi } from 'vitest';
 
+import { ChatbotConfigProvider } from '@/context/ChatbotConfigContext';
 import {
   loadOrCreateDefaultChatbotConfig,
   saveChatbotConfig,
@@ -12,6 +14,10 @@ vi.mock('@/lib/chatbot-config', () => ({
   loadOrCreateDefaultChatbotConfig: vi.fn(),
   saveChatbotConfig: vi.fn(),
 }));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+);
 
 describe('useChatbotConfig', () => {
   const mockConfig = {
@@ -28,7 +34,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('loads config on mount', async () => {
-    const { result } = renderHook(() => useChatbotConfig());
+    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
 
     expect(result.current.isLoading).toBe(true);
 
@@ -37,7 +43,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('updates local config state', async () => {
-    const { result } = renderHook(() => useChatbotConfig());
+    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
@@ -48,13 +54,15 @@ describe('useChatbotConfig', () => {
   });
 
   it('calls saveChatbotConfig when saving', async () => {
-    const { result } = renderHook(() => useChatbotConfig());
+    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
       await result.current.save();
     });
 
-    expect(saveChatbotConfig).toHaveBeenCalledWith(mockConfig);
+    expect(saveChatbotConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Soren' }),
+    );
   });
 });

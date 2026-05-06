@@ -1,15 +1,19 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ChatbotConfigProvider } from '@/context/ChatbotConfigContext';
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right',
-        }}
-      />
+      <ChatbotConfigProvider>
+        <Stack
+          screenOptions={{
+            animation: 'slide_from_right',
+            headerShown: false,
+          }}
+        />
+      </ChatbotConfigProvider>
     </SafeAreaProvider>
   );
 }

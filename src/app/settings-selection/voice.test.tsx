@@ -16,7 +16,7 @@ vi.mock('@/hooks/use-chatbot-config');
 vi.mock('@/hooks/use-tts');
 
 describe('VoiceSelectionScreen', () => {
-  const mockUpdateConfig = vi.fn();
+  const mockSaveWithConfig = vi.fn();
   const mockSpeak = vi.fn();
   const mockBack = vi.fn();
 
@@ -42,7 +42,7 @@ describe('VoiceSelectionScreen', () => {
     vi.mocked(useChatbotConfig).mockReturnValue({
       availableVoices: mockVoices,
       config: { voiceId: 'v1' },
-      updateConfig: mockUpdateConfig,
+      saveWithConfig: mockSaveWithConfig,
     } as any);
     vi.mocked(useTTS).mockReturnValue({
       availableVoices: mockVoices,
@@ -92,7 +92,7 @@ describe('VoiceSelectionScreen', () => {
 
     fireEvent.press(screen.getByText('Luciana'));
 
-    expect(mockUpdateConfig).toHaveBeenCalledWith({ voiceId: 'v3' });
+    expect(mockSaveWithConfig).toHaveBeenCalledWith({ voiceId: 'v3' });
     expect(mockBack).toHaveBeenCalled();
   });
 });

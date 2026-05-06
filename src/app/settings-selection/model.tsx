@@ -4,7 +4,7 @@ import { SelectionListScreen } from '@/components/settings/SelectionListScreen';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 
 export default function ModelSelectionScreen() {
-  const { availableModels, config, modelsLoading, updateConfig } =
+  const { availableModels, config, modelsLoading, saveWithConfig } =
     useChatbotConfig();
 
   if (!config) return null;
@@ -23,7 +23,7 @@ export default function ModelSelectionScreen() {
     <SelectionListScreen
       isLoading={modelsLoading}
       items={items}
-      onSelect={(id) => id && updateConfig({ llmModel: id })}
+      onSelect={(id) => id && saveWithConfig({ llmModel: id })}
       selectedValue={config.llmModel}
       title="Model"
     />

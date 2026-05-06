@@ -4,7 +4,7 @@ import { SelectionListScreen } from '@/components/settings/SelectionListScreen';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 
 export default function ProviderSelectionScreen() {
-  const { availableProviders, config, updateConfig } = useChatbotConfig();
+  const { availableProviders, config, saveWithConfig } = useChatbotConfig();
 
   if (!config) return null;
 
@@ -16,7 +16,7 @@ export default function ProviderSelectionScreen() {
   return (
     <SelectionListScreen
       items={items}
-      onSelect={(id) => id && updateConfig({ llmProvider: id })}
+      onSelect={(id) => id && saveWithConfig({ llmProvider: id })}
       selectedValue={config.llmProvider}
       title="Provider"
     />

@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { SettingSelectRow } from '@/components/settings/SettingSelectRow';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
+import { useDebounce } from '@/hooks/use-debounce';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function ChatbotSettingsScreen() {
@@ -45,24 +46,27 @@ export default function ChatbotSettingsScreen() {
     refreshModels,
     revealKey,
     save,
+    saveWithConfig,
     updateApiKeyDraft,
-    updateConfig,
   } = useChatbotConfig();
+
+  const debouncedSaveName = useDebounce((name: string) => {
+    saveWithConfig({ name });
+  }, 1000);
 
   const [showKey, setShowKey] = React.useState(false);
 
   const hasCreated = React.useRef(false);
 
-  const handleSave = async () => {
-    // Merge nameDraft into config before saving to ensure it's not lost
-    updateConfig({ name: nameDraft });
-    await save();
+  const handleCreate = async () => {
+    // Only used for initial creation in Create Mode
+    await saveWithConfig({ name: nameDraft });
+    replace('/');
+  };
 
-    if (isCreateMode) {
-      replace('/');
-    } else {
-      back();
-    }
+  const handleNameChange = (text: string) => {
+    setNameDraft(text);
+    debouncedSaveName(text);
   };
 
   React.useEffect(() => {
@@ -121,15 +125,17 @@ export default function ChatbotSettingsScreen() {
             <Text style={styles.headerTitle}>
               {isCreateMode ? 'New Chatbot' : 'Settings'}
             </Text>
-            <TouchableOpacity disabled={isSaving} onPress={handleSave}>
-              {isSaving ? (
-                <ActivityIndicator color={colors.accent} size="small" />
-              ) : (
-                <Text style={styles.headerBtnPrimary}>
-                  {isCreateMode ? 'Create' : 'Save'}
-                </Text>
-              )}
-            </TouchableOpacity>
+            {isCreateMode ? (
+              <TouchableOpacity disabled={isSaving} onPress={handleCreate}>
+                {isSaving ? (
+                  <ActivityIndicator color={colors.accent} size="small" />
+                ) : (
+                  <Text style={styles.headerBtnPrimary}>Create</Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 48 }} /> // Balanced header
+            )}
           </View>
 
           <ScrollView contentContainerStyle={styles.content}>
@@ -142,9 +148,13 @@ export default function ChatbotSettingsScreen() {
                     size={48}
                   />
                 </View>
-                <Text style={styles.avatarName}>
-                  {nameDraft || config.name}
-                </Text>
+                <TextInput
+                  onChangeText={handleNameChange}
+                  placeholder="Enter name"
+                  placeholderTextColor={colors.text3}
+                  style={styles.avatarNameInput}
+                  value={nameDraft}
+                />
               </View>
 
               <Text style={styles.sectionTitle}>Identification</Text>
@@ -185,6 +195,7 @@ export default function ChatbotSettingsScreen() {
                     <TextInput
                       autoCapitalize="none"
                       autoCorrect={false}
+                      onBlur={() => apiKeyDraft && save()}
                       onChangeText={updateApiKeyDraft}
                       placeholder={
                         hasProviderKey
@@ -246,17 +257,6 @@ export default function ChatbotSettingsScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Chatbot Profile</Text>
               <View style={styles.card}>
-                <View style={[styles.row, styles.rowInput]}>
-                  <Text style={styles.label}>Name</Text>
-                  <TextInput
-                    onChangeText={setNameDraft}
-                    placeholder="Enter name"
-                    placeholderTextColor={colors.text3}
-                    style={styles.input}
-                    value={nameDraft}
-                  />
-                </View>
-                <View style={styles.separator} />
                 <SettingSelectRow
                   label="Voice"
                   onPress={() => push('/settings-selection/voice')}
@@ -287,6 +287,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: typography.xl,
     fontWeight: '700',
+  },
+  avatarNameInput: {
+    color: colors.text,
+    fontSize: typography.xl,
+    fontWeight: '700',
+    textAlign: 'center',
+    width: '100%',
   },
   avatarSection: {
     alignItems: 'center',

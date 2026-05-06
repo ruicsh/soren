@@ -86,4 +86,18 @@ describe('useChatbotConfig', () => {
       expect.objectContaining({ name: 'Soren' }),
     );
   });
+
+  it('calls saveChatbotConfig with updates when using saveWithConfig', async () => {
+    vi.mocked(listChatbotConfigs).mockResolvedValue([mockConfig]);
+    const { result } = renderUseChatbotConfig();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.saveWithConfig({ name: 'Atomic Update' });
+    });
+
+    expect(saveChatbotConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Atomic Update' }),
+    );
+  });
 });

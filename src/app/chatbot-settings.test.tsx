@@ -1,10 +1,4 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { vi } from 'vitest';
 
@@ -29,6 +23,7 @@ vi.mock('@/hooks/use-chatbot-config', () => ({
 
 describe('ChatbotSettingsScreen', () => {
   const mockSave = vi.fn();
+  const mockSaveWithConfig = vi.fn();
   const mockUpdateConfig = vi.fn();
   const mockBack = vi.fn();
 
@@ -61,6 +56,7 @@ describe('ChatbotSettingsScreen', () => {
       refreshModels: vi.fn(),
       revealKey: vi.fn(),
       save: mockSave,
+      saveWithConfig: mockSaveWithConfig,
       selectChatbot: vi.fn(),
       updateApiKeyDraft: vi.fn(),
       updateConfig: mockUpdateConfig,
@@ -92,28 +88,35 @@ describe('ChatbotSettingsScreen', () => {
     expect(screen.getByText('uuid-123')).toBeTruthy();
   });
 
-  it('updates local nameDraft when typing', () => {
+  it('auto-saves name when typing (debounced)', async () => {
+    vi.useFakeTimers();
     render(<ChatbotSettingsScreen />);
     const input = screen.getByDisplayValue('Soren');
-    fireEvent.changeText(input, 'New Bot');
-    expect(screen.getByDisplayValue('New Bot')).toBeTruthy();
-    // mockUpdateConfig NOT called yet, only on save
-    expect(mockUpdateConfig).not.toHaveBeenCalled();
+    fireEvent.changeText(input, 'New Bot Name');
+
+    // Should not save immediately
+    expect(mockSaveWithConfig).not.toHaveBeenCalled();
+
+    // Advance time
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(mockSaveWithConfig).toHaveBeenCalledWith({
+      name: 'New Bot Name',
+    });
+    vi.useRealTimers();
   });
 
-  it('calls updateConfig with nameDraft when saving', async () => {
-    render(<ChatbotSettingsScreen />);
-    const input = screen.getByDisplayValue('Soren');
-    fireEvent.changeText(input, 'Manually Typed Name');
-
-    const saveBtn = screen.getByText('Save');
-    fireEvent.press(saveBtn);
-
-    await waitFor(() => {
-      expect(mockUpdateConfig).toHaveBeenCalledWith({
-        name: 'Manually Typed Name',
-      });
+  it('calls save with API key on blur', async () => {
+    mockUseChatbotConfig({
+      apiKeyDraft: 'new-key',
     });
+    render(<ChatbotSettingsScreen />);
+
+    const keyInput = screen.getByPlaceholderText('Enter groq key');
+    fireEvent(keyInput, 'blur');
+
     expect(mockSave).toHaveBeenCalled();
   });
 

@@ -80,7 +80,7 @@ const getLanguageName = (code: string) => {
 };
 
 export default function VoiceSelectionScreen() {
-  const { availableVoices, config, updateConfig } = useChatbotConfig();
+  const { availableVoices, config, saveWithConfig } = useChatbotConfig();
   const { speak } = useTTS();
 
   const sections = useMemo(() => {
@@ -183,7 +183,7 @@ export default function VoiceSelectionScreen() {
 
   return (
     <SelectionListScreen
-      onSelect={(id) => updateConfig({ voiceId: id })}
+      onSelect={(id) => saveWithConfig({ voiceId: id })}
       searchable
       sections={sections}
       selectedValue={config.voiceId}

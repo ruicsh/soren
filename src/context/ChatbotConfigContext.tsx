@@ -40,6 +40,7 @@ interface ChatbotConfigContextType {
   refreshModels: () => void;
   revealKey: () => Promise<void>;
   save: () => Promise<void>;
+  saveWithConfig: (updates: Partial<ChatbotConfig>) => Promise<void>;
   selectChatbot: (uuid: string) => void;
   updateApiKeyDraft: (key: string) => void;
   updateConfig: (updates: Partial<ChatbotConfig>) => void;
@@ -246,6 +247,60 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
     [activeUuid, fetchModelsForProvider],
   );
 
+  const saveWithConfig = useCallback(
+    async (updates: Partial<ChatbotConfig>) => {
+      // First, update local state for immediate UI feedback
+      updateConfig(updates);
+
+      // We need to construct the config to save based on the LATEST available data.
+      // Since updateConfig just scheduled a state update, we use the closure's 'chatbots'
+      // but merge the updates ourselves to be safe.
+      const configToSave = chatbots.find((c) => c.uuid === activeUuid);
+      if (!configToSave) return;
+
+      const targetConfig = { ...configToSave, ...updates };
+
+      setIsSaving(true);
+      try {
+        if (apiKeyDraft) {
+          await setApiKey(
+            targetConfig.uuid,
+            targetConfig.llmProvider,
+            apiKeyDraft,
+          );
+          setHasProviderKey(true);
+          setApiKeyDraft('');
+
+          const status = { ...targetConfig.providerKeyStatus };
+          status[targetConfig.llmProvider] = true;
+          targetConfig.providerKeyStatus = status;
+
+          updateConfig({ providerKeyStatus: status });
+
+          await saveChatbotConfig(targetConfig);
+          fetchModelsForProvider(targetConfig.llmProvider, apiKeyDraft);
+        } else {
+          await saveChatbotConfig(targetConfig);
+        }
+
+        // Use refreshChatbots to ensure state is in sync with FS after save
+        await refreshChatbots();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [
+      activeUuid,
+      apiKeyDraft,
+      chatbots,
+      fetchModelsForProvider,
+      refreshChatbots,
+      updateConfig,
+    ],
+  );
+
   const updateLastConversationAt = useCallback(() => {
     const configToSave = chatbots.find((c) => c.uuid === activeUuid);
     if (!configToSave) return;
@@ -293,50 +348,8 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
   );
 
   const save = useCallback(async () => {
-    const configToSave = chatbots.find((c) => c.uuid === activeUuid);
-    if (!configToSave) return;
-
-    const targetConfig = { ...configToSave };
-    setIsSaving(true);
-    try {
-      if (apiKeyDraft) {
-        await setApiKey(
-          targetConfig.uuid,
-          targetConfig.llmProvider,
-          apiKeyDraft,
-        );
-        setHasProviderKey(true);
-        setApiKeyDraft('');
-
-        const status = { ...targetConfig.providerKeyStatus };
-        status[targetConfig.llmProvider] = true;
-        targetConfig.providerKeyStatus = status;
-
-        setChatbots((prev) =>
-          prev.map((c) =>
-            c.uuid === targetConfig.uuid
-              ? { ...c, providerKeyStatus: status }
-              : c,
-          ),
-        );
-
-        fetchModelsForProvider(targetConfig.llmProvider, apiKeyDraft);
-      }
-
-      await saveChatbotConfig(targetConfig);
-      await refreshChatbots();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsSaving(false);
-    }
-  }, [
-    activeUuid,
-    apiKeyDraft,
-    chatbots,
-    fetchModelsForProvider,
-    refreshChatbots,
-  ]);
+    await saveWithConfig({});
+  }, [saveWithConfig]);
 
   const clearProviderApiKey = useCallback(async () => {
     if (!config) return;
@@ -386,6 +399,7 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
         refreshModels,
         revealKey,
         save,
+        saveWithConfig,
         selectChatbot,
         updateApiKeyDraft: setApiKeyDraft,
         updateConfig,

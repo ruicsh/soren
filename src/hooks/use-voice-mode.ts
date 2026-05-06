@@ -30,6 +30,7 @@ const LISTEN_TIMEOUT_MS = 10000;
 const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
 export interface UseVoiceModeOptions {
+  chatbotUuid?: string;
   llmModel?: string;
   llmProvider?: string;
   voiceId?: null | string;
@@ -100,6 +101,7 @@ export function useVoiceMode(
     sendMessage,
     stop: stopStream,
   } = useChatStream({
+    chatbotUuid: options?.chatbotUuid,
     onStreamingChunk: (chunk) => {
       sentenceBuffer.append(chunk);
     },

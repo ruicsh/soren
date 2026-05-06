@@ -20,7 +20,7 @@ vi.mock('@/hooks/use-voice-mode', () => ({
 
 vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: () => ({
-    config: { name: 'Soren', voiceId: 'voice-1' },
+    config: { name: 'Soren', uuid: 'test-uuid', voiceId: 'voice-1' },
     isLoading: false,
   }),
 }));

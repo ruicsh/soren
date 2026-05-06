@@ -8,7 +8,9 @@ import { useVoiceMode } from './use-voice-mode';
 
 type UseVoiceModeOptions = Parameters<typeof useVoiceMode>[0];
 
-const DEFAULT_OPTIONS: UseVoiceModeOptions = {};
+const DEFAULT_OPTIONS: UseVoiceModeOptions = {
+  chatbotUuid: 'test-uuid',
+};
 
 function renderUseVoiceMode({
   overrides = {},

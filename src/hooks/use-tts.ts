@@ -3,6 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const VOICE_DEBUG = process.env.EXPO_PUBLIC_DEBUG_VOICE === '1';
 
+export interface SpeakOptions {
+  language?: string;
+  onDone?: () => void;
+  pitch?: number;
+  rate?: number;
+  voice?: string;
+}
+
 export interface UseTTSOptions {
   language?: string;
   onDone?: () => void;
@@ -14,7 +22,7 @@ export interface UseTTSOptions {
 export interface UseTTSReturn {
   availableVoices: Speech.Voice[];
   isSpeaking: boolean;
-  speak: (text: string) => void;
+  speak: (text: string, options?: SpeakOptions) => void;
   stop: () => void;
 }
 
@@ -124,7 +132,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
     };
   }, [options?.voice, options?.language]);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, speakOptions?: SpeakOptions) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -136,7 +144,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
     });
 
     Speech.speak(trimmed, {
-      language: languageRef.current,
+      language: speakOptions?.language ?? languageRef.current,
       onDone: () => {
         pendingRef.current--;
         debugLog('speak_done', { pending: pendingRef.current });
@@ -146,7 +154,8 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
           // Use a microtask/timeout to ensure state updates have propagated
           setTimeout(() => {
             if (pendingRef.current === 0) {
-              onDoneRef.current?.();
+              const onDone = speakOptions?.onDone ?? onDoneRef.current;
+              onDone?.();
             }
           }, 0);
         }
@@ -162,14 +171,15 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
           setIsSpeaking(false);
           setTimeout(() => {
             if (pendingRef.current === 0) {
-              onDoneRef.current?.();
+              const onDone = speakOptions?.onDone ?? onDoneRef.current;
+              onDone?.();
             }
           }, 0);
         }
       },
-      pitch: pitchRef.current,
-      rate: rateRef.current,
-      voice: voiceRef.current,
+      pitch: speakOptions?.pitch ?? pitchRef.current,
+      rate: speakOptions?.rate ?? rateRef.current,
+      voice: speakOptions?.voice ?? voiceRef.current,
     });
   }, []);
 

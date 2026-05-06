@@ -96,8 +96,20 @@ vi.mock('lucide-react-native', () => {
     Mic: createIconMock('Mic'),
     Phone: createIconMock('Phone'),
     PhoneOff: createIconMock('PhoneOff'),
+    Play: createIconMock('Play'),
+    Search: createIconMock('Search'),
+    X: createIconMock('X'),
   };
 });
+
+// expo-localization — mock for device locale
+vi.mock('expo-localization', () => ({
+  getLocales: () => [{ languageCode: 'en', regionCode: 'US' }],
+}));
+
+// Mock global Expo object if needed by some modules
+(globalThis as any).expo = { modules: {} };
+(globalThis as any).ExpoModules = {};
 
 // expo-crypto — mock for randomUUID
 vi.mock('expo-crypto', () => ({

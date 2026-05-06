@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  type PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
@@ -34,11 +35,9 @@ const ChatbotConfigContext = createContext<ChatbotConfigContextType | null>(
   null,
 );
 
-export function ChatbotConfigProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function ChatbotConfigProvider(props: PropsWithChildren) {
+  const { children } = props;
+
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
@@ -140,5 +139,6 @@ export function useChatbotConfigContext() {
       'useChatbotConfigContext must be used within a ChatbotConfigProvider',
     );
   }
+
   return context;
 }

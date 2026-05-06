@@ -13,14 +13,15 @@ describe('byok-keys', () => {
   const uuid = 'uuid-123';
   const provider = 'groq';
   const key = 'sk-test-123';
-  const expectedKeyName = `byok_key.${uuid}.${provider}`;
+  const expectedKeyName = `byok_key.${provider}`;
+  const expectedLegacyKeyName = `byok_key.${uuid}.${provider}`;
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('setApiKey', () => {
-    it('sets key in SecureStore with sanitized name', async () => {
+    it('sets key in SecureStore with sanitized provider name', async () => {
       await setApiKey(uuid, provider, key);
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         expectedKeyName,
@@ -28,26 +29,52 @@ describe('byok-keys', () => {
       );
     });
 
-    it('sanitizes invalid characters in name', async () => {
-      await setApiKey('uuid:with:colons', 'provider/slash', key);
+    it('sanitizes invalid characters in provider name', async () => {
+      await setApiKey(uuid, 'provider/slash', key);
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'byok_key.uuid_with_colons.provider_slash',
+        'byok_key.provider_slash',
         key,
       );
     });
 
-    it('does nothing if inputs are empty', async () => {
-      await setApiKey('', provider, key);
+    it('does nothing if provider is empty', async () => {
+      await setApiKey(uuid, '', key);
       expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
     });
   });
 
   describe('getApiKey', () => {
-    it('returns key from SecureStore', async () => {
+    it('returns key from SecureStore (shared key)', async () => {
       vi.mocked(SecureStore.getItemAsync).mockResolvedValue(key);
       const result = await getApiKey(uuid, provider);
       expect(result).toBe(key);
       expect(SecureStore.getItemAsync).toHaveBeenCalledWith(expectedKeyName);
+    });
+
+    it('falls back to legacy key and migrates if shared key missing', async () => {
+      // First call for shared key returns null
+      vi.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(null);
+      // Second call for legacy key returns value
+      vi.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(key);
+
+      const result = await getApiKey(uuid, provider);
+
+      expect(result).toBe(key);
+      // Checked shared key first
+      expect(SecureStore.getItemAsync).toHaveBeenNthCalledWith(
+        1,
+        expectedKeyName,
+      );
+      // Then checked legacy key
+      expect(SecureStore.getItemAsync).toHaveBeenNthCalledWith(
+        2,
+        expectedLegacyKeyName,
+      );
+      // Then migrated to shared key
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        expectedKeyName,
+        key,
+      );
     });
 
     it('returns null and catches errors', async () => {
@@ -60,9 +87,12 @@ describe('byok-keys', () => {
   });
 
   describe('deleteApiKey', () => {
-    it('deletes key from SecureStore', async () => {
+    it('deletes both shared and legacy keys', async () => {
       await deleteApiKey(uuid, provider);
       expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(expectedKeyName);
+      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(
+        expectedLegacyKeyName,
+      );
     });
   });
 

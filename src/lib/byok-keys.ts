@@ -5,7 +5,16 @@ import * as SecureStore from 'expo-secure-store';
  */
 const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-const getKeyName = (chatbotUuid: string, providerId: string) => {
+const getKeyName = (providerId: string) => {
+  if (!providerId) return null;
+
+  return `byok_key.${sanitize(providerId)}`;
+};
+
+/**
+ * Legacy key name for backward compatibility
+ */
+const getLegacyKeyName = (chatbotUuid: string, providerId: string) => {
   if (!chatbotUuid || !providerId) return null;
 
   return `byok_key.${sanitize(chatbotUuid)}.${sanitize(providerId)}`;
@@ -15,10 +24,17 @@ export async function deleteApiKey(
   chatbotUuid: string,
   providerId: string,
 ): Promise<void> {
-  const name = getKeyName(chatbotUuid, providerId);
-  if (!name) return;
+  const name = getKeyName(providerId);
+  const legacyName = getLegacyKeyName(chatbotUuid, providerId);
+
   try {
-    await SecureStore.deleteItemAsync(name);
+    if (name) {
+      await SecureStore.deleteItemAsync(name);
+    }
+
+    if (legacyName) {
+      await SecureStore.deleteItemAsync(legacyName);
+    }
   } catch (err) {
     if (process.env.NODE_ENV !== 'test') {
       console.error('SecureStore.deleteItemAsync failed:', err);
@@ -30,10 +46,26 @@ export async function getApiKey(
   chatbotUuid: string,
   providerId: string,
 ): Promise<null | string> {
-  const name = getKeyName(chatbotUuid, providerId);
+  const name = getKeyName(providerId);
   if (!name) return null;
+
   try {
-    return await SecureStore.getItemAsync(name);
+    const key = await SecureStore.getItemAsync(name);
+    if (key) return key;
+
+    // Fallback to legacy key
+    const legacyName = getLegacyKeyName(chatbotUuid, providerId);
+    if (legacyName) {
+      const legacyKey = await SecureStore.getItemAsync(legacyName);
+      if (legacyKey) {
+        // Migrate to new shared key
+        await setApiKey(chatbotUuid, providerId, legacyKey);
+
+        return legacyKey;
+      }
+    }
+
+    return null;
   } catch (err) {
     if (process.env.NODE_ENV !== 'test') {
       console.error('SecureStore.getItemAsync failed:', err);
@@ -57,7 +89,7 @@ export async function setApiKey(
   providerId: string,
   key: string,
 ): Promise<void> {
-  const name = getKeyName(chatbotUuid, providerId);
+  const name = getKeyName(providerId);
   if (!name || !key) return;
   try {
     await SecureStore.setItemAsync(name, key);

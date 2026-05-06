@@ -20,18 +20,18 @@ export interface SelectionItem {
   sublabel?: string;
 }
 
-export interface SelectionSection {
-  data: SelectionItem[];
-  title: string;
-}
-
-interface SelectionListScreenProps {
+export interface SelectionListScreenProps {
   isLoading?: boolean;
   items?: SelectionItem[];
   onSelect: (value: null | string) => void;
   searchable?: boolean;
   sections?: SelectionSection[];
   selectedValue: null | string;
+  title: string;
+}
+
+export interface SelectionSection {
+  data: SelectionItem[];
   title: string;
 }
 

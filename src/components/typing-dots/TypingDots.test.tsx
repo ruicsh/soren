@@ -60,9 +60,9 @@ describe('TypingDots', () => {
 
   it('cleans up interval on unmount', () => {
     const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval');
-    const { unmount } = render(<TypingDots />);
+    render(<TypingDots />);
 
-    unmount();
+    screen.unmount();
 
     expect(clearIntervalSpy).toHaveBeenCalled();
     clearIntervalSpy.mockRestore();

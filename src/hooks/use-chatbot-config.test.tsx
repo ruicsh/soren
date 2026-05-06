@@ -19,6 +19,17 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
 );
 
+const DEFAULT_OPTIONS = { wrapper };
+
+function renderUseChatbotConfig({
+  overrides = {},
+}: { overrides?: Parameters<typeof renderHook>[1] } = {}) {
+  return renderHook(() => useChatbotConfig(), {
+    ...DEFAULT_OPTIONS,
+    ...overrides,
+  });
+}
+
 describe('useChatbotConfig', () => {
   const mockConfig = {
     llmModel: 'llama-3.1-8b-instant',
@@ -34,7 +45,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('loads config on mount', async () => {
-    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
+    const { result } = renderUseChatbotConfig();
 
     expect(result.current.isLoading).toBe(true);
 
@@ -43,7 +54,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('updates local config state', async () => {
-    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
+    const { result } = renderUseChatbotConfig();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
@@ -54,7 +65,7 @@ describe('useChatbotConfig', () => {
   });
 
   it('calls saveChatbotConfig when saving', async () => {
-    const { result } = renderHook(() => useChatbotConfig(), { wrapper });
+    const { result } = renderUseChatbotConfig();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {

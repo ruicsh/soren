@@ -31,12 +31,12 @@ describe('ChatMessageBubble', () => {
   });
 
   it('shows TypingDots when streaming an empty assistant message', () => {
-    const { queryByTestId } = renderChatMessageBubble({
+    renderChatMessageBubble({
       isStreaming: true,
       message: makeMessage('assistant', ''),
     });
 
-    expect(queryByTestId('chat-message-text')).toBeNull();
+    expect(screen.queryByTestId('chat-message-text')).toBeNull();
   });
 
   it('does not show TypingDots when not streaming', () => {

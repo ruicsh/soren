@@ -6,18 +6,20 @@ import { emitSpeechEvent } from '@/tests/test-setup';
 
 import { useVoiceMode } from './use-voice-mode';
 
-vi.mock('@/lib/llm/xhr-stream', () => ({
-  createStreamChat: vi.fn(() => {
-    const gen = (async function* () {
-      yield 'Hello';
-      yield ' world.';
-    })();
+type UseVoiceModeOptions = Parameters<typeof useVoiceMode>[0];
 
-    return Object.assign(gen, {
-      metrics: { firstTokenTime: null, headersTime: null },
-    });
-  }),
-}));
+const DEFAULT_OPTIONS: UseVoiceModeOptions = {};
+
+function renderUseVoiceMode({
+  overrides = {},
+}: { overrides?: Partial<UseVoiceModeOptions> } = {}) {
+  const options = { ...DEFAULT_OPTIONS, ...overrides };
+
+  return {
+    ...renderHook(() => useVoiceMode(options)),
+    options,
+  };
+}
 
 describe('useVoiceMode', () => {
   beforeEach(() => {
@@ -25,14 +27,14 @@ describe('useVoiceMode', () => {
   });
 
   it('initializes in idle state', () => {
-    const { result } = renderHook(() => useVoiceMode());
+    const { result } = renderUseVoiceMode();
     expect(result.current.state).toBe('idle');
     expect(result.current.transcript).toBe('');
     expect(result.current.error).toBeNull();
   });
 
   it('activate requests permissions and transitions to listening', async () => {
-    const { result } = renderHook(() => useVoiceMode());
+    const { result } = renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -54,7 +56,7 @@ describe('useVoiceMode', () => {
   });
 
   it('deactivate resets to idle', async () => {
-    const { result } = renderHook(() => useVoiceMode());
+    const { result } = renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -72,7 +74,7 @@ describe('useVoiceMode', () => {
       ExpoSpeechRecognitionModule.requestPermissionsAsync,
     ).mockRejectedValue(new Error('Mic broken'));
 
-    const { result } = renderHook(() => useVoiceMode());
+    const { result } = renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();

@@ -4,6 +4,21 @@ import { vi } from 'vitest';
 
 import { useTTS } from './use-tts';
 
+type UseTTSOptions = Parameters<typeof useTTS>[0];
+
+const DEFAULT_OPTIONS: UseTTSOptions = {};
+
+function renderUseTTS({
+  overrides = {},
+}: { overrides?: Partial<UseTTSOptions> } = {}) {
+  const options = { ...DEFAULT_OPTIONS, ...overrides };
+
+  return {
+    ...renderHook(() => useTTS(options)),
+    options,
+  };
+}
+
 describe('useTTS', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -11,12 +26,12 @@ describe('useTTS', () => {
   });
 
   it('initializes with isSpeaking false', () => {
-    const { result } = renderHook(() => useTTS());
+    const { result } = renderUseTTS();
     expect(result.current.isSpeaking).toBe(false);
   });
 
   it('speak queues text and sets isSpeaking true', () => {
-    const { result } = renderHook(() => useTTS());
+    const { result } = renderUseTTS();
 
     act(() => {
       result.current.speak('Hello world');
@@ -30,7 +45,7 @@ describe('useTTS', () => {
   });
 
   it('ignores empty or whitespace text', () => {
-    const { result } = renderHook(() => useTTS());
+    const { result } = renderUseTTS();
 
     act(() => {
       result.current.speak('   ');
@@ -40,45 +55,47 @@ describe('useTTS', () => {
   });
 
   it('calls onDone when speak finishes', async () => {
-    const onDone = vi.fn();
-    const { result } = renderHook(() => useTTS({ onDone }));
+    const { options, result } = renderUseTTS({
+      overrides: { onDone: vi.fn() },
+    });
 
     act(() => {
       result.current.speak('Hello');
     });
 
-    const options = vi.mocked(Speech.speak).mock.calls[0][1];
+    const speakOptions = vi.mocked(Speech.speak).mock.calls[0][1];
     act(() => {
-      options?.onDone?.();
+      speakOptions?.onDone?.();
     });
 
     await act(() => new Promise((r) => setTimeout(r, 0)));
 
-    expect(onDone).toHaveBeenCalled();
+    expect(options.onDone).toHaveBeenCalled();
     expect(result.current.isSpeaking).toBe(false);
   });
 
   it('calls onDone when speak errors', async () => {
-    const onDone = vi.fn();
-    const { result } = renderHook(() => useTTS({ onDone }));
+    const { options, result } = renderUseTTS({
+      overrides: { onDone: vi.fn() },
+    });
 
     act(() => {
       result.current.speak('Hello');
     });
 
-    const options = vi.mocked(Speech.speak).mock.calls[0][1];
+    const speakOptions = vi.mocked(Speech.speak).mock.calls[0][1];
     act(() => {
-      options?.onError?.(new Error('test'));
+      speakOptions?.onError?.(new Error('test'));
     });
 
     await act(() => new Promise((r) => setTimeout(r, 0)));
 
-    expect(onDone).toHaveBeenCalled();
+    expect(options.onDone).toHaveBeenCalled();
     expect(result.current.isSpeaking).toBe(false);
   });
 
   it('stops speech and resets isSpeaking', () => {
-    const { result } = renderHook(() => useTTS());
+    const { result } = renderUseTTS();
 
     act(() => {
       result.current.speak('Hello');
@@ -94,7 +111,9 @@ describe('useTTS', () => {
   });
 
   it('passes pitch and rate to Speech.speak', () => {
-    const { result } = renderHook(() => useTTS({ pitch: 0.8, rate: 0.75 }));
+    const { result } = renderUseTTS({
+      overrides: { pitch: 0.8, rate: 0.75 },
+    });
 
     act(() => {
       result.current.speak('Hello');
@@ -123,7 +142,9 @@ describe('useTTS', () => {
     ];
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue(voices);
 
-    const { result } = renderHook(() => useTTS({ language: 'en' }));
+    const { result } = renderUseTTS({
+      overrides: { language: 'en' },
+    });
 
     await act(() => Promise.resolve());
     await act(() => Promise.resolve());
@@ -155,7 +176,9 @@ describe('useTTS', () => {
     ];
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue(voices);
 
-    const { result } = renderHook(() => useTTS({ language: 'en' }));
+    const { result } = renderUseTTS({
+      overrides: { language: 'en' },
+    });
     await act(() => Promise.resolve());
     await act(() => Promise.resolve());
 
@@ -186,7 +209,9 @@ describe('useTTS', () => {
     ];
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue(voices);
 
-    const { result } = renderHook(() => useTTS({ language: 'en-GB' }));
+    const { result } = renderUseTTS({
+      overrides: { language: 'en-GB' },
+    });
     await act(() => Promise.resolve());
     await act(() => Promise.resolve());
 
@@ -201,9 +226,9 @@ describe('useTTS', () => {
   });
 
   it('explicit voice overrides auto-select', () => {
-    const { result } = renderHook(() =>
-      useTTS({ voice: 'com.apple.ttsbubble.Moira' }),
-    );
+    const { result } = renderUseTTS({
+      overrides: { voice: 'com.apple.ttsbubble.Moira' },
+    });
 
     act(() => {
       result.current.speak('Hello');
@@ -216,7 +241,9 @@ describe('useTTS', () => {
   });
 
   it('passes language when specified', () => {
-    const { result } = renderHook(() => useTTS({ language: 'fr-FR' }));
+    const { result } = renderUseTTS({
+      overrides: { language: 'fr-FR' },
+    });
 
     act(() => {
       result.current.speak('Bonjour');

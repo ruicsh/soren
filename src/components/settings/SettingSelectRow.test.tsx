@@ -21,9 +21,7 @@ const DEFAULT_PROPS: SettingSelectRowProps = {
 function renderSettingSelectRow(
   overrides: Partial<SettingSelectRowProps> = {},
 ) {
-  const props = { ...DEFAULT_PROPS, ...overrides };
-
-  return render(<SettingSelectRow {...props} />);
+  return render(<SettingSelectRow {...DEFAULT_PROPS} {...overrides} />);
 }
 
 describe('SettingSelectRow', () => {

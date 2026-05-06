@@ -101,7 +101,7 @@ describe('ChatInput', () => {
 
   it('does not send duplicate transcript on re-render', async () => {
     const onSendSpy = vi.fn();
-    const { rerender } = renderChatInput({ onSend: onSendSpy });
+    renderChatInput({ onSend: onSendSpy });
 
     const micButton = screen.getByTestId('mic-button');
     fireEvent.press(micButton);
@@ -124,7 +124,7 @@ describe('ChatInput', () => {
     await waitFor(() => expect(onSendSpy).toHaveBeenCalledTimes(1));
 
     // Force a re-render while transcript is still "Once"
-    rerender(<ChatInput {...DEFAULT_PROPS} onSend={onSendSpy} />);
+    screen.rerender(<ChatInput {...DEFAULT_PROPS} onSend={onSendSpy} />);
 
     // onSend should still have been called only once
     expect(onSendSpy).toHaveBeenCalledTimes(1);

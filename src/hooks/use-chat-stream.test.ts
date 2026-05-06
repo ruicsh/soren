@@ -11,7 +11,7 @@ import type { StreamMetrics } from '@/lib/llm/types';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
-import { useChatStream } from './use-chat-stream';
+import { useChatStream, type UseChatStreamOptions } from './use-chat-stream';
 
 vi.mock('@/lib/llm/xhr-stream', () => ({
   createStreamChat: vi.fn(),
@@ -43,6 +43,17 @@ function withMetrics(
   });
 }
 
+const DEFAULT_OPTIONS: UseChatStreamOptions = {
+  providerId: 'groq',
+  providerModel: 'llama-3.1-8b',
+};
+
+function renderUseChatStream({
+  overrides = {},
+}: { overrides?: Partial<UseChatStreamOptions> } = {}) {
+  return renderHook(() => useChatStream({ ...DEFAULT_OPTIONS, ...overrides }));
+}
+
 describe('useChatStream', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -53,9 +64,7 @@ describe('useChatStream', () => {
   });
 
   it('initializes with empty messages and isStreaming false', () => {
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     expect(result.current.messages).toEqual([]);
     expect(result.current.isStreaming).toBe(false);
@@ -70,9 +79,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('Hello');
@@ -98,9 +105,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result, unmount } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result, unmount } = renderUseChatStream();
 
     act(() => {
       result.current.sendMessage('Hi');
@@ -119,9 +124,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -140,9 +143,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -162,9 +163,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -186,9 +185,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result, unmount } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result, unmount } = renderUseChatStream();
 
     act(() => {
       result.current.sendMessage('First');
@@ -214,9 +211,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('   ');
@@ -238,9 +233,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderHook(() =>
-      useChatStream({ providerId: 'groq', providerModel: 'llama-3.1-8b' }),
-    );
+    const { result } = renderUseChatStream();
 
     act(() => {
       result.current.sendMessage('Hi');
@@ -271,7 +264,9 @@ describe('useChatStream', () => {
 
   it('returns error if provider not configured', async () => {
     vi.mocked(createProvider).mockReturnValue(null);
-    const { result } = renderHook(() => useChatStream());
+    const { result } = renderUseChatStream({
+      overrides: { providerId: undefined, providerModel: undefined },
+    });
 
     await act(async () => {
       await result.current.sendMessage('Hi');

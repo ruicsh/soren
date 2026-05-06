@@ -42,7 +42,9 @@ Full verify order:
 - Run one file: `npx vitest run src/path/to/file.test.ts`
 - Keep alias mapping in sync between `tsconfig.json` and `vitest.config.mts` (`@/*`, `@/assets/*`)
 - Use `renderComponentName({ overrides })` helper pattern with `DEFAULT_PROPS` in tests (import component props type directly)
+- Use `renderHookName({ overrides })` helper pattern with `DEFAULT_OPTIONS` (or `DEFAULT_PROPS`) for hook tests. Return `{ ...renderHookResult, options }` where `options` is the merged result of `DEFAULT_OPTIONS` and `overrides`.
 - Organize tests using Arrange/Act/Assert (AAA) structure with empty lines between sections, but omit the `// Arrange/Act/Assert` comments.
+- Always use `screen.*` for assertions; do not return/destructure queries from `render`.
 
 ## Conventions That Break Easily
 
@@ -52,8 +54,8 @@ Full verify order:
 - Component files: `src/components/<name>/<Name>.tsx`
 - Hook files: `src/hooks/use-<name>.ts`
 - Props/parameters: destructure on first line of function body, not in signature
-- Formatting: always leave an empty line before `return` (enforced by ESLint)
-- Prettier: single quotes, trailing commas, tab width 2
+- Formatting: always leave empty line before `return` (enforced by ESLint rule)
+- Prettier: rules defined in `.prettierrc` (single quotes, trailing commas, 2-space tabs)
 - Dependencies pinned exactly (`.npmrc` has `save-exact=true`)
 
 ## Communication Mode

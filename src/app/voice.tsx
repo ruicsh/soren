@@ -22,6 +22,7 @@ export default function VoiceScreen() {
 
   useEffect(() => {
     activate();
+
     return () => {
       deactivate();
     };

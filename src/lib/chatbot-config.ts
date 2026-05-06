@@ -37,6 +37,7 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
       try {
         const content = await configFile.text();
         const parsed = JSON.parse(content) as Partial<ChatbotConfig>;
+
         // Migration/Defaults
         return {
           llmModel: parsed.llmModel ?? DEFAULT_MODEL,
@@ -62,6 +63,7 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
   };
 
   await saveChatbotConfig(config);
+
   return config;
 }
 

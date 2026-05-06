@@ -43,6 +43,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
 
       if (options?.voice) {
         voiceRef.current = options.voice;
+
         return;
       }
 
@@ -84,6 +85,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
         ) {
           return 1;
         }
+
         return 0;
       };
 
@@ -97,6 +99,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
           const matchB = b.language === lang ? 1 : 0;
           if (matchB !== matchA) return matchB - matchA;
         }
+
         return 0;
       });
 
@@ -115,6 +118,7 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
         quality: best.quality,
       });
     });
+
     return () => {
       mounted = false;
     };

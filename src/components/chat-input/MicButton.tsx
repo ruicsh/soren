@@ -10,7 +10,9 @@ interface MicButtonProps {
   onPress: () => void;
 }
 
-export function MicButton({ isRecording, onPress }: MicButtonProps) {
+export function MicButton(props: MicButtonProps) {
+  const { isRecording, onPress } = props;
+
   return (
     <Pressable
       hitSlop={16}

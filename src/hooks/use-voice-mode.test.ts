@@ -12,6 +12,7 @@ vi.mock('@/lib/llm/xhr-stream', () => ({
       yield 'Hello';
       yield ' world.';
     })();
+
     return Object.assign(gen, {
       metrics: { firstTokenTime: null, headersTime: null },
     });

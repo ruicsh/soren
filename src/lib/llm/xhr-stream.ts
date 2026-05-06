@@ -78,6 +78,7 @@ export function createStreamChat(
 
     if (onAbort?.()) {
       xhr.abort();
+
       return;
     }
 
@@ -89,6 +90,7 @@ export function createStreamChat(
 
       if (provider.isDone(lines)) {
         queue.push(null);
+
         return;
       }
 
@@ -117,6 +119,7 @@ export function createStreamChat(
         null,
         new Error(`HTTP ${xhr.status}: ${xhr.responseText.slice(0, 200)}`),
       );
+
       return;
     }
 
@@ -172,6 +175,7 @@ function createStreamQueue(): StreamQueue {
       if (queue.length > 0) {
         return Promise.resolve(queue.shift()!);
       }
+
       return new Promise((resolve) => {
         resolveNext = resolve;
       });

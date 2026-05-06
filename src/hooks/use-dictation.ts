@@ -93,6 +93,7 @@ export function useDictation(
         code: event.error,
         msg: event.message,
       });
+
       return;
     }
 

@@ -250,6 +250,7 @@ describe('useChatStream', () => {
       () => {
         const assistant =
           result.current.messages[result.current.messages.length - 1];
+
         return assistant.content === 'first';
       },
       { timeout: 2000 },

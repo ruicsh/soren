@@ -11,10 +11,11 @@ interface ChatMessageProps {
   message: ChatMessage;
 }
 
-export const ChatMessageBubble = memo(function ChatMessageBubble({
-  isStreaming,
-  message,
-}: ChatMessageProps) {
+export const ChatMessageBubble = memo(function ChatMessageBubble(
+  props: ChatMessageProps,
+) {
+  const { isStreaming = false, message } = props;
+
   const isUser = message.role === 'user';
   const showTyping = isStreaming && !isUser && message.content.length === 0;
 

@@ -35,9 +35,11 @@ export const PROVIDERS: ProviderEntry[] = [
 
 export function createProvider(id: string, model: string): LLMProvider | null {
   const entry = PROVIDERS.find((p) => p.id === id);
+
   if (!entry) return null;
 
   const apiKey = getApiKey(entry) || '';
+
   if (!apiKey) return null;
 
   if (entry.type === 'openai-compat') {
@@ -65,5 +67,6 @@ export function getApiKey(provider: ProviderEntry): string | undefined {
   if (provider.apiKeyEnv === 'EXPO_PUBLIC_ANTHROPIC_API_KEY') {
     return process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
   }
+
   return undefined;
 }

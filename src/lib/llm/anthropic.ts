@@ -37,6 +37,7 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
         const trimmed = line.trim();
         if (trimmed === 'event: message_stop') return true;
       }
+
       return false;
     },
 
@@ -65,6 +66,7 @@ export function anthropicProvider(config: AnthropicConfig): LLMProvider {
           }
         }
       }
+
       return deltas;
     },
 

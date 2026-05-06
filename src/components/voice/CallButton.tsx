@@ -7,7 +7,9 @@ interface CallButtonProps {
   onPress: () => void;
 }
 
-export function CallButton({ onPress }: CallButtonProps) {
+export function CallButton(props: CallButtonProps) {
+  const { onPress } = props;
+
   return (
     <Pressable onPress={onPress} style={styles.button} testID="call-button">
       <PhoneOff color="#ffffff" pointerEvents="none" size={32} />

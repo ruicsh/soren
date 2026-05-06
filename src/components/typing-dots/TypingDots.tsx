@@ -15,6 +15,7 @@ export function TypingDots() {
 
   useEffect(() => {
     const id = setInterval(() => setStep((s) => (s + 1) % 4), 200);
+
     return () => clearInterval(id);
   }, []);
 

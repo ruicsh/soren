@@ -20,6 +20,7 @@ function createMockProvider(): LLMProvider {
           return true;
         }
       }
+
       return false;
     },
 
@@ -40,6 +41,7 @@ function createMockProvider(): LLMProvider {
           // ignore
         }
       }
+
       return deltas;
     },
     warmup: () => {},
@@ -158,6 +160,7 @@ describe('Anthropic-style SSE parsing', () => {
       for (const line of lines) {
         if (line.trim() === 'event: message_stop') return true;
       }
+
       return false;
     },
 
@@ -184,6 +187,7 @@ describe('Anthropic-style SSE parsing', () => {
           }
         }
       }
+
       return deltas;
     },
   };

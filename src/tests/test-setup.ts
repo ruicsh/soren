@@ -11,6 +11,7 @@ vi.mock('expo-router', () => {
     replace: vi.fn(),
     setParams: vi.fn(),
   };
+
   return {
     Link: ({
       children,
@@ -58,6 +59,7 @@ vi.mock('react-native-reanimated', () => {
     useAnimatedStyle: (getter: () => Record<string, unknown>) => getter(),
     useSharedValue: (initialValue: unknown) => {
       let value = initialValue;
+
       return {
         get: () => value,
         set: (v: unknown) => {
@@ -80,6 +82,7 @@ vi.mock('lucide-react-native', () => {
   const createIconMock = (name: string) => {
     const IconMock = () => null;
     IconMock.displayName = `Icon(${name})`;
+
     return IconMock;
   };
 
@@ -189,6 +192,7 @@ vi.mock('expo-speech-recognition', () => ({
       const listeners = speechListeners.get(eventName) ?? [];
       listeners.push(listener);
       speechListeners.set(eventName, listeners);
+
       return () => {
         const updated = speechListeners.get(eventName) ?? [];
         speechListeners.set(

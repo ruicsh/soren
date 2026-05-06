@@ -28,6 +28,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
   const provider = useMemo(() => {
     if (!providerId || !providerModel) return null;
+
     return createProvider(providerId, providerModel);
   }, [providerId, providerModel]);
 
@@ -43,6 +44,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (!last || last.role !== 'assistant') return prev;
+
       return [...prev.slice(0, -1), { ...last, content: last.content + delta }];
     });
   }, []);
@@ -62,6 +64,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
           { content: text.trim(), id: generateId(), role: 'user' },
           { content: errorMsg, id: generateId(), role: 'assistant' },
         ]);
+
         return;
       }
 

@@ -27,7 +27,8 @@ export function WaveformAnimation() {
   );
 }
 
-function Bar({ delay }: { delay: number }) {
+function Bar(props: { delay: number }) {
+  const { delay } = props;
   const height = useSharedValue(MIN_HEIGHT);
 
   useEffect(() => {

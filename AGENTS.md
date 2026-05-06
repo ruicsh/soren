@@ -49,6 +49,8 @@ Full verify order:
 - Import from `@/` aliases, avoid deep relative imports
 - Component files: `src/components/<name>/<Name>.tsx`
 - Hook files: `src/hooks/use-<name>.ts`
+- Props/parameters: destructure on first line of function body, not in signature
+- Formatting: always leave an empty line before `return` (enforced by ESLint)
 - Prettier: single quotes, trailing commas, tab width 2
 - Dependencies pinned exactly (`.npmrc` has `save-exact=true`)
 

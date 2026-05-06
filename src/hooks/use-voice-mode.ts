@@ -120,6 +120,7 @@ export function useVoiceMode(
           state: stateRef.current,
           textLen: text.length,
         });
+
         return;
       }
       turnRef.current++;
@@ -141,6 +142,7 @@ export function useVoiceMode(
         .catch((err) => {
           if ((stateRef.current as string) === 'idle') {
             debugLog('llm_error_ignored_idle');
+
             return;
           }
           debugLog('llm_error', {
@@ -165,12 +167,14 @@ export function useVoiceMode(
         isRearming: isRearmingRef.current,
         state: stateRef.current,
       });
+
       return;
     }
 
     // Half-duplex check: never start mic if assistant is still speaking
     if (ttsIsSpeakingRef.current) {
       debugLog('startListening_deferred_tts_active');
+
       return;
     }
 
@@ -272,6 +276,7 @@ export function useVoiceMode(
         deactivate();
       }
     }, LISTEN_TIMEOUT_MS);
+
     return () => clearTimeout(timer);
   }, [state, transcript, deactivate]);
 
@@ -284,6 +289,7 @@ export function useVoiceMode(
         startListeningRef.current();
       }
     }, 2500);
+
     return () => clearTimeout(timer);
   }, [state, isRecording]);
 

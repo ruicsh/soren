@@ -25,6 +25,7 @@ vi.mock('@/hooks/use-tts', () => ({
 
 const TestComponent = () => {
   const { config, updateConfig } = useChatbotConfigContext();
+
   return (
     <View>
       <Text testID="config-name">{config?.name}</Text>
@@ -43,6 +44,7 @@ const TestComponent = () => {
 
 const AnotherComponent = () => {
   const { config } = useChatbotConfigContext();
+
   return (
     <View>
       <Text testID="shared-name">{config?.name}</Text>

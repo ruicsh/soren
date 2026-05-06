@@ -9,7 +9,9 @@ interface SendButtonProps {
   onPress: () => void;
 }
 
-export function SendButton({ onPress }: SendButtonProps) {
+export function SendButton(props: SendButtonProps) {
+  const { onPress } = props;
+
   return (
     <Pressable
       hitSlop={16}

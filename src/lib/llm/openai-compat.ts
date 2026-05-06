@@ -32,6 +32,7 @@ export function openaiCompatProvider(config: OpenAICompatConfig): LLMProvider {
           return true;
         }
       }
+
       return false;
     },
 
@@ -53,6 +54,7 @@ export function openaiCompatProvider(config: OpenAICompatConfig): LLMProvider {
           // ignore malformed JSON
         }
       }
+
       return deltas;
     },
 

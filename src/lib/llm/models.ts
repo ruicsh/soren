@@ -1,4 +1,4 @@
-import { getApiKey, PROVIDERS } from './catalog';
+import { PROVIDERS } from './catalog';
 
 export interface LLMModel {
   id: string;
@@ -11,15 +11,17 @@ export function clearModelCache() {
   for (const key in modelCache) delete modelCache[key];
 }
 
-export async function fetchModels(providerId: string): Promise<LLMModel[]> {
+export async function fetchModels(
+  providerId: string,
+  apiKey: string,
+): Promise<LLMModel[]> {
   const entry = PROVIDERS.find((p) => p.id === providerId);
   if (!entry) return [];
 
   if (modelCache[providerId]) return modelCache[providerId];
 
-  const apiKey = getApiKey(entry);
   if (!apiKey) {
-    throw new Error(`Missing API Key: ${entry.apiKeyEnv}`);
+    throw new Error(`Missing API Key for ${entry.label}`);
   }
 
   const headers: Record<string, string> = {

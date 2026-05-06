@@ -8,10 +8,30 @@ import { vi } from 'vitest';
 
 import type { StreamMetrics } from '@/lib/llm/types';
 
+import { getApiKey } from '@/lib/byok-keys';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
 import { useChatStream, type UseChatStreamOptions } from './use-chat-stream';
+
+vi.mock('@/lib/byok-keys', () => ({
+  getApiKey: vi.fn(() => Promise.resolve('mock-key')),
+}));
+
+const mockProvider = {
+  buildRequest: vi.fn(() => ({ body: '', headers: {}, url: '' })),
+  isDone: vi.fn(() => false),
+  parseChunk: vi.fn(() => []),
+  warmup: vi.fn(),
+};
+
+vi.mock('@/lib/llm/catalog', () => ({
+  createProvider: vi.fn(() => mockProvider),
+}));
+
+vi.mock('@/lib/llm/openai-compat', () => ({
+  openaiCompatProvider: vi.fn(() => mockProvider),
+}));
 
 vi.mock('@/lib/llm/xhr-stream', () => ({
   createStreamChat: vi.fn(),
@@ -44,6 +64,7 @@ function withMetrics(
 }
 
 const DEFAULT_OPTIONS: UseChatStreamOptions = {
+  chatbotUuid: 'uuid-123',
   providerId: 'groq',
   providerModel: 'llama-3.1-8b',
 };
@@ -63,8 +84,12 @@ describe('useChatStream', () => {
     cleanup();
   });
 
-  it('initializes with empty messages and isStreaming false', () => {
+  it('initializes with empty messages and isStreaming false', async () => {
     const { result } = renderUseChatStream();
+
+    // Wait for the effect that sets the provider (even if it sets it to null or a mock)
+    // to complete to avoid "not wrapped in act" warning.
+    await waitFor(() => expect(result.current.messages).toEqual([]));
 
     expect(result.current.messages).toEqual([]);
     expect(result.current.isStreaming).toBe(false);
@@ -81,6 +106,9 @@ describe('useChatStream', () => {
 
     const { result } = renderUseChatStream();
 
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
     await act(async () => {
       await result.current.sendMessage('Hello');
     });
@@ -96,7 +124,7 @@ describe('useChatStream', () => {
     });
   });
 
-  it('isStreaming becomes true when a stream starts', () => {
+  it('isStreaming becomes true when a stream starts', async () => {
     vi.mocked(createStreamChat).mockImplementation(() =>
       withMetrics(
         (async function* () {
@@ -106,6 +134,9 @@ describe('useChatStream', () => {
     );
 
     const { result, unmount } = renderUseChatStream();
+
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
     act(() => {
       result.current.sendMessage('Hi');
@@ -126,6 +157,9 @@ describe('useChatStream', () => {
 
     const { result } = renderUseChatStream();
 
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
     await act(async () => {
       await result.current.sendMessage('Hi');
     });
@@ -144,6 +178,9 @@ describe('useChatStream', () => {
     );
 
     const { result } = renderUseChatStream();
+
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -164,6 +201,9 @@ describe('useChatStream', () => {
     );
 
     const { result } = renderUseChatStream();
+
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -186,6 +226,9 @@ describe('useChatStream', () => {
     );
 
     const { result, unmount } = renderUseChatStream();
+
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
     act(() => {
       result.current.sendMessage('First');
@@ -235,6 +278,9 @@ describe('useChatStream', () => {
 
     const { result } = renderUseChatStream();
 
+    // Wait for provider to resolve
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
     act(() => {
       result.current.sendMessage('Hi');
     });
@@ -263,10 +309,8 @@ describe('useChatStream', () => {
   });
 
   it('returns error if provider not configured', async () => {
-    vi.mocked(createProvider).mockReturnValue(null);
-    const { result } = renderUseChatStream({
-      overrides: { providerId: undefined, providerModel: undefined },
-    });
+    vi.mocked(getApiKey).mockResolvedValue(null);
+    const { result } = renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('Hi');
@@ -274,6 +318,8 @@ describe('useChatStream', () => {
 
     const assistant =
       result.current.messages[result.current.messages.length - 1];
-    expect(assistant.content).toBe('LLM Provider not configured.');
+    expect(assistant.content).toBe(
+      'API Key missing. Please go to Settings to add it.',
+    );
   });
 });

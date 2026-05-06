@@ -5,6 +5,7 @@ export interface ChatbotConfig {
   llmModel: string;
   llmProvider: string;
   name: string;
+  providerKeyStatus?: Record<string, boolean>;
   uuid: string;
   voiceId: null | string;
 }

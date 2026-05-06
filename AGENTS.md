@@ -30,7 +30,6 @@ Full verify order:
 
 ## Env Vars
 
-- `EXPO_PUBLIC_GROQ_API_KEY` — required for chat streaming in `src/hooks/use-chat-stream.ts`
 - `EXPO_PUBLIC_DEBUG_VOICE=1` — optional verbose logs for `use-dictation`, `use-tts`, and `use-voice-mode`
 - `EXPO_PUBLIC_DEBUG_XHR_STREAM=1` — optional verbose logs for `src/lib/llm/xhr-stream.ts`
 

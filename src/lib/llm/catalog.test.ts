@@ -10,7 +10,6 @@ describe('catalog', () => {
 
     it('groq has correct config', () => {
       const groq = PROVIDERS[0];
-      expect(groq.apiKeyEnv).toBe('EXPO_PUBLIC_GROQ_API_KEY');
       expect(groq.baseUrl).toBe('https://api.groq.com/openai/v1');
       expect(groq.defaultModel).toBe('llama-3.1-8b-instant');
       expect(groq.modelsUrl).toBe('https://api.groq.com/openai/v1/models');
@@ -19,7 +18,6 @@ describe('catalog', () => {
 
     it('anthropic has correct config', () => {
       const anthropic = PROVIDERS[1];
-      expect(anthropic.apiKeyEnv).toBe('EXPO_PUBLIC_ANTHROPIC_API_KEY');
       expect(anthropic.defaultModel).toBe('claude-3-5-sonnet-20240620');
       expect(anthropic.modelsUrl).toBe('https://api.anthropic.com/v1/models');
       expect(anthropic.type).toBe('anthropic');
@@ -27,22 +25,8 @@ describe('catalog', () => {
   });
 
   describe('createProvider', () => {
-    beforeEach(() => {
-      process.env.EXPO_PUBLIC_GROQ_API_KEY = 'groq-key';
-      process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY = 'anthropic-key';
-    });
-
-    afterEach(() => {
-      delete process.env.EXPO_PUBLIC_GROQ_API_KEY;
-      delete process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
-    });
-
-    it('returns null for invalid provider', () => {
-      expect(createProvider('invalid', 'model')).toBeNull();
-    });
-
     it('creates groq provider', () => {
-      const provider = createProvider('groq', 'llama-3.1-8b-instant');
+      const provider = createProvider('groq', 'llama-3.1-8b-instant', 'key');
       expect(provider).toBeTruthy();
       expect(provider?.buildRequest).toBeDefined();
     });
@@ -51,14 +35,18 @@ describe('catalog', () => {
       const provider = createProvider(
         'anthropic',
         'claude-3-5-sonnet-20240620',
+        'key',
       );
       expect(provider).toBeTruthy();
       expect(provider?.buildRequest).toBeDefined();
     });
 
+    it('returns null if provider unknown', () => {
+      expect(createProvider('invalid', 'model', 'key')).toBeNull();
+    });
+
     it('returns null if api key missing', () => {
-      delete process.env.EXPO_PUBLIC_GROQ_API_KEY;
-      expect(createProvider('groq', 'model')).toBeNull();
+      expect(createProvider('groq', 'model', '')).toBeNull();
     });
   });
 });

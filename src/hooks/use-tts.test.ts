@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as Speech from 'expo-speech';
 import { vi } from 'vitest';
 
@@ -25,13 +25,15 @@ describe('useTTS', () => {
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([]);
   });
 
-  it('initializes with isSpeaking false', () => {
+  it('initializes with isSpeaking false', async () => {
     const { result } = renderUseTTS();
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
     expect(result.current.isSpeaking).toBe(false);
   });
 
-  it('speak queues text and sets isSpeaking true', () => {
+  it('speak queues text and sets isSpeaking true', async () => {
     const { result } = renderUseTTS();
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('Hello world');
@@ -44,8 +46,9 @@ describe('useTTS', () => {
     expect(result.current.isSpeaking).toBe(true);
   });
 
-  it('ignores empty or whitespace text', () => {
+  it('ignores empty or whitespace text', async () => {
     const { result } = renderUseTTS();
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('   ');
@@ -94,8 +97,9 @@ describe('useTTS', () => {
     expect(result.current.isSpeaking).toBe(false);
   });
 
-  it('stops speech and resets isSpeaking', () => {
+  it('stops speech and resets isSpeaking', async () => {
     const { result } = renderUseTTS();
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('Hello');
@@ -110,10 +114,11 @@ describe('useTTS', () => {
     expect(result.current.isSpeaking).toBe(false);
   });
 
-  it('passes pitch and rate to Speech.speak', () => {
+  it('passes pitch and rate to Speech.speak', async () => {
     const { result } = renderUseTTS({
       overrides: { pitch: 0.8, rate: 0.75 },
     });
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('Hello');
@@ -225,10 +230,11 @@ describe('useTTS', () => {
     );
   });
 
-  it('explicit voice overrides auto-select', () => {
+  it('explicit voice overrides auto-select', async () => {
     const { result } = renderUseTTS({
       overrides: { voice: 'com.apple.ttsbubble.Moira' },
     });
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('Hello');
@@ -240,10 +246,11 @@ describe('useTTS', () => {
     );
   });
 
-  it('passes language when specified', () => {
+  it('passes language when specified', async () => {
     const { result } = renderUseTTS({
       overrides: { language: 'fr-FR' },
     });
+    await waitFor(() => expect(result.current.isSpeaking).toBe(false));
 
     act(() => {
       result.current.speak('Bonjour');

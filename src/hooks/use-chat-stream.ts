@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ChatMessage } from '@/lib/llm/types';
 
+import { getApiKey } from '@/lib/byok-keys';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
 const BATCH_MS = 50;
 
 export interface UseChatStreamOptions {
+  chatbotUuid?: string;
   /** Fired with each flushed batch of streaming text */
   onStreamingChunk?: (chunk: string) => void;
   providerId?: string;
@@ -24,13 +26,33 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
   onStreamingChunkRef.current = options?.onStreamingChunk;
 
-  const { providerId, providerModel } = options || {};
+  const { chatbotUuid, providerId, providerModel } = options || {};
 
-  const provider = useMemo(() => {
-    if (!providerId || !providerModel) return null;
+  const [provider, setProvider] = useState<any>(null);
 
-    return createProvider(providerId, providerModel);
-  }, [providerId, providerModel]);
+  useEffect(() => {
+    let active = true;
+    if (!providerId || !providerModel || !chatbotUuid) {
+      setProvider(null);
+
+      return;
+    }
+
+    getApiKey(chatbotUuid, providerId).then((key) => {
+      if (!active) return;
+      if (!key) {
+        setProvider(null);
+
+        return;
+      }
+      const p = createProvider(providerId, providerModel, key);
+      setProvider(p);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [providerId, providerModel, chatbotUuid]);
 
   useEffect(() => {
     isStreamingRef.current = isStreaming;
@@ -58,7 +80,11 @@ export function useChatStream(options?: UseChatStreamOptions) {
       if (!text.trim() || isStreamingRef.current) return;
 
       if (!provider) {
-        const errorMsg = 'LLM Provider not configured.';
+        const errorMsg =
+          !chatbotUuid || !providerId
+            ? 'LLM Provider not configured.'
+            : 'API Key missing. Please go to Settings to add it.';
+
         setMessages((prev) => [
           ...prev,
           { content: text.trim(), id: generateId(), role: 'user' },
@@ -125,7 +151,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
         setIsStreaming(false);
       }
     },
-    [messages, flush, provider],
+    [messages, flush, provider, chatbotUuid, providerId],
   );
 
   // Cleanup interval on unmount

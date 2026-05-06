@@ -22,6 +22,7 @@ export default function Home() {
   const { push } = useRouter();
   const { config } = useChatbotConfig();
   const { isStreaming, messages, sendMessage } = useChatStream({
+    chatbotUuid: config?.uuid,
     providerId: config?.llmProvider,
     providerModel: config?.llmModel,
   });

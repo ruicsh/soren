@@ -26,8 +26,9 @@ describe('useVoiceMode', () => {
     vi.resetAllMocks();
   });
 
-  it('initializes in idle state', () => {
+  it('initializes in idle state', async () => {
     const { result } = renderUseVoiceMode();
+    await waitFor(() => expect(result.current.state).toBe('idle'));
     expect(result.current.state).toBe('idle');
     expect(result.current.transcript).toBe('');
     expect(result.current.error).toBeNull();

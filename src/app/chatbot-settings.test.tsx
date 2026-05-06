@@ -34,17 +34,22 @@ describe('ChatbotSettingsScreen', () => {
     vi.mocked(router.back).mockImplementation(mockBack);
 
     vi.mocked(useChatbotConfig).mockReturnValue({
+      apiKeyDraft: '',
       availableModels: [],
       availableProviders: [],
       availableVoices: [],
+      clearProviderApiKey: vi.fn(),
       config: mockConfig,
       error: null,
+      hasProviderKey: false,
       isLoading: false,
       isSaving: false,
       modelsError: null,
       modelsLoading: false,
       refreshModels: vi.fn(),
+      revealKey: vi.fn(),
       save: mockSave,
+      updateApiKeyDraft: vi.fn(),
       updateConfig: mockUpdateConfig,
     });
   });
@@ -76,5 +81,37 @@ describe('ChatbotSettingsScreen', () => {
     const backBtn = screen.getByLabelText('Go back');
     fireEvent.press(backBtn);
     expect(mockBack).toHaveBeenCalled();
+  });
+
+  it('calls revealKey when toggling visibility on empty draft with existing key', () => {
+    const mockRevealKey = vi.fn();
+    vi.mocked(useChatbotConfig).mockReturnValue({
+      apiKeyDraft: '',
+      availableModels: [],
+      availableProviders: [
+        { defaultModel: 'm1', id: 'groq', label: 'Groq' } as any,
+      ],
+      availableVoices: [],
+      clearProviderApiKey: vi.fn(),
+      config: mockConfig,
+      error: null,
+      hasProviderKey: true,
+      isLoading: false,
+      isSaving: false,
+      modelsError: null,
+      modelsLoading: false,
+      refreshModels: vi.fn(),
+      revealKey: mockRevealKey,
+      save: mockSave,
+      updateApiKeyDraft: vi.fn(),
+      updateConfig: mockUpdateConfig,
+    });
+
+    render(<ChatbotSettingsScreen />);
+
+    const eyeBtn = screen.getByTestId('eye-icon-button');
+    fireEvent.press(eyeBtn);
+
+    expect(mockRevealKey).toHaveBeenCalled();
   });
 });

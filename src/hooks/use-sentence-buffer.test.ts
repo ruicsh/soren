@@ -4,14 +4,10 @@ import { useSentenceBuffer } from './use-sentence-buffer';
 
 type UseSentenceBufferOptions = Parameters<typeof useSentenceBuffer>[0];
 
-const DEFAULT_OPTIONS: UseSentenceBufferOptions = {
-  onSentence: vi.fn(),
-};
-
 function renderUseSentenceBuffer({
   overrides = {},
 }: { overrides?: Partial<UseSentenceBufferOptions> } = {}) {
-  const options = { ...DEFAULT_OPTIONS, ...overrides };
+  const options = { onSentence: vi.fn(), ...overrides };
 
   return {
     ...renderHook(() => useSentenceBuffer(options)),

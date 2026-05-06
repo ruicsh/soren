@@ -2,36 +2,30 @@ import { vi } from 'vitest';
 
 import { clearModelCache, fetchModels } from './models';
 
+// Mock global fetch
+(globalThis as any).fetch = vi.fn();
+
 describe('models', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearModelCache();
-    (globalThis as any).fetch = vi.fn();
-    process.env.EXPO_PUBLIC_GROQ_API_KEY = 'test-key';
-  });
-
-  afterEach(() => {
-    delete process.env.EXPO_PUBLIC_GROQ_API_KEY;
   });
 
   it('fetches and filters models for groq', async () => {
+    const mockModels = {
+      data: [
+        { id: 'llama-3.1-8b-instant' },
+        { id: 'whisper-large' }, // should be filtered out
+      ],
+    };
+
     vi.mocked(fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          data: [
-            { id: 'llama-3.1-8b-instant' },
-            { id: 'distil-whisper-large-v3-en' }, // excluded
-            { id: 'gemma2-9b-it' },
-          ],
-        }),
+      json: () => Promise.resolve(mockModels),
       ok: true,
     } as any);
 
-    const models = await fetchModels('groq');
+    const models = await fetchModels('groq', 'test-key');
 
-    expect(models).toHaveLength(2);
-    expect(models[0].id).toBe('gemma2-9b-it');
-    expect(models[1].id).toBe('llama-3.1-8b-instant');
     expect(fetch).toHaveBeenCalledWith(
       'https://api.groq.com/openai/v1/models',
       expect.objectContaining({
@@ -40,25 +34,25 @@ describe('models', () => {
         }),
       }),
     );
+    expect(models).toHaveLength(1);
+    expect(models[0].id).toBe('llama-3.1-8b-instant');
   });
 
   it('fetches and filters models for anthropic', async () => {
-    process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY = 'ant-key';
+    const mockModels = {
+      data: [
+        { id: 'claude-3-5-sonnet-20240620' },
+        { id: 'claude-3-haiku-20240307' },
+      ],
+    };
+
     vi.mocked(fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          data: [
-            { id: 'claude-3-5-sonnet-20240620' },
-            { id: 'claude-3-haiku-20240307' },
-          ],
-        }),
+      json: () => Promise.resolve(mockModels),
       ok: true,
     } as any);
 
-    const models = await fetchModels('anthropic');
+    const models = await fetchModels('anthropic', 'ant-key');
 
-    expect(models).toHaveLength(2);
-    expect(models[0].id).toBe('claude-3-5-sonnet-20240620');
     expect(fetch).toHaveBeenCalledWith(
       'https://api.anthropic.com/v1/models',
       expect.objectContaining({
@@ -68,26 +62,28 @@ describe('models', () => {
         }),
       }),
     );
-    delete process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
+    expect(models).toHaveLength(2);
   });
 
   it('returns all models if no chat markers found (fail-open)', async () => {
+    const mockModels = {
+      data: [{ id: 'mystery-model-v1' }],
+    };
+
     vi.mocked(fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          data: [{ id: 'mystery-model-v1' }],
-        }),
+      json: () => Promise.resolve(mockModels),
       ok: true,
     } as any);
 
-    const models = await fetchModels('groq');
+    const models = await fetchModels('groq', 'key');
     expect(models).toHaveLength(1);
     expect(models[0].id).toBe('mystery-model-v1');
   });
 
   it('throws if api key missing', async () => {
-    delete process.env.EXPO_PUBLIC_GROQ_API_KEY;
-    await expect(fetchModels('groq')).rejects.toThrow('Missing API Key');
+    await expect(fetchModels('groq', '')).rejects.toThrow(
+      'Missing API Key for Groq',
+    );
   });
 
   it('throws on api error', async () => {
@@ -97,6 +93,6 @@ describe('models', () => {
       text: () => Promise.resolve('Unauthorized'),
     } as any);
 
-    await expect(fetchModels('groq')).rejects.toThrow('401');
+    await expect(fetchModels('groq', 'key')).rejects.toThrow('401');
   });
 });

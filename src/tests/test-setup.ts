@@ -77,6 +77,13 @@ vi.mock('react-native-reanimated', () => {
   };
 });
 
+// expo-secure-store — mock secret storage
+vi.mock('expo-secure-store', () => ({
+  deleteItemAsync: vi.fn(() => Promise.resolve()),
+  getItemAsync: vi.fn(() => Promise.resolve(null)),
+  setItemAsync: vi.fn(() => Promise.resolve()),
+}));
+
 // lucide-react-native — render as simple elements for testability
 vi.mock('lucide-react-native', () => {
   const createIconMock = (name: string) => {
@@ -93,11 +100,15 @@ vi.mock('lucide-react-native', () => {
     Check: createIconMock('Check'),
     ChevronLeft: createIconMock('ChevronLeft'),
     ChevronRight: createIconMock('ChevronRight'),
+    Eye: createIconMock('Eye'),
+    EyeOff: createIconMock('EyeOff'),
+    Key: createIconMock('Key'),
     Mic: createIconMock('Mic'),
     Phone: createIconMock('Phone'),
     PhoneOff: createIconMock('PhoneOff'),
     Play: createIconMock('Play'),
     Search: createIconMock('Search'),
+    Trash2: createIconMock('Trash2'),
     X: createIconMock('X'),
   };
 });

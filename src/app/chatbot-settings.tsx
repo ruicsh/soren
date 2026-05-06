@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff, Key, Trash2 } from 'lucide-react-native';
+import React from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,6 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,28 +23,36 @@ import { colors, radius, spacing, typography } from '@/theme';
 export default function ChatbotSettingsScreen() {
   const { back, push } = useRouter();
   const {
+    apiKeyDraft,
     availableModels,
     availableProviders,
     availableVoices,
+    clearProviderApiKey,
     config,
     error,
+    hasProviderKey,
     isLoading,
     isSaving,
     modelsError,
     modelsLoading,
     refreshModels,
+    revealKey,
     save,
+    updateApiKeyDraft,
     updateConfig,
   } = useChatbotConfig();
+
+  const [showKey, setShowKey] = React.useState(false);
 
   const handleSave = async () => {
     await save();
     back();
   };
 
-  const providerLabel =
-    availableProviders.find((p) => p.id === config?.llmProvider)?.label ??
-    config?.llmProvider;
+  const providerEntry = availableProviders.find(
+    (p) => p.id === config?.llmProvider,
+  );
+  const providerLabel = providerEntry?.label ?? config?.llmProvider;
 
   const modelLabel =
     availableModels.find((m) => m.id === config?.llmModel)?.name ??
@@ -63,90 +74,152 @@ export default function ChatbotSettingsScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity accessibilityLabel="Go back" onPress={() => back()}>
-            <ArrowLeft color={colors.text} size={24} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <TouchableOpacity disabled={isSaving} onPress={handleSave}>
-            {isSaving ? (
-              <ActivityIndicator color={colors.accent} size="small" />
-            ) : (
-              <Text style={styles.headerBtnPrimary}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.flex}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity
+              accessibilityLabel="Go back"
+              onPress={() => back()}
+            >
+              <ArrowLeft color={colors.text} size={24} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Settings</Text>
+            <TouchableOpacity disabled={isSaving} onPress={handleSave}>
+              {isSaving ? (
+                <ActivityIndicator color={colors.accent} size="small" />
+              ) : (
+                <Text style={styles.headerBtnPrimary}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Identification</Text>
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.label}>UUID</Text>
-                <Text selectable style={styles.value}>
-                  {config.uuid}
-                </Text>
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Identification</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>UUID</Text>
+                  <Text selectable style={styles.value}>
+                    {config.uuid}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Intelligence</Text>
-            <View style={styles.card}>
-              <SettingSelectRow
-                label="Provider"
-                onPress={() => push('/settings-selection/provider')}
-                value={providerLabel ?? null}
-              />
-              <View style={styles.separator} />
-              <SettingSelectRow
-                disabled={modelsLoading}
-                label="Model"
-                onPress={() => push('/settings-selection/model')}
-                value={modelLabel ?? null}
-              />
-            </View>
-            {modelsError && (
-              <TouchableOpacity
-                onPress={refreshModels}
-                style={styles.errorRetry}
-              >
-                <Text style={styles.errorTextSmall}>
-                  {modelsError}. Tap to retry.
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Intelligence</Text>
+              <View style={styles.card}>
+                <SettingSelectRow
+                  label="Provider"
+                  onPress={() => push('/settings-selection/provider')}
+                  value={providerLabel ?? null}
+                />
+                <View style={styles.separator} />
+                <View style={[styles.row, styles.rowInput]}>
+                  <View style={styles.rowInline}>
+                    <Key
+                      color={hasProviderKey ? colors.accent : colors.text3}
+                      size={16}
+                      style={{ marginRight: spacing[2] }}
+                    />
+                    <Text style={styles.label}>API Key</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.rowInline,
+                      { flex: 1, justifyContent: 'flex-end' },
+                    ]}
+                  >
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      onChangeText={updateApiKeyDraft}
+                      placeholder={
+                        hasProviderKey
+                          ? '••••••••••••'
+                          : `Enter ${providerLabel} key`
+                      }
+                      placeholderTextColor={colors.text3}
+                      secureTextEntry={!showKey}
+                      style={[styles.input, { textAlign: 'right' }]}
+                      value={apiKeyDraft}
+                    />
+                    <TouchableOpacity
+                      onPress={async () => {
+                        if (!showKey && !apiKeyDraft && hasProviderKey) {
+                          await revealKey();
+                        }
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Chatbot Profile</Text>
-            <View style={styles.card}>
-              <View style={[styles.row, styles.rowInput]}>
-                <Text style={styles.label}>Name</Text>
-                <TextInput
-                  onChangeText={(name) => updateConfig({ name })}
-                  placeholder="Enter name"
-                  placeholderTextColor={colors.text3}
-                  style={styles.input}
-                  value={config.name}
+                        setShowKey(!showKey);
+                      }}
+                      style={{ paddingHorizontal: spacing[2] }}
+                      testID="eye-icon-button"
+                    >
+                      {showKey ? (
+                        <EyeOff color={colors.text3} size={20} />
+                      ) : (
+                        <Eye color={colors.text3} size={20} />
+                      )}
+                    </TouchableOpacity>
+                    {hasProviderKey && (
+                      <TouchableOpacity
+                        onPress={clearProviderApiKey}
+                        style={{ paddingLeft: spacing[1] }}
+                      >
+                        <Trash2 color={colors.error} size={20} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+                <View style={styles.separator} />
+                <SettingSelectRow
+                  disabled={modelsLoading || (!hasProviderKey && !apiKeyDraft)}
+                  label="Model"
+                  onPress={() => push('/settings-selection/model')}
+                  value={modelLabel ?? null}
                 />
               </View>
-              <View style={styles.separator} />
-              <SettingSelectRow
-                label="Voice"
-                onPress={() => push('/settings-selection/voice')}
-                value={voiceLabel ?? null}
-              />
+              {modelsError && (
+                <TouchableOpacity
+                  onPress={refreshModels}
+                  style={styles.errorRetry}
+                >
+                  <Text style={styles.errorTextSmall}>
+                    {modelsError}. Tap to retry.
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </View>
 
-          {error && <Text style={styles.error}>{error}</Text>}
-        </ScrollView>
-      </KeyboardAvoidingView>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Chatbot Profile</Text>
+              <View style={styles.card}>
+                <View style={[styles.row, styles.rowInput]}>
+                  <Text style={styles.label}>Name</Text>
+                  <TextInput
+                    onChangeText={(name) => updateConfig({ name })}
+                    placeholder="Enter name"
+                    placeholderTextColor={colors.text3}
+                    style={styles.input}
+                    value={config.name}
+                  />
+                </View>
+                <View style={styles.separator} />
+                <SettingSelectRow
+                  label="Voice"
+                  onPress={() => push('/settings-selection/voice')}
+                  value={voiceLabel ?? null}
+                />
+              </View>
+            </View>
+
+            {error && <Text style={styles.error}>{error}</Text>}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

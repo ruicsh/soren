@@ -45,14 +45,14 @@ describe('Home', () => {
 
   it('renders last conversation snippet if available', () => {
     vi.mocked(useChatbotConfig).mockReturnValue({
-      config: { 
-        lastConversationAt: 1714992000000, 
+      config: {
+        lastConversationAt: 1714992000000,
         lastConversationSnippet: 'Hello there',
-        name: 'Soren' 
+        name: 'Soren',
       },
       isLoading: false,
     } as any);
-    
+
     render(<Home />);
     expect(screen.getByText(/Hello there/)).toBeTruthy();
   });

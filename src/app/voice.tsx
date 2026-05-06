@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
-import { Brain as IconBrain } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { CallButton } from '@/components/voice/CallButton';
 import { PulseAnimation } from '@/components/voice/PulseAnimation';
 import { WaveformAnimation } from '@/components/voice/WaveformAnimation';
@@ -57,9 +57,10 @@ export default function VoiceScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.avatarWrap}>
-          <IconBrain
-            color={showPulse ? colors.text : colors.accent}
-            size={80}
+          <ChatbotAvatar
+            modelId={config?.llmModel}
+            providerId={config?.llmProvider}
+            size={120}
           />
         </View>
         <Text style={styles.name}>{chatbotName}</Text>

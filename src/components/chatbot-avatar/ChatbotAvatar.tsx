@@ -3,15 +3,25 @@ import { Brain as IconBrain } from 'lucide-react-native';
 import React from 'react';
 import { View } from 'react-native';
 
-export type AvatarProvider = 'anthropic' | 'groq' | 'openai' | 'meta' | 'mistral' | string;
+export type AvatarProvider =
+  | 'anthropic'
+  | 'groq'
+  | 'meta'
+  | 'mistral'
+  | 'openai'
+  | string;
 
 interface ChatbotAvatarProps {
-  providerId?: string;
   modelId?: string;
+  providerId?: string;
   size?: number;
 }
 
-export const ChatbotAvatar = ({ providerId, modelId, size = 40 }: ChatbotAvatarProps) => {
+export const ChatbotAvatar = ({
+  modelId,
+  providerId,
+  size = 40,
+}: ChatbotAvatarProps) => {
   let icon = null;
 
   // Try model specific icons first
@@ -22,11 +32,11 @@ export const ChatbotAvatar = ({ providerId, modelId, size = 40 }: ChatbotAvatarP
   } else {
     // Fallback to provider icons
     switch (providerId?.toLowerCase()) {
-      case 'groq':
-        icon = <Groq size={size} />;
-        break;
       case 'anthropic':
         icon = <Anthropic size={size} />;
+        break;
+      case 'groq':
+        icon = <Groq size={size} />;
         break;
       case 'ollama':
         icon = <Ollama size={size} />;

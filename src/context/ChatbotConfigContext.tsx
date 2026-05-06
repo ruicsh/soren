@@ -139,8 +139,10 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
       if (!config) return;
       const now = Date.now();
       const firstSentence =
-        snippet.split(/[.!?]/).find((s) => s.trim().length > 0)?.trim() ||
-        snippet.trim();
+        snippet
+          .split(/[.!?]/)
+          .find((s) => s.trim().length > 0)
+          ?.trim() || snippet.trim();
       const finalSnippet =
         firstSentence.length > 60
           ? firstSentence.slice(0, 57) + '...'

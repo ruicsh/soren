@@ -49,12 +49,12 @@ describe('chatbot-config', () => {
 
   it('persists lastConversationAt', async () => {
     const config = {
+      lastConversationAt: 123456789,
       llmModel: 'm1',
       llmProvider: 'p1',
       name: 'Bot',
       uuid: 'u1',
       voiceId: null,
-      lastConversationAt: 123456789,
     };
 
     await saveChatbotConfig(config);

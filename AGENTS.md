@@ -10,6 +10,7 @@
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run test` / `npm run test:watch` / `npm run test:coverage`
 - `npm run web` — Expo web
+- `npm run check` — Full verify checks in order
 
 Full verify order:
 `npm run lint:fix && npm run format && npm run lint && npm run typecheck && npm run test`

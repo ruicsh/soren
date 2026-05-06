@@ -144,6 +144,7 @@ vi.mock('react-native-svg', () => {
 
   return {
     Circle: SvgMock,
+    default: SvgMock,
     Defs: SvgMock,
     G: SvgMock,
     LinearGradient: SvgMock,
@@ -151,7 +152,6 @@ vi.mock('react-native-svg', () => {
     Rect: SvgMock,
     Stop: SvgMock,
     Svg: SvgMock,
-    default: SvgMock,
   };
 });
 

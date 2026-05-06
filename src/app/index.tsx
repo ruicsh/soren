@@ -84,7 +84,9 @@ export default function Home() {
             <View>
               <Text style={styles.headerTitle}>{config?.name ?? 'Soren'}</Text>
               {lastConversationText ? (
-                <Text style={styles.headerSubtitle}>{lastConversationText}</Text>
+                <Text style={styles.headerSubtitle}>
+                  {lastConversationText}
+                </Text>
               ) : null}
             </View>
           </TouchableOpacity>
@@ -128,6 +130,15 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
+  avatarContainer: {
+    alignItems: 'center',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.full,
+    height: 40,
+    justifyContent: 'center',
+    marginRight: spacing[3],
+    width: 40,
+  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -157,24 +168,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  avatarContainer: {
-    alignItems: 'center',
-    backgroundColor: colors.bg2,
-    borderRadius: radius.full,
-    height: 40,
-    justifyContent: 'center',
-    marginRight: spacing[3],
-    width: 40,
+  headerSubtitle: {
+    color: colors.text2,
+    fontSize: 10,
+    marginTop: 2,
   },
   headerTitle: {
     color: colors.text,
     fontSize: typography.lg,
     fontWeight: '600',
-  },
-  headerSubtitle: {
-    color: colors.text2,
-    fontSize: 10,
-    marginTop: 2,
   },
   inputWrap: {
     paddingBottom: spacing[4],

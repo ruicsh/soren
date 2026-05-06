@@ -2,14 +2,14 @@ import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 
 export interface ChatbotConfig {
+  lastConversationAt?: number;
+  lastConversationSnippet?: string;
   llmModel: string;
   llmProvider: string;
   name: string;
   providerKeyStatus?: Record<string, boolean>;
   uuid: string;
   voiceId: null | string;
-  lastConversationAt?: number;
-  lastConversationSnippet?: string;
 }
 
 const DEFAULT_NAME = 'Soren';
@@ -43,13 +43,13 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
 
         // Migration/Defaults
         return {
+          lastConversationAt: parsed.lastConversationAt,
+          lastConversationSnippet: parsed.lastConversationSnippet,
           llmModel: parsed.llmModel ?? DEFAULT_MODEL,
           llmProvider: parsed.llmProvider ?? DEFAULT_PROVIDER,
           name: parsed.name ?? DEFAULT_NAME,
           uuid: parsed.uuid ?? Crypto.randomUUID(),
           voiceId: parsed.voiceId ?? null,
-          lastConversationAt: parsed.lastConversationAt,
-          lastConversationSnippet: parsed.lastConversationSnippet,
         };
       } catch (err) {
         console.warn('Failed to load bot config, recreating:', err);

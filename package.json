@@ -7,6 +7,7 @@
     "android:clean": "expo run:android --no-build-cache",
     "android:device": "expo run:android --device",
     "android:no-build": "expo run:android --no-build",
+    "check": "npm run lint:fix && npm run format && npm run lint && npm run typecheck && npm run test",
     "format": "prettier --write .",
     "ios": "expo run:ios",
     "ios:clean": "expo run:ios --no-build-cache",

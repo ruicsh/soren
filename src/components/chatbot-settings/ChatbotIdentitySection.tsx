@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   value: {
-    color: colors.text,
+    color: colors.text3,
     fontSize: typography.sm,
   },
 });

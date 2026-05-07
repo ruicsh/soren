@@ -133,7 +133,14 @@ export default function ChatbotSettingsScreen() {
               providerId={config.llmProvider}
             />
 
-            <ChatbotIdentitySection uuid={config.uuid} />
+            <ChatbotProfileSection
+              onSelectPersonality={() =>
+                push('/settings-selection/personality')
+              }
+              onSelectVoice={() => push('/settings-selection/voice')}
+              personalityLabel={personalityLabel}
+              voiceLabel={voiceLabel}
+            />
 
             <ChatbotIntelligenceSection
               apiKeyDraft={apiKeyDraft}
@@ -151,16 +158,9 @@ export default function ChatbotSettingsScreen() {
               providerLabel={providerLabel}
             />
 
-            <ChatbotProfileSection
-              onSelectPersonality={() =>
-                push('/settings-selection/personality')
-              }
-              onSelectVoice={() => push('/settings-selection/voice')}
-              personalityLabel={personalityLabel}
-              voiceLabel={voiceLabel}
-            />
-
             {error && <Text style={styles.error}>{error}</Text>}
+
+            <ChatbotIdentitySection uuid={config.uuid} />
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

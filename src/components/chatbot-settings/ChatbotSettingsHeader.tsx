@@ -21,38 +21,48 @@ export function ChatbotSettingsHeader(props: ChatbotSettingsHeaderProps) {
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        accessibilityLabel="Go back"
-        onPress={onBack}
-        testID="settings-back-button"
-      >
-        <ArrowLeft color={colors.text} size={24} />
-      </TouchableOpacity>
-      <Text style={styles.headerTitle} testID="settings-header-title">
-        {isCreateMode ? 'New Chatbot' : 'Settings'}
-      </Text>
-      {isCreateMode ? (
-        <TouchableOpacity disabled={isSaving} onPress={onCreate}>
-          {isSaving ? (
-            <ActivityIndicator color={colors.accent} size="small" />
-          ) : (
-            <Text style={styles.headerBtnPrimary}>Create</Text>
-          )}
+      <View style={styles.sideSlot}>
+        <TouchableOpacity
+          accessibilityLabel="Go back"
+          onPress={onBack}
+          testID="settings-back-button"
+        >
+          <ArrowLeft color={colors.text} size={24} />
         </TouchableOpacity>
-      ) : (
-        <View style={{ width: 48 }} />
-      )}
+      </View>
+
+      <View style={styles.centerSlot}>
+        <Text style={styles.headerTitle} testID="settings-header-title">
+          {isCreateMode ? 'New Chatbot' : 'Settings'}
+        </Text>
+      </View>
+
+      <View style={[styles.sideSlot, styles.rightSlot]}>
+        {isCreateMode && (
+          <TouchableOpacity disabled={isSaving} onPress={onCreate}>
+            {isSaving ? (
+              <ActivityIndicator color={colors.accent} size="small" />
+            ) : (
+              <Text style={styles.headerBtnPrimary}>Create</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  centerSlot: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
   header: {
     alignItems: 'center',
     borderBottomColor: colors.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
@@ -65,5 +75,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: typography.lg,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  rightSlot: {
+    alignItems: 'flex-end',
+  },
+  sideSlot: {
+    justifyContent: 'center',
+    minWidth: 60,
   },
 });

@@ -24,6 +24,7 @@ export default function Home() {
   const { config, updateLastConversation } = useChatbotConfig();
   const { isStreaming, messages, sendMessage } = useChatStream({
     chatbotUuid: config?.uuid,
+    lastConversationAt: config?.lastConversationAt,
     onStreamingChunk: (chunk) => {
       // Logic for capturing snippet usually happens on first chunk or completion
       // But updateLastConversation handles splitting and updating

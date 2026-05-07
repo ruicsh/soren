@@ -203,6 +203,59 @@ export async function loadChatMessagesForDate(
   }
 }
 
+export async function loadLatestAvailableChatMessages(
+  uuid: string,
+  lastConversationAt?: number,
+): Promise<ChatMessage[]> {
+  // Try to load from the last conversation date first
+  if (lastConversationAt) {
+    const lastDate = new Date(lastConversationAt);
+    const messages = await loadChatMessagesForDate(uuid, lastDate);
+    if (messages.length > 0) {
+      return messages;
+    }
+  }
+
+  // Fallback: find the latest available chat file
+  const chatsDir = new Directory(Paths.document, 'chatbots', uuid, 'chats');
+  if (!chatsDir.exists) return [];
+
+  try {
+    const items = chatsDir.list();
+    const dateFiles: { date: Date; file: File }[] = [];
+
+    for (const item of items) {
+      if (item instanceof File) {
+        // Match YYYYMMDD.md pattern
+        const match = item.uri.match(/\/(\d{8})\.md$/);
+        if (match) {
+          const dateStr = match[1];
+          const year = parseInt(dateStr.slice(0, 4), 10);
+          const month = parseInt(dateStr.slice(4, 6), 10) - 1; // JS months are 0-based
+          const day = parseInt(dateStr.slice(6, 8), 10);
+          const date = new Date(year, month, day);
+          dateFiles.push({ date, file: item });
+        }
+      }
+    }
+
+    // Sort by date descending (latest first)
+    dateFiles.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    // Try each date file until we find one with messages
+    for (const { date } of dateFiles) {
+      const messages = await loadChatMessagesForDate(uuid, date);
+      if (messages.length > 0) {
+        return messages;
+      }
+    }
+  } catch (err) {
+    console.warn(`Failed to scan chat files for ${uuid}:`, err);
+  }
+
+  return [];
+}
+
 export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig> {
   const configs = await listChatbotConfigs();
 

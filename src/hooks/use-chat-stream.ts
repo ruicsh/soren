@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/lib/llm/types';
 
 import { getApiKey } from '@/lib/byok-keys';
-import { loadChatMessagesForDate } from '@/lib/chatbot-config';
+import { loadLatestAvailableChatMessages } from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
@@ -11,6 +11,7 @@ const BATCH_MS = 50;
 
 export interface UseChatStreamOptions {
   chatbotUuid?: string;
+  lastConversationAt?: number;
   /** Fired with each flushed batch of streaming text */
   onStreamingChunk?: (chunk: string) => void;
   providerId?: string;
@@ -27,7 +28,8 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
   onStreamingChunkRef.current = options?.onStreamingChunk;
 
-  const { chatbotUuid, providerId, providerModel } = options || {};
+  const { chatbotUuid, lastConversationAt, providerId, providerModel } =
+    options || {};
 
   const [provider, setProvider] = useState<any>(null);
 
@@ -39,15 +41,17 @@ export function useChatStream(options?: UseChatStreamOptions) {
       return;
     }
 
-    loadChatMessagesForDate(chatbotUuid).then((history) => {
-      if (!active) return;
-      setMessages(history);
-    });
+    loadLatestAvailableChatMessages(chatbotUuid, lastConversationAt).then(
+      (history) => {
+        if (!active) return;
+        setMessages(history);
+      },
+    );
 
     return () => {
       active = false;
     };
-  }, [chatbotUuid]);
+  }, [chatbotUuid, lastConversationAt]);
 
   useEffect(() => {
     let active = true;

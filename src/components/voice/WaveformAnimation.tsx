@@ -17,6 +17,10 @@ const MIN_HEIGHT = 16;
 const MAX_HEIGHT = 64;
 const DURATION = 400;
 
+interface BarProps {
+  delay: number;
+}
+
 export function WaveformAnimation() {
   return (
     <View style={styles.container}>
@@ -27,7 +31,7 @@ export function WaveformAnimation() {
   );
 }
 
-function Bar(props: { delay: number }) {
+function Bar(props: BarProps) {
   const { delay } = props;
   const height = useSharedValue(MIN_HEIGHT);
 

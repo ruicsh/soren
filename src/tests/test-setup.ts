@@ -77,6 +77,18 @@ vi.mock('react-native-reanimated', () => {
   };
 });
 
+// react-native-gesture-handler — mock to prevent global undefined error
+vi.mock('react-native-gesture-handler', () => ({
+  GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+    children,
+  Swipeable: ({ children }: { children: React.ReactNode }) => children,
+  TapGestureHandler: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+vi.mock('react-native-gesture-handler/ReanimatedSwipeable', () => ({
+  default: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // expo-secure-store — mock secret storage
 vi.mock('expo-secure-store', () => ({
   deleteItemAsync: vi.fn(() => Promise.resolve()),

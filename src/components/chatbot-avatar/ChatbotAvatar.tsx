@@ -11,7 +11,6 @@ import {
   ZAI,
 } from '@lobehub/icons-rn';
 import { Brain as IconBrain } from 'lucide-react-native';
-import React from 'react';
 import { View } from 'react-native';
 
 export type AvatarProvider =
@@ -29,11 +28,8 @@ interface ChatbotAvatarProps {
   size?: number;
 }
 
-export const ChatbotAvatar = ({
-  modelId,
-  providerId,
-  size = 40,
-}: ChatbotAvatarProps) => {
+export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
+  const { modelId, providerId, size = 40 } = props;
   let icon = null;
 
   const mid = modelId?.toLowerCase() || '';

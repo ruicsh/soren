@@ -35,15 +35,17 @@ export interface SelectionSection {
   title: string;
 }
 
-export function SelectionListScreen({
-  isLoading,
-  items,
-  onSelect,
-  searchable,
-  sections: providedSections,
-  selectedValue,
-  title,
-}: SelectionListScreenProps) {
+export function SelectionListScreen(props: SelectionListScreenProps) {
+  const {
+    isLoading,
+    items,
+    onSelect,
+    searchable,
+    sections: providedSections,
+    selectedValue,
+    title,
+  } = props;
+
   const { back } = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 

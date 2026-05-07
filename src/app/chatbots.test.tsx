@@ -10,11 +10,6 @@ vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: vi.fn(),
 }));
 
-// Mock Swipeable since it might need gesture handler root
-vi.mock('react-native-gesture-handler', () => ({
-  Swipeable: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 describe('ChatbotsScreen', () => {
   const mockBack = vi.fn();
   const mockPush = vi.fn();

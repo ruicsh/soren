@@ -1,5 +1,4 @@
 import { ChevronRight } from 'lucide-react-native';
-import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { colors, spacing, typography } from '@/theme';
@@ -11,12 +10,9 @@ export interface SettingSelectRowProps {
   value: null | string;
 }
 
-export function SettingSelectRow({
-  disabled,
-  label,
-  onPress,
-  value,
-}: SettingSelectRowProps) {
+export function SettingSelectRow(props: SettingSelectRowProps) {
+  const { disabled, label, onPress, value } = props;
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}

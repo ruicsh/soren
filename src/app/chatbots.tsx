@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChatbotListItem } from '@/components/chatbots/ChatbotListItem';
 import { ChatbotsHeader } from '@/components/chatbots/ChatbotsHeader';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
-import { colors } from '@/theme';
+import { getDateLabel } from '@/lib/date-label';
+import { colors, spacing, typography } from '@/theme';
 
 export default function ChatbotsScreen() {
   const { back, push } = useRouter();
@@ -16,6 +17,61 @@ export default function ChatbotsScreen() {
     back();
   };
 
+  // Group chatbots by date labels
+  const groupedChatbots = chatbots.reduce(
+    (groups, chatbot) => {
+      const label = getDateLabel(chatbot.lastConversationAt);
+      if (!groups[label]) {
+        groups[label] = [];
+      }
+      groups[label].push(chatbot);
+
+      return groups;
+    },
+    {} as Record<string, typeof chatbots>,
+  );
+
+  // Sort groups: today, yesterday, weekdays (Mon-Sun), then fallback
+  const groupOrder = ['today', 'yesterday'];
+  const weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  groupOrder.push(...weekdays);
+
+  const sections = Object.keys(groupedChatbots)
+    .sort((a, b) => {
+      const aIndex = groupOrder.indexOf(a);
+      const bIndex = groupOrder.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+
+      // Both are fallback dates, sort alphabetically (newer dates first? but since it's date string, alphabetical might work)
+      return a.localeCompare(b);
+    })
+    .map((title) => ({
+      data: groupedChatbots[title],
+      title,
+    }));
+
+  const renderSectionHeader = ({
+    section: { title },
+  }: {
+    section: { title: string };
+  }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <ChatbotsHeader
@@ -23,8 +79,7 @@ export default function ChatbotsScreen() {
         onDone={() => back()}
       />
 
-      <FlatList
-        data={chatbots}
+      <SectionList
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyExtractor={(item) => item.uuid}
         renderItem={({ item }) => (
@@ -35,6 +90,9 @@ export default function ChatbotsScreen() {
             onSelect={handleSelect}
           />
         )}
+        renderSectionHeader={renderSectionHeader}
+        sections={sections}
+        stickySectionHeadersEnabled={false}
       />
     </SafeAreaView>
   );
@@ -44,6 +102,17 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.bg,
     flex: 1,
+  },
+  sectionHeader: {
+    backgroundColor: colors.bg,
+    paddingBottom: spacing[1],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
+  },
+  sectionHeaderText: {
+    color: colors.text2,
+    fontSize: typography.sm,
+    fontWeight: '600',
   },
   separator: {
     backgroundColor: colors.border,

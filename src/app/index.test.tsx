@@ -20,6 +20,8 @@ describe('Home', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-07T12:00:00Z')); // Set to today for consistent tests
     vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
     vi.mocked(useChatbotConfig).mockReturnValue({
       config: { lastConversationAt: 1714992000000, name: 'Soren' },
@@ -30,6 +32,10 @@ describe('Home', () => {
       messages: [],
       sendMessage: vi.fn(),
     } as any);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders chatbot name from config', () => {
@@ -43,18 +49,38 @@ describe('Home', () => {
     expect(screen.getByText(/Last active:/)).toBeTruthy();
   });
 
-  it('renders last conversation snippet if available', () => {
-    vi.mocked(useChatbotConfig).mockReturnValue({
-      config: {
-        lastConversationAt: 1714992000000,
-        lastConversationSnippet: 'Hello there',
-        name: 'Soren',
-      },
-      isLoading: false,
+  it('renders date headers for messages from different days', () => {
+    vi.mocked(useChatStream).mockReturnValue({
+      isStreaming: false,
+      messages: [
+        {
+          content: 'Hello from yesterday',
+          id: 'msg1',
+          role: 'user',
+          timestamp: new Date('2026-05-06T10:00:00Z').getTime(),
+        },
+        {
+          content: 'Response yesterday',
+          id: 'msg2',
+          role: 'assistant',
+          timestamp: new Date('2026-05-06T10:01:00Z').getTime(),
+        },
+        {
+          content: 'Hello today',
+          id: 'msg3',
+          role: 'user',
+          timestamp: new Date('2026-05-07T10:00:00Z').getTime(),
+        },
+      ],
+      sendMessage: vi.fn(),
     } as any);
 
     render(<Home />);
-    expect(screen.getByText(/Hello there/)).toBeTruthy();
+
+    expect(screen.getByText('yesterday')).toBeTruthy();
+    expect(screen.getByText('today')).toBeTruthy();
+    expect(screen.getByText('Hello from yesterday')).toBeTruthy();
+    expect(screen.getByText('Hello today')).toBeTruthy();
   });
 
   it('navigates to chatbot settings when name is pressed', () => {

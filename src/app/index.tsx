@@ -17,6 +17,7 @@ import { ChatMessageBubble } from '@/components/chat-message/ChatMessage';
 import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
+import { getDateLabel } from '@/lib/date-label';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function Home() {
@@ -68,6 +69,22 @@ export default function Home() {
 
   const hasMessages = messages.length > 0;
   const lastMessageId = messages[messages.length - 1]?.id;
+
+  const messageRows: (
+    | { label: string; type: 'header' }
+    | { message: (typeof messages)[0]; type: 'message' }
+  )[] = [];
+
+  let lastDateLabel: null | string = null;
+
+  for (const msg of messages) {
+    const label = getDateLabel(msg.timestamp);
+    if (label !== lastDateLabel) {
+      messageRows.push({ label, type: 'header' });
+      lastDateLabel = label;
+    }
+    messageRows.push({ message: msg, type: 'message' });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -124,13 +141,23 @@ export default function Home() {
             ref={scrollViewRef}
             style={styles.scroll}
           >
-            {messages.map((msg) => (
-              <ChatMessageBubble
-                isStreaming={isStreaming && msg.id === lastMessageId}
-                key={msg.id}
-                message={msg}
-              />
-            ))}
+            {messageRows.map((row, index) => {
+              if (row.type === 'header') {
+                return (
+                  <View key={`header-${index}`} style={styles.dateHeader}>
+                    <Text style={styles.dateHeaderText}>{row.label}</Text>
+                  </View>
+                );
+              }
+
+              return (
+                <ChatMessageBubble
+                  isStreaming={isStreaming && row.message.id === lastMessageId}
+                  key={row.message.id}
+                  message={row.message}
+                />
+              );
+            })}
           </ScrollView>
         ) : (
           <View style={styles.empty}>
@@ -177,6 +204,16 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.bg,
     flex: 1,
+  },
+  dateHeader: {
+    alignItems: 'center',
+    marginBottom: spacing[2],
+    marginTop: spacing[3],
+  },
+  dateHeaderText: {
+    color: colors.text2,
+    fontSize: typography.sm,
+    fontWeight: '600',
   },
   empty: {
     alignItems: 'center',

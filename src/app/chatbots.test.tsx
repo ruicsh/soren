@@ -18,25 +18,50 @@ describe('ChatbotsScreen', () => {
 
   const mockChatbots = [
     {
-      lastConversationAt: 1714992000000,
-      lastConversationSnippet: 'Hello bot 1',
+      lastConversationAt: new Date('2026-05-07T10:00:00Z').getTime(), // Today
+      lastConversationSnippet: 'Hello bot today',
       llmModel: 'm1',
       llmProvider: 'p1',
-      name: 'Bot 1',
-      uuid: 'uuid-1',
+      name: 'Bot Today',
+      uuid: 'uuid-today',
     },
     {
-      lastConversationAt: 1714991000000,
-      lastConversationSnippet: 'Hello bot 2',
+      lastConversationAt: new Date('2026-05-06T10:00:00Z').getTime(), // Yesterday
+      lastConversationSnippet: 'Hello bot yesterday',
       llmModel: 'm2',
       llmProvider: 'p2',
-      name: 'Bot 2',
-      uuid: 'uuid-2',
+      name: 'Bot Yesterday',
+      uuid: 'uuid-yesterday',
+    },
+    {
+      lastConversationAt: new Date('2026-05-05T10:00:00Z').getTime(), // Tuesday (within 6 days)
+      lastConversationSnippet: 'Hello bot tuesday',
+      llmModel: 'm3',
+      llmProvider: 'p3',
+      name: 'Bot Tuesday',
+      uuid: 'uuid-tuesday',
+    },
+    {
+      lastConversationAt: new Date('2026-04-30T10:00:00Z').getTime(), // Older (Wed 30 Apr)
+      lastConversationSnippet: 'Hello bot older',
+      llmModel: 'm4',
+      llmProvider: 'p4',
+      name: 'Bot Older',
+      uuid: 'uuid-older',
+    },
+    {
+      lastConversationSnippet: 'Hello bot no date',
+      llmModel: 'm5',
+      llmProvider: 'p5',
+      name: 'Bot No Date',
+      uuid: 'uuid-no-date',
     },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-07T12:00:00Z')); // Set to today for consistent tests
     vi.mocked(useRouter).mockReturnValue({
       back: mockBack,
       push: mockPush,
@@ -50,13 +75,25 @@ describe('ChatbotsScreen', () => {
     } as any);
   });
 
-  it('renders list of chatbots', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('renders list of chatbots grouped by date', () => {
     render(<ChatbotsScreen />);
 
-    expect(screen.getByText('Bot 1')).toBeTruthy();
-    expect(screen.getByText('Bot 2')).toBeTruthy();
-    expect(screen.getByText('Hello bot 1')).toBeTruthy();
-    expect(screen.getByText('Hello bot 2')).toBeTruthy();
+    expect(screen.getByText('Bot Today')).toBeTruthy();
+    expect(screen.getByText('Bot Yesterday')).toBeTruthy();
+    expect(screen.getByText('Bot Tuesday')).toBeTruthy();
+    expect(screen.getByText('Bot Older')).toBeTruthy();
+    expect(screen.getByText('Bot No Date')).toBeTruthy();
+
+    // Check section headers
+    expect(screen.getByText('today')).toBeTruthy();
+    expect(screen.getByText('yesterday')).toBeTruthy();
+    expect(screen.getByText('Tuesday')).toBeTruthy(); // Tuesday since within 6 days
+    expect(screen.getByText('Thu 30 Apr')).toBeTruthy(); // Older date
+    expect(screen.getByText('Older')).toBeTruthy(); // No date
   });
 
   it('navigates back when Done is pressed', () => {
@@ -76,8 +113,8 @@ describe('ChatbotsScreen', () => {
   it('selects chatbot and goes back when item is pressed', () => {
     render(<ChatbotsScreen />);
 
-    fireEvent.press(screen.getByText('Bot 2'));
-    expect(mockSelectChatbot).toHaveBeenCalledWith('uuid-2');
+    fireEvent.press(screen.getByText('Bot Yesterday'));
+    expect(mockSelectChatbot).toHaveBeenCalledWith('uuid-yesterday');
     expect(mockBack).toHaveBeenCalled();
   });
 });

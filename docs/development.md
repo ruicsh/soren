@@ -1,87 +1,85 @@
-# Development
+# Development Runbook
 
-## Prerequisites
+Architecture, workflows, and operations for project maintainers.
 
-- Node.js + npm
-- Xcode (for iOS builds)
-- iOS Simulator or physical device
+## 1. Quick Start
 
-## Install dependencies
+### First Time Setup
 
 ```bash
 npm install
+npm run ios        # Build native iOS dev-client
+npm run android    # Build native Android dev-client (optional)
 ```
 
-## Running the app
+### Day-to-Day Flow
 
-This project uses a **development build** (not Expo Go), which means you compile a native iOS/Android app that includes `expo-dev-client`. This is required for native modules that Expo Go does not support.
+1. Start Metro: `npm start`
+2. Open **Soren** app on Simulator/Device (Scan QR _inside_ the app, not with Camera).
 
-### First time / after adding a native module
+---
 
-Build and install the native app:
+## 2. Architecture & Environment
+
+### Tech Stack
+
+- **Framework**: Expo 55 (React 19 / RN 0.83)
+- **Router**: Expo Router (Routes in `src/app/`)
+- **LLM**: Custom provider layer in `src/lib/llm/`
+- **Compiler**: React Compiler enabled (use `.get()`/`.set()` for Reanimated shared values)
+
+### Debug Environment Flags
+
+Set these in `.env.local` for verbose diagnostics:
+
+- `EXPO_PUBLIC_DEBUG_VOICE=1`: Logs for `use-dictation`, `use-tts`, `use-voice-mode`.
+- `EXPO_PUBLIC_DEBUG_XHR_STREAM=1`: Logs for streaming LLM responses.
+
+### Bundler Restrictions
+
+Metro is configured to **block** the following from the mobile bundle:
+
+- `vite`, `vitest`
+- Files matching `*.test.*`
+- `src/tests/` directory
+
+---
+
+## 3. Operations & Maintenance
+
+### When to Rebuild Native
+
+A full `npm run ios` / `npm run android` is mandatory if:
+
+1. `app.json` or `package.json` (native deps) changes.
+2. `ios/` or `android/` directories are deleted/stale.
+3. Native config changes (`Info.plist`, `AndroidManifest.xml`).
+
+### Quality Gate (Hard)
+
+Before pushing any change, ensure the full suite passes:
 
 ```bash
-npm run ios        # iOS
-npm run android    # Android
+npm run check
 ```
 
-This compiles the native project. The first build is slow; subsequent builds are incremental and faster.
+### Command Reference
 
-### Day-to-day development
+| Command                 | Action                                          |
+| :---------------------- | :---------------------------------------------- |
+| `npm run ios:clean`     | Wipe build cache and rebuild native iOS         |
+| `npm run ios:device`    | Build/install directly to USB-connected device  |
+| `npm run lint:fix`      | Auto-fix styling and project conventions        |
+| `npm run typecheck`     | Run full `tsc` verification                     |
+| `npm run test:coverage` | Run Vitest with V8 coverage report              |
+| `npm run web`           | Launch web target (useful for layout debugging) |
 
-Start Metro and let the already-installed dev client connect:
+---
 
-```bash
-npm start
-```
+## 4. Conventions
 
-Then open the dev client app on your simulator/device. It will auto-connect to the Metro bundler.
-
-### Physical device
-
-1. **Build & install** (first time, or after native changes):
-
-   ```bash
-   npm run ios:device      # iOS (USB connected)
-   npm run android:device  # Android
-   ```
-
-   This builds, installs, and starts Metro. The app opens on your phone.
-
-2. **Day-to-day**, just start Metro — the app is already installed:
-   ```bash
-   npm start
-   ```
-   Open the dev client app on your phone — it auto-connects to Metro.
-
-**Scan the QR code from inside the dev client app** — not with the phone's Camera app. Your phone and computer must be on the **same WiFi network**.
-
-### Other useful commands
-
-| Command                    | Description                                |
-| -------------------------- | ------------------------------------------ |
-| `npm start`                | Start Metro bundler for dev client         |
-| `npm run ios`              | Build and run iOS app on simulator         |
-| `npm run ios:device`       | Build and run iOS app on physical device   |
-| `npm run ios:no-build`     | Run iOS app without rebuilding native code |
-| `npm run ios:clean`        | Clean rebuild iOS app                      |
-| `npm run android`          | Build and run Android app                  |
-| `npm run android:device`   | Build and run Android app on device        |
-| `npm run android:no-build` | Run Android app without rebuild            |
-| `npm run android:clean`    | Clean rebuild Android app                  |
-| `npm run web`              | Start web version                          |
-| `npm test`                 | Run tests (Vitest)                         |
-| `npm run test:watch`       | Run tests in watch mode                    |
-| `npm run lint`             | Run ESLint                                 |
-| `npm run format`           | Format code with Prettier                  |
-| `npm run typecheck`        | Run TypeScript type check                  |
-
-## When do I need to rebuild?
-
-You only need to run `npm run ios` / `npm run android` again when:
-
-- You install or remove a package with native code (e.g. `npx expo install expo-camera`)
-- You modify `app.json`, `Info.plist`, `AndroidManifest.xml`, or other native configuration
-- You run a clean build (`npm run ios:clean` / `npm run android:clean`)
-
-For pure JavaScript/TypeScript changes, `npm start` is enough.
+- **Icons**: Use `@lobehub/icons-rn` for AI logos; `lucide-react-native` for UI.
+- **Styling**: `StyleSheet.create` only. Use tokens from `src/theme.ts`.
+- **Imports**: Always use `@/` aliases. No relative paths above component level.
+- **Hooks**: Logic in `src/hooks/use-name.ts`; props destructure on line 1.
+- **Files**: PascalCase for components (`src/components/Name/Name.tsx`), kebab-case for hooks/utils.

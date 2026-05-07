@@ -10,7 +10,7 @@ Primary goals:
 - Fast chat UX with streaming responses
 - Voice conversation loop (dictation -> LLM -> TTS)
 - Local-first chatbot profile persistence
-- Provider abstraction for OpenAI-compatible and Anthropic APIs
+- Provider abstraction for OpenAI-compatible and Anthropic APIs (supports OpenAI, Groq, Google Gemini)
 
 ## 2) Tech Stack
 
@@ -102,7 +102,7 @@ Provider abstraction in `src/lib/llm/`:
 - Catalog defines providers and metadata (`PROVIDERS`)
 - Factory creates concrete provider client by provider type
 - Current types:
-  - OpenAI-compatible streaming protocol
+  - OpenAI-compatible streaming protocol (OpenAI, Groq, Google Gemini)
   - Anthropic streaming protocol
 
 Capabilities per provider adapter:

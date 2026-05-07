@@ -38,6 +38,30 @@ describe('models', () => {
     expect(models[0].id).toBe('llama-3.1-8b-instant');
   });
 
+  it('fetches and filters models for google', async () => {
+    const mockModels = {
+      data: [{ id: 'gemini-1.5-flash' }, { id: 'text-embedding-004' }],
+    };
+
+    vi.mocked(fetch).mockResolvedValue({
+      json: () => Promise.resolve(mockModels),
+      ok: true,
+    } as any);
+
+    const models = await fetchModels('google', 'test-key');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://generativelanguage.googleapis.com/v1beta/openai/models',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-key',
+        }),
+      }),
+    );
+    expect(models).toHaveLength(1);
+    expect(models[0].id).toBe('gemini-1.5-flash');
+  });
+
   it('fetches and filters models for opencode-go', async () => {
     const mockModels = {
       data: [

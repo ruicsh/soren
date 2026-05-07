@@ -14,6 +14,11 @@ describe('ChatbotAvatar', () => {
     expect(screen.getByTestId(/icon-claude/)).toBeOnTheScreen();
   });
 
+  it('renders Gemini icon for gemini models', () => {
+    render(<ChatbotAvatar modelId="gemini-1.5-flash" />);
+    expect(screen.getByTestId(/icon-gemini/)).toBeOnTheScreen();
+  });
+
   it('renders OpenAI icon for deepseek models', () => {
     render(<ChatbotAvatar modelId="deepseek-v4" />);
     expect(screen.getByTestId(/icon-deepseek/)).toBeOnTheScreen();
@@ -32,6 +37,11 @@ describe('ChatbotAvatar', () => {
   it('renders OpenAI icon for openai provider', () => {
     render(<ChatbotAvatar providerId="openai" />);
     expect(screen.getByTestId('icon-openai')).toBeOnTheScreen();
+  });
+
+  it('renders Gemini icon for google provider', () => {
+    render(<ChatbotAvatar providerId="google" />);
+    expect(screen.getByTestId('icon-google')).toBeOnTheScreen();
   });
 
   it('renders Brain icon as fallback', () => {

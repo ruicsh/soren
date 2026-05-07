@@ -1,6 +1,7 @@
 import {
   Anthropic,
   DeepSeek,
+  Gemini,
   Groq,
   Kimi,
   Minimax,
@@ -42,6 +43,8 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
     icon = <Anthropic size={iconSize} />;
   } else if (mid.includes('deepseek')) {
     icon = <DeepSeek size={iconSize} />;
+  } else if (mid.includes('gemini')) {
+    icon = <Gemini size={iconSize} />;
   } else if (mid.includes('qwen')) {
     icon = <Qwen size={iconSize} />;
   } else if (mid.includes('glm')) {
@@ -64,6 +67,9 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
         break;
       case 'openai':
         icon = <OpenAI size={iconSize} />;
+        break;
+      case 'google':
+        icon = <Gemini size={iconSize} />;
         break;
       case 'opencode-go':
         icon = <OpenCode size={iconSize} />;

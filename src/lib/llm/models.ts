@@ -82,6 +82,7 @@ function isChatModel(model: LLMModel): boolean {
     'claude',
     'mixtral',
     'gemma',
+    'gemini',
     'qwen',
     'deepseek',
     'glm',

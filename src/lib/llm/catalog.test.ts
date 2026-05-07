@@ -4,6 +4,7 @@ describe('catalog', () => {
   describe('PROVIDERS', () => {
     it('includes required providers', () => {
       expect(PROVIDERS.map((p) => p.id)).toContain('groq');
+      expect(PROVIDERS.map((p) => p.id)).toContain('google');
       expect(PROVIDERS.map((p) => p.id)).toContain('anthropic');
       expect(PROVIDERS.map((p) => p.id)).toContain('opencode-go');
     });
@@ -14,6 +15,18 @@ describe('catalog', () => {
       expect(groq?.defaultModel).toBe('llama-3.1-8b-instant');
       expect(groq?.modelsUrl).toBe('https://api.groq.com/openai/v1/models');
       expect(groq?.type).toBe('openai-compat');
+    });
+
+    it('google has correct config', () => {
+      const google = PROVIDERS.find((p) => p.id === 'google');
+      expect(google?.baseUrl).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/openai',
+      );
+      expect(google?.defaultModel).toBe('gemini-1.5-flash');
+      expect(google?.modelsUrl).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/openai/models',
+      );
+      expect(google?.type).toBe('openai-compat');
     });
 
     it('opencode-go has correct config', () => {

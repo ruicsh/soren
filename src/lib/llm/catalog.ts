@@ -30,6 +30,14 @@ export const PROVIDERS: ProviderEntry[] = [
     type: 'openai-compat',
   },
   {
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    defaultModel: 'gemini-1.5-flash',
+    id: 'google',
+    label: 'Google',
+    modelsUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/models',
+    type: 'openai-compat',
+  },
+  {
     baseUrl: 'https://opencode.ai/zen/go/v1',
     defaultModel: 'deepseek-v4-flash',
     id: 'opencode-go',

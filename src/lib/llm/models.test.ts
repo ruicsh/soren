@@ -62,38 +62,6 @@ describe('models', () => {
     expect(models[0].id).toBe('gemini-1.5-flash');
   });
 
-  it('fetches and filters models for opencode-go', async () => {
-    const mockModels = {
-      data: [
-        { id: 'deepseek-v4-flash' },
-        { id: 'glm-5.1' },
-        { id: 'kimi-k2.6' },
-        { id: 'mimo-v2.5' },
-        { id: 'minimax-m2.7' },
-        { id: 'other-model' }, // should be filtered out
-      ],
-    };
-
-    vi.mocked(fetch).mockResolvedValue({
-      json: () => Promise.resolve(mockModels),
-      ok: true,
-    } as any);
-
-    const models = await fetchModels('opencode-go', 'test-key');
-
-    expect(fetch).toHaveBeenCalledWith(
-      'https://opencode.ai/zen/go/v1/models',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-key',
-        }),
-      }),
-    );
-    expect(models).toHaveLength(5);
-    expect(models.map((m) => m.id)).toContain('deepseek-v4-flash');
-    expect(models.map((m) => m.id)).toContain('glm-5.1');
-  });
-
   it('fetches and filters models for anthropic', async () => {
     const mockModels = {
       data: [

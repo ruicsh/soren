@@ -39,14 +39,6 @@ export const PROVIDERS: ProviderEntry[] = [
     type: 'openai-compat',
   },
   {
-    baseUrl: 'https://opencode.ai/zen/go/v1',
-    defaultModel: 'deepseek-v4-flash',
-    id: 'opencode-go',
-    label: 'OpenCode Go',
-    modelsUrl: 'https://opencode.ai/zen/go/v1/models',
-    type: 'openai-compat',
-  },
-  {
     baseUrl: 'https://router.huggingface.co/v1',
     defaultModel: 'openai/gpt-oss-20b:fastest',
     id: 'huggingface',

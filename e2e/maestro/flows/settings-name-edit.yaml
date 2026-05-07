@@ -1,0 +1,27 @@
+appId: com.anonymous.soren
+---
+- launchApp
+- runFlow: helpers/ios-permissions.yaml
+
+# Open Settings via ID
+- tapOn: { id: 'header-profile-pressable' }
+- assertVisible: 'Settings'
+
+# Change Name via ID
+- tapOn: { id: 'chatbot-name-input' }
+- inputText: 'Maestro Bot'
+- hideKeyboard
+- back
+
+# Verify Home Name Change (Text match OK here because we just set it)
+- assertVisible: 'Maestro Bot'
+
+# Re-open and verify persist
+- tapOn: 'Maestro Bot'
+- assertVisible: 'Maestro Bot'
+
+# Reset name for next test run stability
+- tapOn: { id: 'chatbot-name-input' }
+- inputText: 'Soren'
+- hideKeyboard
+- back

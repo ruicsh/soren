@@ -21,10 +21,14 @@ export function ChatbotSettingsHeader(props: ChatbotSettingsHeaderProps) {
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity accessibilityLabel="Go back" onPress={onBack}>
+      <TouchableOpacity
+        accessibilityLabel="Go back"
+        onPress={onBack}
+        testID="settings-back-button"
+      >
         <ArrowLeft color={colors.text} size={24} />
       </TouchableOpacity>
-      <Text style={styles.headerTitle}>
+      <Text style={styles.headerTitle} testID="settings-header-title">
         {isCreateMode ? 'New Chatbot' : 'Settings'}
       </Text>
       {isCreateMode ? (

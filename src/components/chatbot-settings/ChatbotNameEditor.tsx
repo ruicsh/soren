@@ -23,6 +23,7 @@ export function ChatbotNameEditor(props: ChatbotNameEditorProps) {
         placeholder="Enter name"
         placeholderTextColor={colors.text3}
         style={styles.avatarNameInput}
+        testID="chatbot-name-input"
         value={name}
       />
     </View>

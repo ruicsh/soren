@@ -41,6 +41,10 @@ yarn-error.*
 # unit tests
 /coverage
 
+# maestro
+hierarchy.json
+e2e/maestro/hierarchy.json
+
 # generated native folders
 /ios
 /android

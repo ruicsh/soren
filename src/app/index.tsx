@@ -105,6 +105,7 @@ export default function Home() {
             <TouchableOpacity
               onPress={() => push('/chatbot-settings')}
               style={styles.headerProfile}
+              testID="header-profile-pressable"
             >
               <View style={styles.avatarContainer}>
                 <ChatbotAvatar

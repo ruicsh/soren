@@ -1,0 +1,25 @@
+appId: com.anonymous.soren
+---
+- runFlow:
+    when:
+      visible: 'Allow While Using App'
+    commands:
+      - tapOn: 'Allow While Using App'
+
+- runFlow:
+    when:
+      visible: 'Allow Once'
+    commands:
+      - tapOn: 'Allow Once'
+
+- runFlow:
+    when:
+      visible: 'Allow'
+    commands:
+      - tapOn: 'Allow'
+
+- runFlow:
+    when:
+      visible: 'OK'
+    commands:
+      - tapOn: 'OK'

@@ -1,0 +1,24 @@
+appId: com.anonymous.soren
+---
+- launchApp
+- runFlow: helpers/ios-permissions.yaml
+
+# Home check
+- assertVisible: { id: 'voice-call-button' }
+
+# Navigate to Settings via ID
+- tapOn: { id: 'header-profile-pressable' }
+- assertVisible: { id: 'settings-header-title' }
+- tapOn: { id: 'settings-back-button' }
+- waitForAnimationToEnd
+
+# Navigate to Voice
+- assertVisible: { id: 'voice-call-button' }
+- tapOn: { id: 'voice-call-button' }
+- runFlow: helpers/ios-permissions.yaml
+- assertVisible: 'End Call'
+- tapOn: { id: 'call-button' }
+
+# Back Home
+- waitForAnimationToEnd
+- assertVisible: { id: 'voice-call-button' }

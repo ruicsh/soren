@@ -6,6 +6,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { useDictation } from '@/hooks/use-dictation';
 import { useSentenceBuffer } from '@/hooks/use-sentence-buffer';
 import { useTTS } from '@/hooks/use-tts';
+import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
 
 export interface UseVoiceModeReturn {
   activate: () => Promise<void>;
@@ -97,9 +98,12 @@ export function useVoiceMode(
   const sentenceBuffer = useSentenceBuffer({
     onSentence: (sentence) => {
       if (stateRef.current !== 'idle' && stateRef.current !== 'error') {
-        debugLog('sentence_emitted', { len: sentence.length });
+        const sanitized = sanitizeAssistantContent(sentence);
+        if (!sanitized.trim()) return;
+
+        debugLog('sentence_emitted', { len: sanitized.length });
         setState('speaking');
-        ttsSpeak(sentence);
+        ttsSpeak(sanitized);
       }
     },
   });

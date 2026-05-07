@@ -59,6 +59,9 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
       case 'anthropic':
         icon = <Anthropic size={iconSize} />;
         break;
+      case 'google':
+        icon = <Gemini size={iconSize} />;
+        break;
       case 'groq':
         icon = <Groq size={iconSize} />;
         break;
@@ -67,9 +70,6 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
         break;
       case 'openai':
         icon = <OpenAI size={iconSize} />;
-        break;
-      case 'google':
-        icon = <Gemini size={iconSize} />;
         break;
       case 'opencode-go':
         icon = <OpenCode size={iconSize} />;

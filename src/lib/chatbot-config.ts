@@ -3,6 +3,8 @@ import { Directory, File, Paths } from 'expo-file-system';
 
 import type { ChatMessage } from '@/lib/llm/types';
 
+import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
+
 export interface ChatbotConfig {
   lastConversationAt?: number;
   lastConversationSnippet?: string;
@@ -169,14 +171,18 @@ export async function loadChatMessagesForDate(
         /^- \[(\d{2}):(\d{2}):(\d{2})\] (User|Assistant): (.*)$/,
       );
       if (match) {
-        const [, hh, mm, ss, role, content] = match;
+        const [, hh, mm, ss, roleStr, content] = match;
         const msgDate = new Date(baseDate);
         msgDate.setHours(parseInt(hh, 10), parseInt(mm, 10), parseInt(ss, 10));
 
+        const role = roleStr.toLowerCase() as 'assistant' | 'user';
         currentMsg = {
-          content: content.replace(/<br\/>/g, '\n'),
+          content:
+            role === 'assistant'
+              ? sanitizeAssistantContent(content.replace(/<br\/>/g, '\n'))
+              : content.replace(/<br\/>/g, '\n'),
           id: `${msgDate.getTime()}-${Math.random().toString(36).slice(2, 9)}`,
-          role: role.toLowerCase() as 'assistant' | 'user',
+          role,
           timestamp: msgDate.getTime(),
         };
         messages.push(currentMsg);
@@ -189,6 +195,10 @@ export async function loadChatMessagesForDate(
         // (Removing leading spaces/dashes if any from manual edits or broken saves)
         const addition = line.replace(/^\s+/, '').replace(/<br\/>/g, '\n');
         currentMsg.content += '\n' + addition;
+
+        if (currentMsg.role === 'assistant') {
+          currentMsg.content = sanitizeAssistantContent(currentMsg.content);
+        }
       }
     }
 

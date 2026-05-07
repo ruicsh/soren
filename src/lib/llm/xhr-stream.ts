@@ -1,4 +1,4 @@
-import type { LLMProvider, StreamMetrics } from './types';
+import { LLMError, type LLMProvider, type StreamMetrics } from './types';
 
 const DEBUG = process.env.EXPO_PUBLIC_DEBUG_XHR_STREAM === '1';
 const STREAM_TIMEOUT_MS = 60000;
@@ -24,10 +24,7 @@ export function createStreamChat(
   };
 
   const { body, headers, url } = provider.buildRequest(messages);
-  const getTime =
-    typeof performance !== 'undefined'
-      ? () => performance.now()
-      : () => Date.now();
+  const getTime = () => Date.now();
   const t0 = getTime();
   dlog(`[LLM] XHR send() at t=0ms`);
 
@@ -39,13 +36,16 @@ export function createStreamChat(
 
   // Timeout: if no progress for STREAM_TIMEOUT_MS, abort
   let lastProgressTime = getTime();
-  const timeoutId = setInterval(() => {
-    if (getTime() - lastProgressTime > STREAM_TIMEOUT_MS) {
-      dlog(`[LLM] Stream timeout after ${STREAM_TIMEOUT_MS}ms`);
-      xhr.abort();
-      clearInterval(timeoutId);
-    }
-  }, 10000);
+  const timeoutId =
+    STREAM_TIMEOUT_MS > 0
+      ? setInterval(() => {
+          if (getTime() - lastProgressTime > STREAM_TIMEOUT_MS) {
+            dlog(`[LLM] Stream timeout after ${STREAM_TIMEOUT_MS}ms`);
+            xhr.abort();
+            if (timeoutId) clearInterval(timeoutId);
+          }
+        }, 10000)
+      : null;
 
   xhr.onreadystatechange = () => {
     const t = getTime() - t0;
@@ -110,14 +110,53 @@ export function createStreamChat(
   };
 
   xhr.onload = () => {
-    clearInterval(timeoutId);
+    if (timeoutId) clearInterval(timeoutId);
     const t = getTime() - t0;
     dlog(`[LLM] onload at t=${t.toFixed(0)}ms, status=${xhr.status}`);
 
     if (xhr.status < 200 || xhr.status >= 300) {
+      const responseText = xhr.responseText;
+      let errorMessage = `HTTP ${xhr.status}: ${responseText.slice(0, 200)}`;
+      let isTransient = xhr.status >= 500 || xhr.status === 429;
+      let errorCode: string | undefined;
+
+      // Special case for common status codes if JSON parsing fails
+      if (xhr.status === 429) {
+        errorMessage = 'Rate limit reached. Retrying...';
+      } else if (xhr.status === 503) {
+        errorMessage = 'Model busy. Retrying...';
+      }
+
+      try {
+        const parsed = JSON.parse(responseText);
+        const error = parsed.error || parsed;
+        errorMessage = error.message || errorMessage;
+        errorCode = error.code;
+
+        // If it's a 429, check if it's quota vs rate limit
+        if (xhr.status === 429) {
+          const isQuota =
+            errorMessage.toLowerCase().includes('quota') ||
+            errorMessage.toLowerCase().includes('billing') ||
+            errorCode === 'insufficient_quota';
+          isTransient = !isQuota;
+          if (isQuota) {
+            errorMessage = 'Quota reached for this provider key.';
+          } else {
+            errorMessage = 'Rate limit reached. Retrying...';
+          }
+        } else if (xhr.status === 503) {
+          errorMessage = 'Model busy. Retrying...';
+        } else if (xhr.status >= 500) {
+          errorMessage = 'Provider internal error. Retrying...';
+        }
+      } catch {
+        // use default error message
+      }
+
       queue.push(
         null,
-        new Error(`HTTP ${xhr.status}: ${xhr.responseText.slice(0, 200)}`),
+        new LLMError(errorMessage, xhr.status, errorCode, isTransient),
       );
 
       return;
@@ -137,14 +176,14 @@ export function createStreamChat(
   };
 
   xhr.onerror = () => {
-    clearInterval(timeoutId);
+    if (timeoutId) clearInterval(timeoutId);
     const t = getTime() - t0;
     dlog(`[LLM] onerror at t=${t.toFixed(0)}ms`);
     queue.push(null, new Error('Network request failed'));
   };
 
   xhr.onabort = () => {
-    clearInterval(timeoutId);
+    if (timeoutId) clearInterval(timeoutId);
     const t = getTime() - t0;
     dlog(`[LLM] onabort at t=${t.toFixed(0)}ms`);
     queue.push(null);
@@ -166,9 +205,8 @@ export function createStreamChat(
 
 function createStreamQueue(): StreamQueue {
   const queue: { error?: Error; value: null | string }[] = [];
-  let resolveNext:
-    | ((item: { error?: Error; value: null | string }) => void)
-    | null = null;
+  const waiters: ((item: { error?: Error; value: null | string }) => void)[] =
+    [];
 
   return {
     next() {
@@ -177,13 +215,13 @@ function createStreamQueue(): StreamQueue {
       }
 
       return new Promise((resolve) => {
-        resolveNext = resolve;
+        waiters.push(resolve);
       });
     },
     push(value, error) {
-      if (resolveNext) {
-        resolveNext({ error, value });
-        resolveNext = null;
+      if (waiters.length > 0) {
+        const resolve = waiters.shift()!;
+        resolve({ error, value });
       } else {
         queue.push({ error, value });
       }

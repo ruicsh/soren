@@ -22,3 +22,15 @@ export interface StreamMetrics {
   firstTokenTime: null | number;
   headersTime: null | number;
 }
+
+export class LLMError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string,
+    public isTransient: boolean = false,
+  ) {
+    super(message);
+    this.name = 'LLMError';
+  }
+}

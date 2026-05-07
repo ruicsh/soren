@@ -313,6 +313,13 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
     async (userText: string, assistantText: string) => {
       if (!config) return;
       const now = Date.now();
+
+      // Don't save transient error messages as the conversation snippet
+      const isErrorMessage =
+        assistantText.includes('HTTP ') ||
+        assistantText.includes('Retrying...') ||
+        assistantText.includes('Quota reached');
+
       const firstSentence =
         assistantText
           .split(/[.!?]/)
@@ -323,15 +330,19 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
           ? firstSentence.slice(0, 57) + '...'
           : firstSentence;
 
+      const snippetToSave = isErrorMessage
+        ? config.lastConversationSnippet
+        : finalSnippet;
+
       const updated = {
         ...config,
         lastConversationAt: now,
-        lastConversationSnippet: finalSnippet,
+        lastConversationSnippet: snippetToSave,
       };
 
       updateConfig({
         lastConversationAt: now,
-        lastConversationSnippet: finalSnippet,
+        lastConversationSnippet: snippetToSave,
       });
 
       await appendChatTurn({

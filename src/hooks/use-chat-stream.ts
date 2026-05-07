@@ -5,6 +5,8 @@ import type { ChatMessage } from '@/lib/llm/types';
 import { getApiKey } from '@/lib/byok-keys';
 import { loadLatestAvailableChatMessages } from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
+import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
+import { LLMError } from '@/lib/llm/types';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
 const BATCH_MS = 50;
@@ -23,6 +25,8 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(false);
   const pendingRef = useRef('');
+  const assistantRawRef = useRef('');
+  const emittedSanitizedLenRef = useRef(0);
   const flushTimerRef = useRef<null | ReturnType<typeof setInterval>>(null);
   const isStreamingRef = useRef(false);
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
@@ -85,12 +89,23 @@ export function useChatStream(options?: UseChatStreamOptions) {
     const delta = pendingRef.current;
     if (!delta) return;
     pendingRef.current = '';
-    onStreamingChunkRef.current?.(delta);
+
+    assistantRawRef.current += delta;
+    const fullSanitized = sanitizeAssistantContent(assistantRawRef.current);
+    const newSanitizedDelta = fullSanitized.slice(
+      emittedSanitizedLenRef.current,
+    );
+
+    if (newSanitizedDelta) {
+      onStreamingChunkRef.current?.(newSanitizedDelta);
+      emittedSanitizedLenRef.current += newSanitizedDelta.length;
+    }
+
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (!last || last.role !== 'assistant') return prev;
 
-      return [...prev.slice(0, -1), { ...last, content: last.content + delta }];
+      return [...prev.slice(0, -1), { ...last, content: fullSanitized }];
     });
   }, []);
 
@@ -129,6 +144,8 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
       abortRef.current = false;
       pendingRef.current = '';
+      assistantRawRef.current = '';
+      emittedSanitizedLenRef.current = 0;
 
       const now = Date.now();
       const userMessage: ChatMessage = {
@@ -148,36 +165,64 @@ export function useChatStream(options?: UseChatStreamOptions) {
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
       setIsStreaming(true);
 
+      const MAX_RETRIES = 2;
+      let attempt = 0;
+
+      const runStream = async () => {
+        try {
+          const history = [...messages, userMessage].map((m) => ({
+            content: m.content,
+            role: m.role as 'assistant' | 'system' | 'user',
+          }));
+
+          const historyWithSystem = [
+            {
+              content:
+                'You are a helpful, concise assistant. Keep responses brief.',
+              role: 'system' as const,
+            },
+            ...history,
+          ];
+
+          const stream = createStreamChat(
+            provider,
+            historyWithSystem,
+            () => abortRef.current,
+          );
+
+          for await (const _delta of stream) {
+            pendingRef.current += _delta;
+          }
+        } catch (err) {
+          if (
+            err instanceof LLMError &&
+            err.isTransient &&
+            attempt < MAX_RETRIES &&
+            !abortRef.current
+          ) {
+            attempt++;
+            const delay = Math.pow(2, attempt) * 500 + Math.random() * 500;
+            // Show temporary retry status in UI if we haven't received content yet
+            if (assistantRawRef.current === '') {
+              pendingRef.current = `(Retry ${attempt}/${MAX_RETRIES}: ${err.message}) `;
+              flush();
+              pendingRef.current = '';
+            }
+            await new Promise((resolve) => setTimeout(resolve, delay));
+
+            return runStream();
+          }
+
+          pendingRef.current =
+            pendingRef.current ||
+            (err instanceof Error ? err.message : 'Something went wrong');
+        }
+      };
+
       flushTimerRef.current = setInterval(flush, BATCH_MS);
 
       try {
-        const history = [...messages, userMessage].map((m) => ({
-          content: m.content,
-          role: m.role as 'assistant' | 'system' | 'user',
-        }));
-
-        const historyWithSystem = [
-          {
-            content:
-              'You are a helpful, concise assistant. Keep responses brief.',
-            role: 'system' as const,
-          },
-          ...history,
-        ];
-
-        const stream = createStreamChat(
-          provider,
-          historyWithSystem,
-          () => abortRef.current,
-        );
-
-        for await (const _delta of stream) {
-          pendingRef.current += _delta;
-        }
-      } catch (err) {
-        pendingRef.current =
-          pendingRef.current ||
-          (err instanceof Error ? err.message : 'Something went wrong');
+        await runStream();
       } finally {
         if (flushTimerRef.current) {
           clearInterval(flushTimerRef.current);

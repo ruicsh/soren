@@ -191,6 +191,39 @@ describe('useChatStream', () => {
     expect(assistant.content).toBe('Hello world');
   });
 
+  it('filters out reasoning tags from onStreamingChunk callback', async () => {
+    const chunks: string[] = [];
+    const onStreamingChunk = vi.fn((c) => chunks.push(c));
+
+    vi.mocked(createStreamChat).mockImplementation(() =>
+      withMetrics(
+        (async function* () {
+          yield '<tho';
+          yield 'ught>secret</thought>';
+          yield 'Hello';
+          yield ' <think>more</think>';
+          yield 'world';
+        })(),
+      ),
+    );
+
+    const { result } = renderUseChatStream({
+      overrides: { onStreamingChunk },
+    });
+
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.sendMessage('Hi');
+    });
+
+    // onStreamingChunk should only have received the visible parts
+    expect(chunks.join('')).toBe('Hello world');
+    expect(
+      result.current.messages[result.current.messages.length - 1].content,
+    ).toBe('Hello world');
+  });
+
   it('handles stream errors by appending error text', async () => {
     vi.mocked(createStreamChat).mockImplementation(() =>
       withMetrics(

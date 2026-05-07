@@ -1,10 +1,20 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import * as Speech from 'expo-speech';
 import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { vi } from 'vitest';
 
+import { useChatStream } from '@/hooks/use-chat-stream';
 import { emitSpeechEvent } from '@/tests/test-setup';
 
 import { useVoiceMode } from './use-voice-mode';
+
+vi.mock('@/hooks/use-chat-stream', () => ({
+  useChatStream: vi.fn(() => ({
+    messages: [],
+    sendMessage: vi.fn(() => Promise.resolve()),
+    stop: vi.fn(),
+  })),
+}));
 
 type UseVoiceModeOptions = Parameters<typeof useVoiceMode>[0];
 
@@ -85,5 +95,43 @@ describe('useVoiceMode', () => {
 
     await waitFor(() => expect(result.current.state).toBe('error'));
     expect(result.current.error).toBe('Mic broken');
+  });
+
+  it('filters out reasoning tags before sending to TTS', async () => {
+    let capturedOnSentence: ((s: string) => void) | undefined;
+    vi.mocked(useChatStream).mockImplementation((opts) => {
+      capturedOnSentence = opts?.onStreamingChunk;
+
+      return {
+        isStreaming: false,
+        messages: [],
+        sendMessage: vi.fn(() => Promise.resolve()),
+        stop: vi.fn(),
+      };
+    });
+
+    const { result } = renderUseVoiceMode();
+
+    await act(async () => {
+      await result.current.activate();
+    });
+
+    // Simulate assistant sending a chunk with hidden reasoning
+    await act(async () => {
+      capturedOnSentence?.('<thought>thinking</thought>Hello');
+    });
+
+    // Wait for sentence buffer to flush (voice mode flushes on LLM done or punctuation)
+    // For simplicity, we can just trigger a punctuation or wait if sentence-buffer emits immediately
+    await act(async () => {
+      capturedOnSentence?.('. ');
+    });
+
+    // Check if Speech.speak was called with sanitized text
+    expect(Speech.speak).toHaveBeenCalledWith('Hello.', expect.anything());
+    // Should NOT contain <thought>
+    const calls = vi.mocked(Speech.speak).mock.calls;
+    const spokenText = calls[calls.length - 1][0];
+    expect(spokenText).not.toContain('<thought>');
   });
 });

@@ -114,4 +114,22 @@ describe('ChatMessageBubble', () => {
     renderChatMessageBubble({ message: makeMessage('user', 'Hello') });
     expect(screen.queryByTestId('chat-message-time')).toBeNull();
   });
+
+  it('renders long content without truncation (no numberOfLines)', () => {
+    const longText = 'A'.repeat(1000);
+    renderChatMessageBubble({ message: makeMessage('assistant', longText) });
+
+    const textElement = screen.getByTestId('chat-message-text');
+    expect(textElement.props.numberOfLines).toBeUndefined();
+    expect(screen.getByText(longText)).toBeTruthy();
+  });
+
+  it('renders multiline content with newlines', () => {
+    const multilineText = 'Line 1\nLine 2\nLine 3';
+    renderChatMessageBubble({
+      message: makeMessage('assistant', multilineText),
+    });
+
+    expect(screen.getByText(multilineText)).toBeTruthy();
+  });
 });

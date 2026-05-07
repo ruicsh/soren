@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
   bubbleAssistant: {
     backgroundColor: colors.bg2,
     borderRadius: radius['2xl'],
+    flexShrink: 1,
     justifyContent: 'center',
     maxWidth: '85%',
     paddingBottom: spacing[2],
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
   bubbleUser: {
     backgroundColor: colors.accent,
     borderRadius: radius['2xl'],
+    flexShrink: 1,
     justifyContent: 'center',
     maxWidth: '85%',
     paddingBottom: spacing[2],
@@ -87,11 +89,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     marginBottom: spacing[3],
+    width: '100%',
   },
   rowUser: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginBottom: spacing[3],
+    width: '100%',
   },
   textAssistant: {
     color: colors.text,

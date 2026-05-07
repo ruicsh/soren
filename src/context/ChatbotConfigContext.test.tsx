@@ -5,6 +5,7 @@ import {
   ChatbotConfigProvider,
   useChatbotConfigContext,
 } from '@/context/ChatbotConfigContext';
+import { deleteApiKey as mockDeleteApiKey } from '@/lib/byok-keys';
 import {
   listChatbotConfigs,
   loadOrCreateDefaultChatbotConfig,
@@ -95,5 +96,42 @@ describe('ChatbotConfigContext switching', () => {
 
     // The effect inside the provider will re-run but functional update should keep bot-2
     await waitFor(() => expect(result.current.config?.uuid).toBe('bot-2'));
+  });
+
+  it('deletes provider key only if no other bot uses it', async () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+    );
+
+    const { result } = await renderHook(() => useChatbotConfigContext(), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Case 1: Delete bot-1, but bot-2 still uses 'groq'
+    await act(async () => {
+      await result.current.deleteChatbot('bot-1');
+    });
+
+    expect(mockDeleteApiKey).not.toHaveBeenCalledWith('bot-1', 'groq');
+
+    // Case 2: Delete bot-2 (last groq bot)
+    // Manually update the state because deleteChatbot uses the 'chatbots' state from closure
+    await act(async () => {
+      // simulate the listChatbotConfigs update that usually happens inside refreshChatbots
+      (listChatbotConfigs as any).mockResolvedValue([mockBots[1]]);
+      await result.current.refreshChatbots();
+    });
+
+    await act(async () => {
+      await result.current.deleteChatbot('bot-2');
+    });
+
+    expect(mockDeleteApiKey).toHaveBeenCalledWith('bot-2', 'groq');
   });
 });

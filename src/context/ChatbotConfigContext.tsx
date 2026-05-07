@@ -176,11 +176,27 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
 
   const deleteChatbot = useCallback(
     async (uuid: string) => {
-      // Cleanup provider keys
-      const bot = chatbots.find((c) => c.uuid === uuid);
-      if (bot && bot.providerKeyStatus) {
-        for (const pId in bot.providerKeyStatus) {
-          await deleteApiKey(uuid, pId);
+      const botToDelete = chatbots.find((c) => c.uuid === uuid);
+      const remainingBots = chatbots.filter((c) => c.uuid !== uuid);
+
+      if (botToDelete) {
+        // Collect all providers this bot was associated with
+        const providersToCheck = new Set<string>();
+        providersToCheck.add(botToDelete.llmProvider);
+
+        if (botToDelete.providerKeyStatus) {
+          for (const pId in botToDelete.providerKeyStatus) {
+            providersToCheck.add(pId);
+          }
+        }
+
+        // Only delete SecureStore key if NO other chatbot is using that provider
+        for (const pId of providersToCheck) {
+          const isStillUsed = remainingBots.some((c) => c.llmProvider === pId);
+
+          if (!isStillUsed) {
+            await deleteApiKey(uuid, pId);
+          }
         }
       }
 

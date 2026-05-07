@@ -18,6 +18,7 @@ export default function VoiceScreen() {
     chatbotUuid: config?.uuid,
     llmModel: config?.llmModel,
     llmProvider: config?.llmProvider,
+    systemPrompt: config?.systemPrompt,
     updateLastConversation,
     voiceId: config?.voiceId,
   });

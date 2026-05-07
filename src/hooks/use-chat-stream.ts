@@ -9,6 +9,7 @@ import {
 } from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
 import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
+import { buildSystemPrompt } from '@/lib/llm/system-prompt';
 import { LLMError } from '@/lib/llm/types';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
@@ -186,7 +187,9 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
           const historyWithSystem = [
             {
-              content: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+              content: buildSystemPrompt({
+                systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+              }),
               role: 'system' as const,
             },
             ...history,

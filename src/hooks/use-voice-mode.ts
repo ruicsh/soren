@@ -38,6 +38,7 @@ export interface UseVoiceModeOptions {
   chatbotUuid?: string;
   llmModel?: string;
   llmProvider?: string;
+  systemPrompt?: string;
   updateLastConversation?: (
     userText: string,
     assistantText: string,
@@ -119,6 +120,7 @@ export function useVoiceMode(
     },
     providerId: options?.llmProvider,
     providerModel: options?.llmModel,
+    systemPrompt: options?.systemPrompt,
   });
 
   const lastUserTextRef = useRef<null | string>(null);

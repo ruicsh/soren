@@ -385,7 +385,7 @@ describe('useChatStream', () => {
       expect.anything(),
       expect.arrayContaining([
         expect.objectContaining({
-          content: customPrompt,
+          content: expect.stringContaining(customPrompt),
           role: 'system',
         }),
       ]),

@@ -119,12 +119,9 @@ export default function Home() {
                 <Text style={styles.headerTitle}>
                   {config?.name ?? 'Soren'}
                 </Text>
-                {config?.lastConversationAt && (
-                  <Text style={styles.headerSubtitle}>
-                    Last active:{' '}
-                    {new Date(config.lastConversationAt).toLocaleDateString()}
-                  </Text>
-                )}
+                <Text style={styles.headerSubtitle}>
+                  {config?.llmProvider}:{config?.llmModel}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>

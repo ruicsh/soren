@@ -57,6 +57,9 @@ export function ChatbotListItem(props: ChatbotListItemProps) {
             </Text>
             <Text style={styles.itemTime}>{time}</Text>
           </View>
+          <Text style={styles.itemModel}>
+            {item.llmProvider}:{item.llmModel}
+          </Text>
           <Text numberOfLines={1} style={styles.itemSnippet}>
             {item.lastConversationSnippet || 'No messages yet'}
           </Text>
@@ -96,6 +99,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing[1],
+  },
+  itemModel: {
+    color: colors.text2,
+    fontSize: 10,
+    marginBottom: 2,
   },
   itemName: {
     color: colors.text,

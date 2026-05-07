@@ -24,7 +24,12 @@ describe('Home', () => {
     vi.setSystemTime(new Date('2026-05-07T12:00:00Z')); // Set to today for consistent tests
     vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
     vi.mocked(useChatbotConfig).mockReturnValue({
-      config: { lastConversationAt: 1714992000000, name: 'Soren' },
+      config: {
+        lastConversationAt: 1714992000000,
+        llmModel: 'gpt-4o',
+        llmProvider: 'openai',
+        name: 'Soren',
+      },
       isLoading: false,
     } as any);
     vi.mocked(useChatStream).mockReturnValue({
@@ -43,10 +48,9 @@ describe('Home', () => {
     expect(screen.getByText('Soren')).toBeTruthy();
   });
 
-  it('renders last active timestamp if available', () => {
+  it('renders provider and model if available', () => {
     render(<Home />);
-    // 1714992000000 = May 6, 2024 (depending on locale, but checking prefix)
-    expect(screen.getByText(/Last active:/)).toBeTruthy();
+    expect(screen.getByText('openai:gpt-4o')).toBeTruthy();
   });
 
   it('renders date headers for messages from different days', () => {

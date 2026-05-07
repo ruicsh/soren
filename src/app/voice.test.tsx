@@ -20,7 +20,13 @@ vi.mock('@/hooks/use-voice-mode', () => ({
 
 vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: () => ({
-    config: { name: 'Soren', uuid: 'test-uuid', voiceId: 'voice-1' },
+    config: {
+      llmModel: 'gpt-4o',
+      llmProvider: 'openai',
+      name: 'Soren',
+      uuid: 'test-uuid',
+      voiceId: 'voice-1',
+    },
     isLoading: false,
   }),
 }));
@@ -34,6 +40,7 @@ describe('VoiceScreen', () => {
     render(<VoiceScreen />);
     expect(screen.getByText('Connecting…')).toBeTruthy();
     expect(screen.getByText('Soren')).toBeTruthy();
+    expect(screen.getByText('openai:gpt-4o')).toBeTruthy();
     expect(mockActivate).toHaveBeenCalled();
   });
 

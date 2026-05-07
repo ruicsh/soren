@@ -43,6 +43,7 @@ describe('ChatbotListItem', () => {
     renderChatbotListItem();
 
     expect(screen.getByText('Test Bot')).toBeOnTheScreen();
+    expect(screen.getByText('openai:gpt-4o')).toBeOnTheScreen();
     expect(screen.getByText('Hello snippet')).toBeOnTheScreen();
     // Time for 1714992000000 depends on local timezone but should be present
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeOnTheScreen();

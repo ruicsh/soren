@@ -32,7 +32,9 @@ export default function VoiceScreen() {
   }, [activate, deactivate]);
 
   const chatbotName = config?.name ?? 'Soren';
-  const modelName = config?.llmModel ?? '';
+  const providerModel = config
+    ? `${config.llmProvider}:${config.llmModel}`
+    : '';
 
   const statusText =
     state === 'connecting'
@@ -73,7 +75,9 @@ export default function VoiceScreen() {
         <TouchableOpacity onPress={() => push('/chatbot-settings')}>
           <Text style={styles.name}>{chatbotName}</Text>
         </TouchableOpacity>
-        {modelName ? <Text style={styles.modelName}>{modelName}</Text> : null}
+        {providerModel ? (
+          <Text style={styles.modelName}>{providerModel}</Text>
+        ) : null}
         <Text style={[styles.status, error ? styles.statusError : null]}>
           {statusText}
         </Text>

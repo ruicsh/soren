@@ -98,6 +98,11 @@ export default function ChatbotSettingsScreen() {
         config?.voiceId ??
         '');
 
+  const personalityLabel = config?.systemPrompt
+    ? config.systemPrompt.slice(0, 30) +
+      (config.systemPrompt.length > 30 ? '...' : '')
+    : 'Default';
+
   if (isLoading || !config) {
     return (
       <View style={styles.loading}>
@@ -147,7 +152,11 @@ export default function ChatbotSettingsScreen() {
             />
 
             <ChatbotProfileSection
+              onSelectPersonality={() =>
+                push('/settings-selection/personality')
+              }
               onSelectVoice={() => push('/settings-selection/voice')}
+              personalityLabel={personalityLabel}
               voiceLabel={voiceLabel}
             />
 

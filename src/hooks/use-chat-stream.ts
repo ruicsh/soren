@@ -3,7 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/lib/llm/types';
 
 import { getApiKey } from '@/lib/byok-keys';
-import { loadLatestAvailableChatMessages } from '@/lib/chatbot-config';
+import {
+  DEFAULT_SYSTEM_PROMPT,
+  loadLatestAvailableChatMessages,
+} from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
 import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
 import { LLMError } from '@/lib/llm/types';
@@ -18,6 +21,7 @@ export interface UseChatStreamOptions {
   onStreamingChunk?: (chunk: string) => void;
   providerId?: string;
   providerModel?: string;
+  systemPrompt?: string;
 }
 
 export function useChatStream(options?: UseChatStreamOptions) {
@@ -32,8 +36,13 @@ export function useChatStream(options?: UseChatStreamOptions) {
   const onStreamingChunkRef = useRef(options?.onStreamingChunk);
   onStreamingChunkRef.current = options?.onStreamingChunk;
 
-  const { chatbotUuid, lastConversationAt, providerId, providerModel } =
-    options || {};
+  const {
+    chatbotUuid,
+    lastConversationAt,
+    providerId,
+    providerModel,
+    systemPrompt,
+  } = options || {};
 
   const [provider, setProvider] = useState<any>(null);
 
@@ -177,8 +186,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
           const historyWithSystem = [
             {
-              content:
-                'You are a helpful, concise assistant. Keep responses brief.',
+              content: systemPrompt || DEFAULT_SYSTEM_PROMPT,
               role: 'system' as const,
             },
             ...history,
@@ -232,7 +240,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
         setIsStreaming(false);
       }
     },
-    [messages, flush, provider, chatbotUuid, providerId],
+    [messages, flush, provider, chatbotUuid, providerId, systemPrompt],
   );
 
   // Cleanup interval on unmount

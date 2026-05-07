@@ -38,10 +38,11 @@ function renderUseChatbotConfig({
 }
 
 describe('useChatbotConfig', () => {
-  const mockConfig = {
+  const mockConfig: any = {
     llmModel: 'llama-3.1-8b-instant',
     llmProvider: 'groq',
     name: 'Soren',
+    systemPrompt: 'persona',
     uuid: 'uuid-123',
     voiceId: null,
   };

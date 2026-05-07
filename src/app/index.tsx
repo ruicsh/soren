@@ -32,6 +32,7 @@ export default function Home() {
     },
     providerId: config?.llmProvider,
     providerModel: config?.llmModel,
+    systemPrompt: config?.systemPrompt,
   });
 
   const lastUserTextRef = useRef<null | string>(null);

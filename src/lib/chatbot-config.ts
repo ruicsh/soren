@@ -12,6 +12,7 @@ export interface ChatbotConfig {
   llmProvider: string;
   name: string;
   providerKeyStatus?: Record<string, boolean>;
+  systemPrompt: string;
   uuid: string;
   voiceId: null | string;
 }
@@ -26,6 +27,8 @@ export interface ChatTurn {
 const DEFAULT_NAME = 'Soren';
 const DEFAULT_PROVIDER = 'groq';
 const DEFAULT_MODEL = 'llama-3.1-8b-instant';
+export const DEFAULT_SYSTEM_PROMPT =
+  "You are a helpful, direct, and thoughtful assistant. Be concise and honest. Don't be sycophantic — skip the affirmations and get to the point. If you don't know something, say so.";
 
 export const getChatbotsRootPath = () => Paths.document.uri + 'chatbots/';
 
@@ -107,6 +110,7 @@ export async function listChatbotConfigs(): Promise<ChatbotConfig[]> {
             llmProvider: parsed.llmProvider ?? DEFAULT_PROVIDER,
             name: parsed.name ?? DEFAULT_NAME,
             providerKeyStatus: parsed.providerKeyStatus,
+            systemPrompt: parsed.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
             uuid: parsed.uuid,
             voiceId: parsed.voiceId ?? null,
           });
@@ -279,6 +283,7 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
     llmModel: DEFAULT_MODEL,
     llmProvider: DEFAULT_PROVIDER,
     name: DEFAULT_NAME,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
     uuid,
     voiceId: null,
   };

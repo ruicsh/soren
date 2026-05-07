@@ -31,6 +31,7 @@ describe('ChatbotSettingsScreen', () => {
     llmModel: 'llama-3.1-8b-instant',
     llmProvider: 'groq',
     name: 'Soren',
+    systemPrompt: 'You are helpful',
     uuid: 'uuid-123',
     voiceId: null,
   };

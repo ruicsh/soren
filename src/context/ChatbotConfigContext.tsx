@@ -12,6 +12,7 @@ import { deleteApiKey, getApiKey, setApiKey } from '@/lib/byok-keys';
 import {
   appendChatTurn,
   ChatbotConfig,
+  DEFAULT_SYSTEM_PROMPT,
   deleteChatbot as deleteChatbotFs,
   listChatbotConfigs,
   loadOrCreateDefaultChatbotConfig,
@@ -162,6 +163,7 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
       llmModel: 'llama-3.1-8b-instant',
       llmProvider: 'groq',
       name: 'New Chatbot',
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
       uuid,
       voiceId: null,
     };

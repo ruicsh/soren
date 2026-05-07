@@ -360,4 +360,36 @@ describe('useChatStream', () => {
       'API Key missing. Please go to Settings to add it.',
     );
   });
+
+  it('uses custom systemPrompt when provided in options', async () => {
+    const customPrompt = 'You are a pirate.';
+    vi.mocked(createStreamChat).mockImplementation(() =>
+      withMetrics(
+        (async function* () {
+          yield 'Ahoy';
+        })(),
+      ),
+    );
+
+    const { result } = renderUseChatStream({
+      overrides: { systemPrompt: customPrompt },
+    });
+
+    await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.sendMessage('Hello');
+    });
+
+    expect(createStreamChat).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.arrayContaining([
+        expect.objectContaining({
+          content: customPrompt,
+          role: 'system',
+        }),
+      ]),
+      expect.anything(),
+    );
+  });
 });

@@ -55,6 +55,7 @@ describe('chatbot-config', () => {
       llmModel: 'm1',
       llmProvider: 'p1',
       name: 'Bot',
+      systemPrompt: 'persona',
       uuid: 'u1',
       voiceId: null,
     };
@@ -71,6 +72,7 @@ describe('chatbot-config', () => {
       llmModel: 'llama-3.1-70b-versatile',
       llmProvider: 'groq',
       name: 'New Name',
+      systemPrompt: 'prompt',
       uuid: 'uuid-to-save',
       voiceId: 'voice-2',
     };

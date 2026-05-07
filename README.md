@@ -5,12 +5,10 @@ Soren is a mobile AI chat app for fast text conversations and natural voice call
 <div align="center">
   <table border="0">
     <tr>
-      <td><img src="docs/screenshot-chatbots.png" width="300" /></td>
-      <td><img src="docs/screenshot-chat.png" width="300" /></td>
-    </tr>
-    <tr>
-      <td><img src="docs/screenshot-voice.png" width="300" /></td>
-      <td><img src="docs/screenshot-chatbot-settings.png" width="300" /></td>
+      <td width="24%"><img src="docs/screenshot-chatbots.png" /></td>
+      <td width="24%"><img src="docs/screenshot-chat.png" /></td>
+      <td width="24%"><img src="docs/screenshot-voice.png" /></td>
+      <td width="24%"><img src="docs/screenshot-chatbot-settings.png" /></td>
     </tr>
   </table>
 </div>

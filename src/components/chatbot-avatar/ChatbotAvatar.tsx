@@ -3,6 +3,7 @@ import {
   DeepSeek,
   Gemini,
   Groq,
+  HuggingFace,
   Kimi,
   Minimax,
   Ollama,
@@ -41,6 +42,8 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
     icon = <Ollama size={iconSize} />;
   } else if (mid.includes('claude')) {
     icon = <Anthropic size={iconSize} />;
+  } else if (mid.includes('openai')) {
+    icon = <OpenAI size={iconSize} />;
   } else if (mid.includes('deepseek')) {
     icon = <DeepSeek size={iconSize} />;
   } else if (mid.includes('gemini')) {
@@ -64,6 +67,9 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
         break;
       case 'groq':
         icon = <Groq size={iconSize} />;
+        break;
+      case 'huggingface':
+        icon = <HuggingFace size={iconSize} />;
         break;
       case 'ollama':
         icon = <Ollama size={iconSize} />;

@@ -140,6 +140,7 @@ vi.mock('@lobehub/icons-rn', () => {
     DeepSeek: createIconMock('DeepSeek'),
     Gemini: createIconMock('Gemini'),
     Groq: createIconMock('Groq'),
+    HuggingFace: createIconMock('HuggingFace'),
     Kimi: createIconMock('Kimi'),
     Meta: createIconMock('Meta'),
     Minimax: createIconMock('Minimax'),

@@ -89,6 +89,8 @@ function isChatModel(model: LLMModel): boolean {
     'kimi',
     'mimo',
     'minimax',
+    'gpt',
+    'oss',
   ];
   const exclude = [
     'embed',

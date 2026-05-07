@@ -46,6 +46,14 @@ export const PROVIDERS: ProviderEntry[] = [
     type: 'openai-compat',
   },
   {
+    baseUrl: 'https://router.huggingface.co/v1',
+    defaultModel: 'openai/gpt-oss-20b:fastest',
+    id: 'huggingface',
+    label: 'Hugging Face',
+    modelsUrl: 'https://router.huggingface.co/v1/models',
+    type: 'openai-compat',
+  },
+  {
     defaultModel: 'claude-3-5-sonnet-20240620',
     id: 'anthropic',
     label: 'Anthropic',

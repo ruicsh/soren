@@ -121,6 +121,37 @@ describe('models', () => {
     expect(models).toHaveLength(2);
   });
 
+  it('fetches and filters models for huggingface', async () => {
+    const mockModels = {
+      data: [
+        { id: 'openai/gpt-oss-20b:fastest' },
+        { id: 'meta-llama/Llama-3.1-8B-Instruct' },
+        { id: 'sentence-transformers/all-MiniLM-L6-v2' }, // should be filtered
+      ],
+    };
+
+    vi.mocked(fetch).mockResolvedValue({
+      json: () => Promise.resolve(mockModels),
+      ok: true,
+    } as any);
+
+    const models = await fetchModels('huggingface', 'hf-key');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://router.huggingface.co/v1/models',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer hf-key',
+        }),
+      }),
+    );
+    expect(models).toHaveLength(2);
+    expect(models.map((m) => m.id)).toContain('openai/gpt-oss-20b:fastest');
+    expect(models.map((m) => m.id)).toContain(
+      'meta-llama/Llama-3.1-8B-Instruct',
+    );
+  });
+
   it('returns all models if no chat markers found (fail-open)', async () => {
     const mockModels = {
       data: [{ id: 'mystery-model-v1' }],

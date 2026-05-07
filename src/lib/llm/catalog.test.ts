@@ -7,6 +7,7 @@ describe('catalog', () => {
       expect(PROVIDERS.map((p) => p.id)).toContain('google');
       expect(PROVIDERS.map((p) => p.id)).toContain('anthropic');
       expect(PROVIDERS.map((p) => p.id)).toContain('opencode-go');
+      expect(PROVIDERS.map((p) => p.id)).toContain('huggingface');
     });
 
     it('groq has correct config', () => {
@@ -43,11 +44,29 @@ describe('catalog', () => {
       expect(anthropic?.modelsUrl).toBe('https://api.anthropic.com/v1/models');
       expect(anthropic?.type).toBe('anthropic');
     });
+
+    it('huggingface has correct config', () => {
+      const hf = PROVIDERS.find((p) => p.id === 'huggingface');
+      expect(hf?.baseUrl).toBe('https://router.huggingface.co/v1');
+      expect(hf?.defaultModel).toBe('openai/gpt-oss-20b:fastest');
+      expect(hf?.modelsUrl).toBe('https://router.huggingface.co/v1/models');
+      expect(hf?.type).toBe('openai-compat');
+    });
   });
 
   describe('createProvider', () => {
     it('creates groq provider', () => {
       const provider = createProvider('groq', 'llama-3.1-8b-instant', 'key');
+      expect(provider).toBeTruthy();
+      expect(provider?.buildRequest).toBeDefined();
+    });
+
+    it('creates huggingface provider', () => {
+      const provider = createProvider(
+        'huggingface',
+        'openai/gpt-oss-20b:fastest',
+        'key',
+      );
       expect(provider).toBeTruthy();
       expect(provider?.buildRequest).toBeDefined();
     });

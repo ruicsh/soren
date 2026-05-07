@@ -25,7 +25,7 @@ Soren focuses on everyday conversation flow: quick replies, clean chat history, 
 - Start a voice session and talk naturally, hands-free style.
 - Create multiple chatbot profiles for different use cases.
 - Pick your preferred AI provider and model.
-- Supports OpenAI, Groq, Google Gemini, Anthropic.
+- Supports OpenAI, Groq, Google Gemini, Anthropic, OpenCode Go, Hugging Face.
 - Choose a voice for spoken responses.
 - Bring your own API key and keep your setup personal.
 

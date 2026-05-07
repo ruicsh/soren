@@ -13,6 +13,8 @@ export interface UseSentenceBufferReturn {
   append: (text: string) => void;
   /** Flush any remaining text as a final sentence */
   flush: () => void;
+  /** Clear buffer without emitting */
+  reset: () => void;
 }
 
 export function useSentenceBuffer(
@@ -66,5 +68,9 @@ export function useSentenceBuffer(
     bufferRef.current = '';
   }, []);
 
-  return { append, flush };
+  const reset = useCallback(() => {
+    bufferRef.current = '';
+  }, []);
+
+  return { append, flush, reset };
 }

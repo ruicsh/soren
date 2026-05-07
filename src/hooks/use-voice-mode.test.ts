@@ -40,7 +40,6 @@ describe('useVoiceMode', () => {
 
   it('initializes in idle state', async () => {
     const { result } = renderUseVoiceMode();
-    await waitFor(() => expect(result.current.state).toBe('idle'));
     expect(result.current.state).toBe('idle');
     expect(result.current.transcript).toBe('');
     expect(result.current.error).toBeNull();
@@ -58,7 +57,7 @@ describe('useVoiceMode', () => {
     ).toHaveBeenCalled();
     expect(result.current.state).toBe('listening');
 
-    act(() => {
+    await act(async () => {
       emitSpeechEvent('result', {
         isFinal: false,
         results: [{ confidence: 0.9, segments: [], transcript: 'Hi' }],
@@ -75,7 +74,7 @@ describe('useVoiceMode', () => {
       await result.current.activate();
     });
 
-    act(() => {
+    await act(async () => {
       result.current.deactivate();
     });
 
@@ -133,5 +132,54 @@ describe('useVoiceMode', () => {
     const calls = vi.mocked(Speech.speak).mock.calls;
     const spokenText = calls[calls.length - 1][0];
     expect(spokenText).not.toContain('<thought>');
+  });
+
+  it('interrupt() stops TTS, stream and starts listening', async () => {
+    const mockStopStream = vi.fn();
+    vi.mocked(useChatStream).mockReturnValue({
+      isStreaming: true,
+      messages: [],
+      sendMessage: vi.fn(() => Promise.resolve()),
+      stop: mockStopStream,
+    });
+
+    const { result } = renderUseVoiceMode();
+
+    await act(async () => {
+      await result.current.activate();
+    });
+
+    // Simulate speaking state by triggering a sentence
+    let capturedOnChunk: ((c: string) => void) | undefined;
+    vi.mocked(useChatStream).mockImplementation((opts) => {
+      capturedOnChunk = opts?.onStreamingChunk;
+
+      return {
+        isStreaming: true,
+        messages: [],
+        sendMessage: vi.fn(() => Promise.resolve()),
+        stop: mockStopStream,
+      };
+    });
+
+    // Re-render to pick up mock implementation
+    const { result: result2 } = renderUseVoiceMode();
+    await act(async () => {
+      await result2.current.activate();
+    });
+
+    await act(async () => {
+      capturedOnChunk?.('Hello. ');
+    });
+
+    expect(result2.current.state).toBe('speaking');
+
+    await act(async () => {
+      result2.current.interrupt();
+    });
+
+    expect(Speech.stop).toHaveBeenCalled();
+    expect(mockStopStream).toHaveBeenCalled();
+    expect(result2.current.state).toBe('listening');
   });
 });

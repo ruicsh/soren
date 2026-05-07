@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,14 +15,15 @@ import { colors, radius, spacing, typography } from '@/theme';
 export default function VoiceScreen() {
   const { back, push } = useRouter();
   const { config, updateLastConversation } = useChatbotConfig();
-  const { activate, deactivate, error, state, transcript } = useVoiceMode({
-    chatbotUuid: config?.uuid,
-    llmModel: config?.llmModel,
-    llmProvider: config?.llmProvider,
-    systemPrompt: config?.systemPrompt,
-    updateLastConversation,
-    voiceId: config?.voiceId,
-  });
+  const { activate, deactivate, error, interrupt, state, transcript } =
+    useVoiceMode({
+      chatbotUuid: config?.uuid,
+      llmModel: config?.llmModel,
+      llmProvider: config?.llmProvider,
+      systemPrompt: config?.systemPrompt,
+      updateLastConversation,
+      voiceId: config?.voiceId,
+    });
 
   useEffect(() => {
     activate();
@@ -101,8 +103,22 @@ export default function VoiceScreen() {
       </View>
 
       <View style={styles.controls}>
-        <CallButton onPress={handleDisconnect} />
-        <Text style={styles.endText}>End Call</Text>
+        {showPulse && (
+          <TouchableOpacity
+            onPress={interrupt}
+            style={styles.interruptButton}
+            testID="interrupt-button"
+          >
+            <View style={styles.interruptIconBox}>
+              <X color={colors.text2} size={20} />
+            </View>
+            <Text style={styles.interruptText}>Interrupt</Text>
+          </TouchableOpacity>
+        )}
+        <View style={styles.callButtonContainer}>
+          <CallButton onPress={handleDisconnect} />
+          <Text style={styles.endText}>End Call</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -124,6 +140,10 @@ const styles = StyleSheet.create({
     marginTop: spacing[12],
     width: 160,
   },
+  callButtonContainer: {
+    alignItems: 'center',
+    flexDirection: 'column',
+  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -134,6 +154,8 @@ const styles = StyleSheet.create({
   },
   controls: {
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: spacing[12],
   },
   endText: {
@@ -152,6 +174,24 @@ const styles = StyleSheet.create({
     marginTop: spacing[8],
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
+  },
+  interruptButton: {
+    alignItems: 'center',
+    marginRight: spacing[12],
+  },
+  interruptIconBox: {
+    alignItems: 'center',
+    backgroundColor: colors.bg2,
+    borderRadius: radius.full,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  interruptText: {
+    color: colors.text2,
+    fontSize: typography.sm,
+    fontWeight: '500',
+    marginTop: spacing[2],
   },
   modelName: {
     color: colors.text3,

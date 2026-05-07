@@ -13,6 +13,7 @@ export interface UseVoiceModeReturn {
   availableVoices: import('expo-speech').Voice[];
   deactivate: () => void;
   error: null | string;
+  interrupt: () => void;
   messages: ChatMessage[];
   state: VoiceModeState;
   transcript: string;
@@ -96,9 +97,15 @@ export function useVoiceMode(
     stateRef.current = state;
   }, [state]);
 
+  const interruptRef = useRef(false);
+
   const sentenceBuffer = useSentenceBuffer({
     onSentence: (sentence) => {
-      if (stateRef.current !== 'idle' && stateRef.current !== 'error') {
+      if (
+        stateRef.current !== 'idle' &&
+        stateRef.current !== 'error' &&
+        !interruptRef.current
+      ) {
         const sanitized = sanitizeAssistantContent(sentence);
         if (!sanitized.trim()) return;
 
@@ -116,7 +123,9 @@ export function useVoiceMode(
   } = useChatStream({
     chatbotUuid: options?.chatbotUuid,
     onStreamingChunk: (chunk) => {
-      sentenceBuffer.append(chunk);
+      if (!interruptRef.current) {
+        sentenceBuffer.append(chunk);
+      }
     },
     providerId: options?.llmProvider,
     providerModel: options?.llmModel,
@@ -281,6 +290,24 @@ export function useVoiceMode(
     isRearmingRef.current = false;
   }, [stopDictation, ttsStop, stopStream]);
 
+  const interrupt = useCallback(() => {
+    if (stateRef.current !== 'speaking' && stateRef.current !== 'processing') {
+      return;
+    }
+
+    debugLog('interrupt_call');
+    interruptRef.current = true;
+    ttsStop();
+    stopStream();
+    sentenceBuffer.reset();
+    streamDoneRef.current = true; // Mark done so we can re-arm
+    startListening();
+    // Reset interrupt flag after a short delay to allow late chunks to be ignored
+    setTimeout(() => {
+      interruptRef.current = false;
+    }, 100);
+  }, [ttsStop, stopStream, sentenceBuffer, startListening]);
+
   // Keep ref in sync with TTS speaking state to avoid stale closures
   useEffect(() => {
     ttsIsSpeakingRef.current = ttsIsSpeaking;
@@ -345,6 +372,7 @@ export function useVoiceMode(
     availableVoices,
     deactivate,
     error,
+    interrupt,
     messages,
     state,
     transcript,

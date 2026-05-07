@@ -74,6 +74,8 @@ vi.mock('react-native-reanimated', () => {
       };
     },
     View: ViewMock,
+    withRepeat: (anim: unknown) => anim,
+    withSpring: (toValue: unknown) => toValue,
   };
 });
 

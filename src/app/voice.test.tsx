@@ -5,18 +5,7 @@ import VoiceScreen from './voice';
 
 const mockActivate = vi.fn();
 const mockDeactivate = vi.fn();
-
-vi.mock('@/hooks/use-voice-mode', () => ({
-  useVoiceMode: () => ({
-    activate: mockActivate,
-    availableVoices: [],
-    deactivate: mockDeactivate,
-    error: null,
-    messages: [],
-    state: 'connecting',
-    transcript: '',
-  }),
-}));
+const mockInterrupt = vi.fn();
 
 vi.mock('@/hooks/use-chatbot-config', () => ({
   useChatbotConfig: () => ({
@@ -31,9 +20,25 @@ vi.mock('@/hooks/use-chatbot-config', () => ({
   }),
 }));
 
+vi.mock('@/hooks/use-voice-mode', () => ({
+  useVoiceMode: () => {
+    return {
+      activate: mockActivate,
+      availableVoices: [],
+      deactivate: mockDeactivate,
+      error: null,
+      interrupt: mockInterrupt,
+      messages: [],
+      state: (globalThis as any).__VOICE_STATE || 'connecting',
+      transcript: '',
+    };
+  },
+}));
+
 describe('VoiceScreen', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    (globalThis as any).__VOICE_STATE = 'connecting';
   });
 
   it('renders connecting state on mount', () => {
@@ -49,5 +54,13 @@ describe('VoiceScreen', () => {
     const button = screen.getByTestId('call-button');
     fireEvent.press(button);
     expect(mockDeactivate).toHaveBeenCalled();
+  });
+
+  it('calls interrupt when interrupt button is pressed', () => {
+    (globalThis as any).__VOICE_STATE = 'speaking';
+    render(<VoiceScreen />);
+    const button = screen.getByTestId('interrupt-button');
+    fireEvent.press(button);
+    expect(mockInterrupt).toHaveBeenCalled();
   });
 });

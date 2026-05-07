@@ -207,6 +207,8 @@ describe('models', () => {
       text: () => Promise.resolve('Unauthorized'),
     } as any);
 
-    await expect(fetchModels('groq', 'key')).rejects.toThrow('401');
+    await expect(fetchModels('groq', 'key')).rejects.toThrow(
+      'Invalid or expired API key',
+    );
   });
 });

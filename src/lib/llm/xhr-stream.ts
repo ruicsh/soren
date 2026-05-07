@@ -121,8 +121,9 @@ export function createStreamChat(
       let isTransient = xhr.status >= 500 || xhr.status === 429;
       let errorCode: string | undefined;
 
-      // Special case for common status codes if JSON parsing fails
-      if (xhr.status === 429) {
+      if (xhr.status === 401 || xhr.status === 403) {
+        errorMessage = 'Invalid or expired API key.';
+      } else if (xhr.status === 429) {
         errorMessage = 'Rate limit reached. Retrying...';
       } else if (xhr.status === 503) {
         errorMessage = 'Model busy. Retrying...';
@@ -134,8 +135,11 @@ export function createStreamChat(
         errorMessage = error.message || errorMessage;
         errorCode = error.code;
 
-        // If it's a 429, check if it's quota vs rate limit
-        if (xhr.status === 429) {
+        // If it's a 401/403, it's definitely not transient
+        if (xhr.status === 401 || xhr.status === 403) {
+          isTransient = false;
+          errorMessage = 'Invalid or expired API key.';
+        } else if (xhr.status === 429) {
           const isQuota =
             errorMessage.toLowerCase().includes('quota') ||
             errorMessage.toLowerCase().includes('billing') ||

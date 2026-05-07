@@ -39,6 +39,10 @@ export async function fetchModels(
 
   const resp = await fetch(entry.modelsUrl, { headers });
   if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) {
+      throw new Error('Invalid or expired API key');
+    }
+
     const text = await resp.text();
     throw new Error(`Failed to fetch models: ${resp.status} ${text}`);
   }

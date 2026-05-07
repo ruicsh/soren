@@ -152,6 +152,33 @@ describe('models', () => {
     );
   });
 
+  it('fetches and filters models for ollama-cloud', async () => {
+    const mockModels = {
+      models: [
+        { model: 'gpt-oss:120b', name: 'gpt-oss:120b' },
+        { model: 'llama3:latest', name: 'llama3:latest' },
+      ],
+    };
+
+    vi.mocked(fetch).mockResolvedValue({
+      json: () => Promise.resolve(mockModels),
+      ok: true,
+    } as any);
+
+    const models = await fetchModels('ollama-cloud', 'ollama-key');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://ollama.com/api/tags',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer ollama-key',
+        }),
+      }),
+    );
+    expect(models).toHaveLength(2);
+    expect(models[0].id).toBe('gpt-oss:120b');
+  });
+
   it('returns all models if no chat markers found (fail-open)', async () => {
     const mockModels = {
       data: [{ id: 'mystery-model-v1' }],

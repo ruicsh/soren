@@ -72,6 +72,7 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
         icon = <HuggingFace size={iconSize} />;
         break;
       case 'ollama':
+      case 'ollama-cloud':
         icon = <Ollama size={iconSize} />;
         break;
       case 'openai':

@@ -8,6 +8,15 @@ describe('catalog', () => {
       expect(PROVIDERS.map((p) => p.id)).toContain('anthropic');
       expect(PROVIDERS.map((p) => p.id)).toContain('opencode-go');
       expect(PROVIDERS.map((p) => p.id)).toContain('huggingface');
+      expect(PROVIDERS.map((p) => p.id)).toContain('ollama-cloud');
+    });
+
+    it('ollama-cloud has correct config', () => {
+      const ollama = PROVIDERS.find((p) => p.id === 'ollama-cloud');
+      expect(ollama?.baseUrl).toBe('https://ollama.com/api');
+      expect(ollama?.defaultModel).toBe('gpt-oss:120b');
+      expect(ollama?.modelsUrl).toBe('https://ollama.com/api/tags');
+      expect(ollama?.type).toBe('ollama');
     });
 
     it('groq has correct config', () => {

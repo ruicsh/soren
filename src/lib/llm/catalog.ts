@@ -1,6 +1,7 @@
 import type { LLMProvider } from './types';
 
 import { anthropicProvider } from './anthropic';
+import { ollamaProvider } from './ollama';
 import { openaiCompatProvider } from './openai-compat';
 
 export interface ProviderEntry {
@@ -9,7 +10,7 @@ export interface ProviderEntry {
   id: string;
   label: string;
   modelsUrl: string;
-  type: 'anthropic' | 'openai' | 'openai-compat';
+  type: 'anthropic' | 'ollama' | 'openai' | 'openai-compat';
 }
 
 export const PROVIDERS: ProviderEntry[] = [
@@ -54,6 +55,14 @@ export const PROVIDERS: ProviderEntry[] = [
     type: 'openai-compat',
   },
   {
+    baseUrl: 'https://ollama.com/api',
+    defaultModel: 'gpt-oss:120b',
+    id: 'ollama-cloud',
+    label: 'Ollama Cloud',
+    modelsUrl: 'https://ollama.com/api/tags',
+    type: 'ollama',
+  },
+  {
     defaultModel: 'claude-3-5-sonnet-20240620',
     id: 'anthropic',
     label: 'Anthropic',
@@ -73,6 +82,14 @@ export function createProvider(
 
   if (entry.type === 'openai-compat') {
     return openaiCompatProvider({
+      apiKey,
+      baseUrl: entry.baseUrl!,
+      model,
+    });
+  }
+
+  if (entry.type === 'ollama') {
+    return ollamaProvider({
       apiKey,
       baseUrl: entry.baseUrl!,
       model,

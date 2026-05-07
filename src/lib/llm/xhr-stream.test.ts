@@ -223,3 +223,34 @@ describe('Anthropic-style SSE parsing', () => {
     );
   });
 });
+
+describe('Ollama-style NDJSON parsing', () => {
+  const ollamaProvider: LLMProvider = {
+    buildRequest: () => ({ body: '', headers: {}, url: '' }),
+    isDone: (lines: string[]) => lines.some((l) => l.includes('"done":true')),
+    parseChunk: (lines: string[]) =>
+      lines
+        .map((l) => {
+          try {
+            return JSON.parse(l).message?.content;
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean),
+    streamFormat: 'ndjson',
+  };
+
+  it('parses content from NDJSON lines', () => {
+    const lines = [
+      '{"message":{"content":"Hello"}}',
+      '{"message":{"content":"!"}}',
+    ];
+    expect(ollamaProvider.parseChunk(lines)).toEqual(['Hello', '!']);
+  });
+
+  it('detects done:true in isDone', () => {
+    expect(ollamaProvider.isDone(['{"done":true}'])).toBe(true);
+    expect(ollamaProvider.isDone(['{"done":false}'])).toBe(false);
+  });
+});

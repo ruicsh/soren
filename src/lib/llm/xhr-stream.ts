@@ -82,10 +82,11 @@ export function createStreamChat(
       return;
     }
 
-    let boundary = buffer.indexOf('\n\n');
+    const separator = provider.streamFormat === 'ndjson' ? '\n' : '\n\n';
+    let boundary = buffer.indexOf(separator);
     while (boundary !== -1) {
       const chunk = buffer.slice(0, boundary);
-      buffer = buffer.slice(boundary + 2);
+      buffer = buffer.slice(boundary + separator.length);
       const lines = chunk.split('\n');
 
       if (provider.isDone(lines)) {
@@ -105,7 +106,7 @@ export function createStreamChat(
         queue.push(delta);
       }
 
-      boundary = buffer.indexOf('\n\n');
+      boundary = buffer.indexOf(separator);
     }
   };
 

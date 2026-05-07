@@ -15,6 +15,7 @@ export interface LLMProvider {
   };
   isDone(lines: string[]): boolean;
   parseChunk(lines: string[]): string[];
+  streamFormat?: 'ndjson' | 'sse';
   warmup?(): void;
 }
 

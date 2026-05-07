@@ -30,6 +30,8 @@ export async function fetchModels(
 
   if (entry.type === 'openai-compat') {
     headers.Authorization = `Bearer ${apiKey}`;
+  } else if (entry.type === 'ollama') {
+    headers.Authorization = `Bearer ${apiKey}`;
   } else if (entry.type === 'anthropic') {
     headers['x-api-key'] = apiKey;
     headers['anthropic-version'] = '2023-06-01';
@@ -48,12 +50,14 @@ export async function fetchModels(
     rawModels = data.data || [];
   } else if (entry.type === 'anthropic') {
     rawModels = data.data || [];
+  } else if (entry.type === 'ollama') {
+    rawModels = data.models || [];
   }
 
   const models = rawModels
     .map((m: any) => ({
-      id: m.id,
-      name: m.id, // Some providers don't give a friendly name
+      id: m.id || m.name || m.model,
+      name: m.name || m.model || m.id, // Some providers don't give a friendly name
     }))
     .filter(isChatModel);
 

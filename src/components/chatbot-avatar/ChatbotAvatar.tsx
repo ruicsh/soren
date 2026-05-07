@@ -2,13 +2,13 @@ import {
   Anthropic,
   DeepSeek,
   Gemini,
+  Gemma,
   Groq,
   HuggingFace,
   Kimi,
   Minimax,
   Ollama,
   OpenAI,
-  OpenCode,
   Qwen,
   ZAI,
 } from '@lobehub/icons-rn';
@@ -42,12 +42,14 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
     icon = <Ollama size={iconSize} />;
   } else if (mid.includes('claude')) {
     icon = <Anthropic size={iconSize} />;
-  } else if (mid.includes('openai')) {
+  } else if (mid.includes('openai') || mid.includes('gpt')) {
     icon = <OpenAI size={iconSize} />;
   } else if (mid.includes('deepseek')) {
     icon = <DeepSeek size={iconSize} />;
   } else if (mid.includes('gemini')) {
     icon = <Gemini size={iconSize} />;
+  } else if (mid.includes('gemma')) {
+    icon = <Gemma size={iconSize} />;
   } else if (mid.includes('qwen')) {
     icon = <Qwen size={iconSize} />;
   } else if (mid.includes('glm')) {
@@ -77,9 +79,6 @@ export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
         break;
       case 'openai':
         icon = <OpenAI size={iconSize} />;
-        break;
-      case 'opencode-go':
-        icon = <OpenCode size={iconSize} />;
         break;
     }
   }

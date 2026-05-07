@@ -141,7 +141,7 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
         const hasKey = !!(await getApiKey(initial.uuid, initial.llmProvider));
         if (isMounted) {
           setHasProviderKey(hasKey);
-          fetchModelsForProvider(initial.llmProvider);
+          await fetchModelsForProvider(initial.llmProvider);
         }
       })
       .catch((err) => {

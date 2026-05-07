@@ -49,7 +49,13 @@ describe('ChatbotConfigContext switching', () => {
       <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
     );
 
-    const { result } = renderHook(() => useChatbotConfigContext(), { wrapper });
+    const { result } = await renderHook(() => useChatbotConfigContext(), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.config?.uuid).toBe('bot-1');
@@ -66,8 +72,15 @@ describe('ChatbotConfigContext switching', () => {
       <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
     );
 
-    const { rerender, result } = renderHook(() => useChatbotConfigContext(), {
-      wrapper,
+    const { rerender, result } = await renderHook(
+      () => useChatbotConfigContext(),
+      {
+        wrapper,
+      },
+    );
+
+    await act(async () => {
+      await Promise.resolve();
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

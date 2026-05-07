@@ -22,13 +22,19 @@ const DEFAULT_OPTIONS: UseVoiceModeOptions = {
   chatbotUuid: 'test-uuid',
 };
 
-function renderUseVoiceMode({
+async function renderUseVoiceMode({
   overrides = {},
 }: { overrides?: Partial<UseVoiceModeOptions> } = {}) {
   const options = { ...DEFAULT_OPTIONS, ...overrides };
 
+  const renderResult = renderHook(() => useVoiceMode(options));
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
   return {
-    ...renderHook(() => useVoiceMode(options)),
+    ...renderResult,
     options,
   };
 }
@@ -39,14 +45,14 @@ describe('useVoiceMode', () => {
   });
 
   it('initializes in idle state', async () => {
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
     expect(result.current.state).toBe('idle');
     expect(result.current.transcript).toBe('');
     expect(result.current.error).toBeNull();
   });
 
   it('activate requests permissions and transitions to listening', async () => {
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -68,7 +74,7 @@ describe('useVoiceMode', () => {
   });
 
   it('deactivate resets to idle', async () => {
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -86,7 +92,7 @@ describe('useVoiceMode', () => {
       ExpoSpeechRecognitionModule.requestPermissionsAsync,
     ).mockRejectedValue(new Error('Mic broken'));
 
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -109,7 +115,7 @@ describe('useVoiceMode', () => {
       };
     });
 
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -143,7 +149,7 @@ describe('useVoiceMode', () => {
       stop: mockStopStream,
     });
 
-    const { result } = renderUseVoiceMode();
+    const { result } = await renderUseVoiceMode();
 
     await act(async () => {
       await result.current.activate();
@@ -163,7 +169,7 @@ describe('useVoiceMode', () => {
     });
 
     // Re-render to pick up mock implementation
-    const { result: result2 } = renderUseVoiceMode();
+    const { result: result2 } = await renderUseVoiceMode();
     await act(async () => {
       await result2.current.activate();
     });

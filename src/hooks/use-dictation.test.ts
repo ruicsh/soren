@@ -10,10 +10,18 @@ type UseDictationOptions = Parameters<typeof useDictation>[0];
 
 const DEFAULT_OPTIONS: UseDictationOptions = {};
 
-function renderUseDictation({
+async function renderUseDictation({
   overrides = {},
 }: { overrides?: UseDictationOptions } = {}) {
-  return renderHook(() => useDictation({ ...DEFAULT_OPTIONS, ...overrides }));
+  const renderResult = await renderHook(() =>
+    useDictation({ ...DEFAULT_OPTIONS, ...overrides }),
+  );
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  return renderResult;
 }
 
 describe('useDictation', () => {
@@ -21,8 +29,8 @@ describe('useDictation', () => {
     vi.resetAllMocks();
   });
 
-  it('initializes with isRecording false and empty transcript', () => {
-    const { result } = renderUseDictation();
+  it('initializes with isRecording false and empty transcript', async () => {
+    const { result } = await renderUseDictation();
 
     expect(result.current.isRecording).toBe(false);
     expect(result.current.transcript).toBe('');
@@ -30,7 +38,7 @@ describe('useDictation', () => {
   });
 
   it('requests permissions and starts recording', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -60,7 +68,7 @@ describe('useDictation', () => {
       status: 'denied',
     } as any);
 
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await expect(result.current.startDictation()).rejects.toThrow(
@@ -78,7 +86,7 @@ describe('useDictation', () => {
       ExpoSpeechRecognitionModule.requestPermissionsAsync,
     ).mockRejectedValue(new Error('Native module not available'));
 
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await expect(result.current.startDictation()).rejects.toThrow(
@@ -92,7 +100,7 @@ describe('useDictation', () => {
   });
 
   it('accumulates interim results into transcript', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -118,7 +126,7 @@ describe('useDictation', () => {
   });
 
   it('accumulates final results and clears interim buffer', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -153,7 +161,7 @@ describe('useDictation', () => {
   });
 
   it('stops recording and calls module stop', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -167,7 +175,7 @@ describe('useDictation', () => {
   });
 
   it('sets isRecording to false on end event', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -181,7 +189,7 @@ describe('useDictation', () => {
   });
 
   it('sets error and stops recording on error event', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();
@@ -201,7 +209,7 @@ describe('useDictation', () => {
   });
 
   it('clears previous transcript and error on new start', async () => {
-    const { result } = renderUseDictation();
+    const { result } = await renderUseDictation();
 
     await act(async () => {
       await result.current.startDictation();

@@ -24,14 +24,34 @@ describe('ChatbotAvatar', () => {
     expect(screen.getByTestId(/icon-gemini/)).toBeOnTheScreen();
   });
 
-  it('renders OpenAI icon for deepseek models', () => {
-    render(<ChatbotAvatar modelId="deepseek-v4" />);
-    expect(screen.getByTestId(/icon-deepseek/)).toBeOnTheScreen();
+  it('renders Gemma icon for gemma models', () => {
+    render(<ChatbotAvatar modelId="gemma-2" />);
+    expect(screen.getByTestId(/icon-gemma/)).toBeOnTheScreen();
   });
 
-  it('renders OpenAI icon for opencode-go provider', () => {
-    render(<ChatbotAvatar providerId="opencode-go" />);
-    expect(screen.getByTestId('icon-opencode-go')).toBeOnTheScreen();
+  it('renders Qwen icon for qwen models', () => {
+    render(<ChatbotAvatar modelId="qwen-2.5" />);
+    expect(screen.getByTestId(/icon-qwen/)).toBeOnTheScreen();
+  });
+
+  it('renders ZAI icon for glm models', () => {
+    render(<ChatbotAvatar modelId="glm-4" />);
+    expect(screen.getByTestId(/icon-glm/)).toBeOnTheScreen();
+  });
+
+  it('renders Kimi icon for kimi models', () => {
+    render(<ChatbotAvatar modelId="kimi-1.5" />);
+    expect(screen.getByTestId(/icon-kimi/)).toBeOnTheScreen();
+  });
+
+  it('renders Minimax icon for minimax models', () => {
+    render(<ChatbotAvatar modelId="minimax-01" />);
+    expect(screen.getByTestId(/icon-minimax/)).toBeOnTheScreen();
+  });
+
+  it('renders DeepSeek icon for deepseek models', () => {
+    render(<ChatbotAvatar modelId="deepseek-v4" />);
+    expect(screen.getByTestId(/icon-deepseek/)).toBeOnTheScreen();
   });
 
   it('renders Groq icon for groq provider', () => {
@@ -44,12 +64,17 @@ describe('ChatbotAvatar', () => {
     expect(screen.getByTestId('icon-openai')).toBeOnTheScreen();
   });
 
+  it('renders Anthropic icon for anthropic provider', () => {
+    render(<ChatbotAvatar providerId="anthropic" />);
+    expect(screen.getByTestId('icon-anthropic')).toBeOnTheScreen();
+  });
+
   it('renders Gemini icon for google provider', () => {
     render(<ChatbotAvatar providerId="google" />);
     expect(screen.getByTestId('icon-google')).toBeOnTheScreen();
   });
 
-  it('renders OpenAI icon for huggingface provider', () => {
+  it('renders HuggingFace icon for huggingface provider', () => {
     render(<ChatbotAvatar providerId="huggingface" />);
     expect(screen.getByTestId('icon-huggingface')).toBeOnTheScreen();
   });

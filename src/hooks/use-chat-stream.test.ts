@@ -14,27 +14,32 @@ import { createStreamChat } from '@/lib/llm/xhr-stream';
 
 import { useChatStream, type UseChatStreamOptions } from './use-chat-stream';
 
-vi.mock('@/lib/byok-keys', () => ({
-  getApiKey: vi.fn(() => Promise.resolve('mock-key')),
-}));
-
-const mockProvider = {
-  buildRequest: vi.fn(() => ({ body: '', headers: {}, url: '' })),
-  isDone: vi.fn(() => false),
-  parseChunk: vi.fn(() => []),
-  warmup: vi.fn(),
+let getApiKeyDeferred: {
+  reject: (error: any) => void;
+  resolve: (value: null | string) => void;
+};
+let loadMessagesDeferred: {
+  reject: (error: any) => void;
+  resolve: (value: any[]) => void;
 };
 
-vi.mock('@/lib/llm/catalog', () => ({
-  createProvider: vi.fn(() => mockProvider),
+vi.mock('@/lib/byok-keys', () => ({
+  getApiKey: vi.fn(
+    () =>
+      new Promise((resolve, reject) => {
+        getApiKeyDeferred = { reject, resolve };
+      }),
+  ),
 }));
 
-vi.mock('@/lib/llm/openai-compat', () => ({
-  openaiCompatProvider: vi.fn(() => mockProvider),
-}));
-
-vi.mock('@/lib/llm/xhr-stream', () => ({
-  createStreamChat: vi.fn(),
+vi.mock('@/lib/chatbot-config', () => ({
+  DEFAULT_SYSTEM_PROMPT: '',
+  loadLatestAvailableChatMessages: vi.fn(
+    () =>
+      new Promise((resolve, reject) => {
+        loadMessagesDeferred = { reject, resolve };
+      }),
+  ),
 }));
 
 vi.mock('@/lib/llm/catalog', () => ({
@@ -55,6 +60,10 @@ vi.mock('@/lib/llm/openai-compat', () => ({
   })),
 }));
 
+vi.mock('@/lib/llm/xhr-stream', () => ({
+  createStreamChat: vi.fn(),
+}));
+
 function withMetrics(
   gen: AsyncGenerator<string>,
 ): AsyncGenerator<string> & { metrics: StreamMetrics } {
@@ -69,10 +78,20 @@ const DEFAULT_OPTIONS: UseChatStreamOptions = {
   providerModel: 'llama-3.1-8b',
 };
 
-function renderUseChatStream({
+async function renderUseChatStream({
   overrides = {},
 }: { overrides?: Partial<UseChatStreamOptions> } = {}) {
-  return renderHook(() => useChatStream({ ...DEFAULT_OPTIONS, ...overrides }));
+  const renderResult = await renderHook(() =>
+    useChatStream({ ...DEFAULT_OPTIONS, ...overrides }),
+  );
+
+  // Resolve async effects within act() to prevent act warnings
+  await act(async () => {
+    getApiKeyDeferred?.resolve('mock-key');
+    loadMessagesDeferred?.resolve([]);
+  });
+
+  return renderResult;
 }
 
 describe('useChatStream', () => {
@@ -85,11 +104,7 @@ describe('useChatStream', () => {
   });
 
   it('initializes with empty messages and isStreaming false', async () => {
-    const { result } = renderUseChatStream();
-
-    // Wait for the effect that sets the provider (even if it sets it to null or a mock)
-    // to complete to avoid "not wrapped in act" warning.
-    await waitFor(() => expect(result.current.messages).toEqual([]));
+    const { result } = await renderUseChatStream();
 
     expect(result.current.messages).toEqual([]);
     expect(result.current.isStreaming).toBe(false);
@@ -104,7 +119,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -133,16 +148,16 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result, unmount } = renderUseChatStream();
+    const { result, unmount } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
-    act(() => {
+    await act(async () => {
       result.current.sendMessage('Hi');
     });
 
-    expect(result.current.isStreaming).toBe(true);
+    await waitFor(() => expect(result.current.isStreaming).toBe(true));
     unmount();
   });
 
@@ -155,7 +170,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -177,7 +192,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -207,7 +222,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream({
+    const { result } = await renderUseChatStream({
       overrides: { onStreamingChunk },
     });
 
@@ -233,7 +248,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -258,7 +273,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result, unmount } = renderUseChatStream();
+    const { result, unmount } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -287,7 +302,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     await act(async () => {
       await result.current.sendMessage('   ');
@@ -309,12 +324,12 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream();
+    const { result } = await renderUseChatStream();
 
     // Wait for provider to resolve
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
 
-    act(() => {
+    await act(async () => {
       result.current.sendMessage('Hi');
     });
 
@@ -342,20 +357,32 @@ describe('useChatStream', () => {
   });
 
   it('returns error if provider not configured', async () => {
+    // Override the mock before rendering
     vi.mocked(getApiKey).mockResolvedValue(null);
-    const { result } = renderUseChatStream();
 
-    // Wait for provider/history effect
+    const renderResult = await renderHook(() =>
+      useChatStream({ ...DEFAULT_OPTIONS }),
+    );
+
+    // Resolve messages but not API key (let it fail)
+    await act(async () => {
+      loadMessagesDeferred?.resolve([]);
+    });
+
     await waitFor(() => expect(getApiKey).toHaveBeenCalled());
 
     await act(async () => {
-      await result.current.sendMessage('Hi');
+      await renderResult.result.current.sendMessage('Hi');
     });
 
-    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+    await waitFor(() =>
+      expect(renderResult.result.current.messages).toHaveLength(2),
+    );
 
     const assistant =
-      result.current.messages[result.current.messages.length - 1];
+      renderResult.result.current.messages[
+        renderResult.result.current.messages.length - 1
+      ];
     expect(assistant.content).toBe(
       'API Key missing. Please go to Settings to add it.',
     );
@@ -371,7 +398,7 @@ describe('useChatStream', () => {
       ),
     );
 
-    const { result } = renderUseChatStream({
+    const { result } = await renderUseChatStream({
       overrides: { systemPrompt: customPrompt },
     });
 

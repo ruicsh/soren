@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, ChevronLeft, Play, Search, X } from 'lucide-react-native';
+import { Check, Play, Search, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
   SectionList,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app/AppHeader';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export interface SelectionItem {
@@ -137,14 +138,7 @@ export function SelectionListScreen(props: SelectionListScreenProps) {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => back()} style={styles.backBtn}>
-          <ChevronLeft color={colors.accent} size={24} />
-          <Text style={styles.backBtnText}>Settings</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <View style={styles.spacer} />
-      </View>
+      <AppHeader onBack={() => back()} title={title} variant="title" />
 
       {searchable && (
         <View style={styles.searchContainer}>
@@ -193,17 +187,6 @@ export function SelectionListScreen(props: SelectionListScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  backBtn: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    left: spacing[2],
-    position: 'absolute',
-  },
-  backBtnText: {
-    color: colors.accent,
-    fontSize: typography.base,
-    marginLeft: -spacing[1],
-  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -219,19 +202,6 @@ const styles = StyleSheet.create({
     color: colors.text3,
     fontSize: typography.base,
     textAlign: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    height: 50,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: typography.lg,
-    fontWeight: '600',
   },
   item: {
     alignItems: 'center',
@@ -326,8 +296,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     height: StyleSheet.hairlineWidth,
     marginLeft: spacing[12],
-  },
-  spacer: {
-    width: 80,
   },
 });

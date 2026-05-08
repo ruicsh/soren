@@ -69,12 +69,6 @@ export async function appendChatTurn(turn: ChatTurn) {
   } else {
     chatFile.write(content);
   }
-
-  // Also ensure MEMORY.md exists
-  const memoryFile = new File(Paths.document, 'chatbots', uuid, 'MEMORY.md');
-  if (!memoryFile.exists) {
-    memoryFile.write(`# Memory - ${uuid}\n\n`);
-  }
 }
 
 export async function deleteChatbot(uuid: string) {

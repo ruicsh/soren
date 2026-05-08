@@ -57,7 +57,7 @@ describe('SelectionListScreen', () => {
   it('calls back when back button is pressed', () => {
     renderSelectionListScreen();
 
-    fireEvent.press(screen.getByText('Settings'));
+    fireEvent.press(screen.getByLabelText('Go back'));
 
     expect(mockBack).toHaveBeenCalled();
   });

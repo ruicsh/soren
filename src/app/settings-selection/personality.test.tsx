@@ -58,7 +58,7 @@ describe('PersonalitySelectionScreen', () => {
     const input = screen.getByDisplayValue('Original Persona');
     fireEvent.changeText(input, 'New Persona');
 
-    const backBtn = screen.getByText('Settings');
+    const backBtn = screen.getByLabelText('Go back');
     await act(async () => {
       fireEvent.press(backBtn);
     });
@@ -74,7 +74,7 @@ describe('PersonalitySelectionScreen', () => {
     const input = screen.getByDisplayValue('Original Persona');
     fireEvent.changeText(input, '   '); // Spaces should be trimmed to empty
 
-    const backBtn = screen.getByText('Settings');
+    const backBtn = screen.getByLabelText('Go back');
     await act(async () => {
       fireEvent.press(backBtn);
     });

@@ -96,13 +96,6 @@ describe('ChatbotsScreen', () => {
     expect(screen.getByText('Older')).toBeTruthy(); // No date
   });
 
-  it('navigates back when Done is pressed', () => {
-    render(<ChatbotsScreen />);
-
-    fireEvent.press(screen.getByText('Done'));
-    expect(mockBack).toHaveBeenCalled();
-  });
-
   it('navigates to settings in create mode when Plus is pressed', () => {
     render(<ChatbotsScreen />);
 

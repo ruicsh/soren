@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Mic } from 'lucide-react-native';
+import { Mic } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   Keyboard,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app/AppHeader';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { useDictation } from '@/hooks/use-dictation';
 import { DEFAULT_SYSTEM_PROMPT } from '@/lib/chatbot-config';
@@ -70,14 +71,7 @@ export default function PersonalitySelectionScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.flex}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-              <ChevronLeft color={colors.accent} size={24} />
-              <Text style={styles.backBtnText}>Settings</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Personality</Text>
-            <View style={styles.spacer} />
-          </View>
+          <AppHeader onBack={handleBack} title="Personality" variant="title" />
 
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -117,17 +111,6 @@ export default function PersonalitySelectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  backBtn: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    left: spacing[2],
-    position: 'absolute',
-  },
-  backBtnText: {
-    color: colors.accent,
-    fontSize: typography.base,
-    marginLeft: -spacing[1],
-  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -144,19 +127,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: spacing[4],
-  },
-  header: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    height: 50,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: typography.lg,
-    fontWeight: '600',
   },
   hint: {
     color: colors.text3,
@@ -180,8 +150,5 @@ const styles = StyleSheet.create({
   },
   micButtonActive: {
     backgroundColor: colors.accent,
-  },
-  spacer: {
-    width: 80,
   },
 });

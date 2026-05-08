@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Brain as IconBrain, Phone } from 'lucide-react-native';
+import { Brain as IconBrain, Phone } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app/AppHeader';
 import { ChatInput } from '@/components/chat-input/ChatInput';
 import { ChatMessageBubble } from '@/components/chat-message/ChatMessage';
 import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
@@ -26,7 +27,7 @@ export default function Home() {
   const { isStreaming, messages, sendMessage } = useChatStream({
     chatbotUuid: config?.uuid,
     lastConversationAt: config?.lastConversationAt,
-    onStreamingChunk: (chunk) => {
+    onStreamingChunk: (_chunk) => {
       // Logic for capturing snippet usually happens on first chunk or completion
       // But updateLastConversation handles splitting and updating
     },
@@ -94,15 +95,8 @@ export default function Home() {
         keyboardVerticalOffset={0}
         style={styles.flex}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => push('/chatbots')}
-              style={styles.backButton}
-            >
-              <ChevronLeft color={colors.accent} size={20} />
-            </TouchableOpacity>
+        <AppHeader
+          leftContent={
             <TouchableOpacity
               onPress={() => push('/chatbot-settings')}
               style={styles.headerProfile}
@@ -125,14 +119,18 @@ export default function Home() {
                 </Text>
               </View>
             </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={() => push('/voice')}
-            testID="voice-call-button"
-          >
-            <Phone color={colors.accent} pointerEvents="none" size={24} />
-          </TouchableOpacity>
-        </View>
+          }
+          onBack={() => push('/chatbots')}
+          rightSlot={
+            <TouchableOpacity
+              onPress={() => push('/voice')}
+              testID="voice-call-button"
+            >
+              <Phone color={colors.accent} pointerEvents="none" size={24} />
+            </TouchableOpacity>
+          }
+          variant="custom"
+        />
 
         {/* Messages area */}
         {hasMessages ? (
@@ -192,15 +190,6 @@ const styles = StyleSheet.create({
     marginRight: spacing[2],
     width: 40,
   },
-  backButton: {
-    alignItems: 'center',
-    backgroundColor: colors.bg2,
-    borderRadius: radius.full,
-    height: 36,
-    justifyContent: 'center',
-    marginRight: spacing[4],
-    width: 36,
-  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -231,18 +220,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[2],
-    paddingTop: spacing[4],
-  },
-  headerLeft: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
   },
   headerProfile: {
     alignItems: 'center',

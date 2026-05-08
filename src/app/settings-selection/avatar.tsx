@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app/AppHeader';
 import {
   applyAvatarBW,
   type NiceAvatarConfig,
@@ -50,13 +51,7 @@ export default function AvatarSelectionScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>Settings</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Avatar</Text>
-        <View style={styles.spacer} />
-      </View>
+      <AppHeader onBack={() => back()} title="Avatar" variant="title" />
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Default row */}
@@ -119,17 +114,6 @@ export default function AvatarSelectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  backBtn: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    left: spacing[2],
-    position: 'absolute',
-  },
-  backBtnText: {
-    color: colors.accent,
-    fontSize: typography.base,
-    marginLeft: -spacing[1],
-  },
   container: {
     backgroundColor: colors.bg,
     flex: 1,
@@ -193,19 +177,6 @@ const styles = StyleSheet.create({
     marginTop: spacing[6],
     textTransform: 'uppercase',
   },
-  header: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    height: 50,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: typography.lg,
-    fontWeight: '600',
-  },
   selectedDot: {
     backgroundColor: colors.accent,
     borderRadius: 6,
@@ -225,8 +196,5 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: typography.base,
     fontWeight: '600',
-  },
-  spacer: {
-    width: 80,
   },
 });

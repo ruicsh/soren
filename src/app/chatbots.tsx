@@ -1,9 +1,16 @@
 import { useRouter } from 'expo-router';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { Plus } from 'lucide-react-native';
+import {
+  SectionList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/app/AppHeader';
 import { ChatbotListItem } from '@/components/chatbots/ChatbotListItem';
-import { ChatbotsHeader } from '@/components/chatbots/ChatbotsHeader';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { getDateLabel } from '@/lib/date-label';
 import { colors, spacing, typography } from '@/theme';
@@ -74,9 +81,18 @@ export default function ChatbotsScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
-      <ChatbotsHeader
-        onAdd={() => push('/chatbot-settings?mode=create')}
-        onDone={() => back()}
+      <AppHeader
+        hideBackButton
+        rightSlot={
+          <TouchableOpacity
+            accessibilityLabel="Add chatbot"
+            onPress={() => push('/chatbot-settings?mode=create')}
+          >
+            <Plus color={colors.accent} size={24} />
+          </TouchableOpacity>
+        }
+        title="Chatbots"
+        variant="title"
       />
 
       <SectionList

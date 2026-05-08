@@ -60,6 +60,7 @@ This runs, in order:
 - **Shared First**: Check `src/tests/test-setup.ts` before creating local mocks.
 - **Native Modules**: Mock at the module level (e.g., `vi.mock('expo-speech', ...)`).
 - **Deterministic**: Mocks should return fixed values (e.g., `test-uuid-1234`) to prevent snapshot/assertion drift.
+- **ExecuTorch**: `react-native-executorch` and `react-native-executorch-expo-resource-fetcher` are mocked in `test-setup.ts`. The mock model returns `isReady: true`, `downloadProgress: 1`, and a 384-dim `Float32Array` from `forward()`. Override per-test with `vi.mocked(useTextEmbeddings).mockReturnValueOnce(...)`.
 
 ---
 

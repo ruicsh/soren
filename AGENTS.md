@@ -20,6 +20,7 @@ Full verify order:
 - App uses development builds (`expo-dev-client`); scan QR inside dev client app, not phone camera app
 - `ios/` and `android/` are generated and gitignored; rebuild native only when native deps/config change (`app.json`, Info.plist, Android manifest)
 - Metro blocks `vite`, `vitest`, and `*.test.*` from mobile bundle (`metro.config.js`)
+- `react-native-executorch` requires New Architecture (already enabled) and a native rebuild after install; not compatible with Expo Go
 
 ## Architecture
 
@@ -28,11 +29,13 @@ Full verify order:
 - Root layout entry: `src/app/_layout.tsx`
 - Main screens: `src/app/index.tsx` (chat), `src/app/voice.tsx`, `src/app/chatbot-settings.tsx`
 - LLM/provider layer: `src/lib/llm/` (`openai-compat`, `anthropic`, `xhr-stream`)
+- On-device embeddings: `src/hooks/use-executorch.ts` (MiniLM L6 v2 via `react-native-executorch`)
 
 ## Env Vars
 
 - `EXPO_PUBLIC_DEBUG_VOICE=1` — optional verbose logs for `use-dictation`, `use-tts`, and `use-voice-mode`
 - `EXPO_PUBLIC_DEBUG_XHR_STREAM=1` — optional verbose logs for `src/lib/llm/xhr-stream.ts`
+- `EXPO_PUBLIC_DEBUG_EXECUTORCH=1` — optional verbose logs for `use-executorch` (init, model download, health check, ready state)
 
 ## Testing
 

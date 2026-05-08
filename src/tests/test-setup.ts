@@ -294,6 +294,30 @@ vi.mock('expo-speech-recognition', () => ({
   },
 }));
 
+// react-native-executorch — mock on-device ML runtime
+vi.mock('react-native-executorch', () => {
+  const mockModel = {
+    downloadProgress: 1,
+    error: null,
+    forward: vi.fn(() => Promise.resolve(new Float32Array(384).fill(0.1))),
+    isGenerating: false,
+    isReady: true,
+  };
+
+  return {
+    ALL_MINILM_L6_V2: 'all-MiniLM-L6-v2',
+    initExecutorch: vi.fn(),
+    useTextEmbeddings: vi.fn(() => mockModel),
+  };
+});
+
+// react-native-executorch-expo-resource-fetcher — mock download adapter
+vi.mock('react-native-executorch-expo-resource-fetcher', () => ({
+  ExpoResourceFetcher: {
+    fetch: vi.fn(() => Promise.resolve({ uri: 'mock://cached-model.pte' })),
+  },
+}));
+
 // Helper to emit speech recognition events in tests
 export function emitSpeechEvent(eventName: string, event: unknown) {
   const listeners = speechListeners.get(eventName) ?? [];

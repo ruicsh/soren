@@ -19,6 +19,7 @@ Primary goals:
 - TypeScript (strict mode)
 - Vitest + React Native Testing Library
 - Expo modules: SecureStore, FileSystem, Speech, Speech Recognition
+- ExecuTorch (on-device text embeddings via `react-native-executorch` + `react-native-executorch-expo-resource-fetcher`)
 
 ## 3) High-Level System View
 
@@ -34,6 +35,7 @@ Root composition:
 
 - `GestureHandlerRootView`
 - `SafeAreaProvider`
+- `ExecutorchProvider` (model download modal + embedding context)
 - `ChatbotConfigProvider`
 - Expo `Stack` navigator
 
@@ -152,6 +154,22 @@ Safety/control mechanisms:
 - Rearm guard to prevent mic re-entry races
 - Timeout auto-disconnect when listening stays silent
 - Watchdog to recover if state says listening but recorder not active
+
+## 9.5) On-Device Embeddings
+
+`use-executorch` manages the ExecuTorch runtime lifecycle:
+
+1. `initExecutorch({ resourceFetcher: ExpoResourceFetcher })` — called once on mount
+2. `useTextEmbeddings({ model: ALL_MINILM_L6_V2 })` — downloads ~110MB model (cached after first download)
+3. Health check: `forward('health check')` — verifies 384-dim Float32Array output
+4. Status machine: `initializing → downloading → ready` (or `error`)
+
+`ExecutorchProvider` wraps the app root and renders a full-screen `ModelDownloadModal` during download.
+On error, user can dismiss and continue without embeddings.
+
+`useExecutorchContext()` exposes `{ status, embed, downloadProgress, error }` to any screen.
+
+Debug logging: set `EXPO_PUBLIC_DEBUG_EXECUTORCH=1` for verbose `[ExecuTorch]` logs.
 
 ## 10) UI Architecture
 

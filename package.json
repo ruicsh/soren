@@ -28,6 +28,7 @@
   "dependencies": {
     "@lobehub/icons-rn": "2.7.0",
     "expo": "55.0.20",
+    "expo-asset": "55.0.17",
     "expo-crypto": "55.0.14",
     "expo-dev-client": "55.0.32",
     "expo-file-system": "55.0.19",
@@ -42,6 +43,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.6",
+    "react-native-executorch": "0.8.3",
+    "react-native-executorch-expo-resource-fetcher": "0.8.0",
     "react-native-gesture-handler": "2.31.2",
     "react-native-reanimated": "4.3.0",
     "react-native-safe-area-context": "5.7.0",

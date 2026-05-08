@@ -34,6 +34,7 @@ Set these in `.env.local` for verbose diagnostics:
 
 - `EXPO_PUBLIC_DEBUG_VOICE=1`: Logs for `use-dictation`, `use-tts`, `use-voice-mode`.
 - `EXPO_PUBLIC_DEBUG_XHR_STREAM=1`: Logs for streaming LLM responses.
+- `EXPO_PUBLIC_DEBUG_EXECUTORCH=1`: Logs for ExecuTorch init, model download, health check, and ready transitions.
 
 ### Bundler Restrictions
 
@@ -54,6 +55,7 @@ A full `npm run ios` / `npm run android` is mandatory if:
 1. `app.json` or `package.json` (native deps) changes.
 2. `ios/` or `android/` directories are deleted/stale.
 3. Native config changes (`Info.plist`, `AndroidManifest.xml`).
+4. `react-native-executorch` or `react-native-executorch-expo-resource-fetcher` is added or updated.
 
 ### Quality Gate (Hard)
 

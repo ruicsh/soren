@@ -26,6 +26,7 @@ Soren focuses on everyday conversation flow: quick replies, clean chat history, 
 - Supports OpenAI, Groq, Google Gemini, Anthropic, Hugging Face, Ollama Cloud.
 - Choose a voice for spoken responses.
 - Bring your own API key and keep your setup personal.
+- Run on-device AI embeddings locally — no server round-trip for vector similarity.
 
 ## How It Feels
 
@@ -37,6 +38,7 @@ Soren focuses on everyday conversation flow: quick replies, clean chat history, 
 
 Soren is local-first for chatbot configuration and conversation history on device.  
 API keys are stored securely on device storage.
+On-device embeddings (MiniLM L6 v2) run entirely locally after initial download (~110MB).
 
 ## Project Docs (Maintainers)
 

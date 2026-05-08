@@ -20,6 +20,7 @@ Primary goals:
 - Vitest + React Native Testing Library
 - Expo modules: SecureStore, FileSystem, Speech, Speech Recognition
 - ExecuTorch (on-device text embeddings via `react-native-executorch` + `react-native-executorch-expo-resource-fetcher`)
+- sqlite-vec (on-device vector store via `@op-engineering/op-sqlite`)
 
 ## 3) High-Level System View
 
@@ -28,14 +29,16 @@ Core layers:
 1. UI routes and components
 2. Feature hooks (chat streaming, voice mode, dictation, TTS)
 3. App state context (`ChatbotConfigProvider`)
-4. Persistence layer (FileSystem + SecureStore)
-5. LLM provider layer (provider catalog + streaming transport)
+4. Vector store (`VectorStoreProvider`)
+5. Persistence layer (FileSystem + SecureStore)
+6. LLM provider layer (provider catalog + streaming transport)
 
 Root composition:
 
 - `GestureHandlerRootView`
 - `SafeAreaProvider`
 - `ExecutorchProvider` (model download modal + embedding context)
+- `VectorStoreProvider` (sqlite-vec health check + storage context)
 - `ChatbotConfigProvider`
 - Expo `Stack` navigator
 
@@ -96,6 +99,12 @@ Screens keep small UI state locally (input draft, scroll refs, temporary flags),
 - API keys stored in Expo SecureStore
 - Current key scope is provider-based key name (`byok_key.<provider>`)
 - Legacy chatbot+provider keys auto-migrate on read
+
+## Vector store storage
+
+- Location: app document directory `soren_vectors.db`
+- Virtual table `vec_embeddings` using `vec0`
+- Stores 384-dim embeddings (`float[384]`) with auxiliary `metadata` text column
 
 ## 7) LLM Provider Architecture
 
@@ -170,6 +179,20 @@ On error, user can dismiss and continue without embeddings.
 `useExecutorchContext()` exposes `{ status, embed, downloadProgress, error }` to any screen.
 
 Debug logging: set `EXPO_PUBLIC_DEBUG_EXECUTORCH=1` for verbose `[ExecuTorch]` logs.
+
+## 9.6) Vector Store Architecture
+
+`use-vector-store` manages the sqlite-vec lifecycle:
+
+1. `initVectorStore()` — called once on mount
+2. Health check: `SELECT vec_version()` — verifies extension availability
+3. Schema: `CREATE VIRTUAL TABLE IF NOT EXISTS vec_embeddings USING vec0(embedding float[384], +metadata text)`
+4. Status machine: `initializing → ready` (or `error`)
+
+`VectorStoreProvider` exposes `{ status, error, insertEmbedding, searchSimilar }`.
+Operations are guarded and only execute when status is `ready`.
+
+Debug logging: set `EXPO_PUBLIC_DEBUG_SQLITE=1` for verbose `[SQLite]` logs.
 
 ## 10) UI Architecture
 

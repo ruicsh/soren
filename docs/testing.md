@@ -61,6 +61,7 @@ This runs, in order:
 - **Native Modules**: Mock at the module level (e.g., `vi.mock('expo-speech', ...)`).
 - **Deterministic**: Mocks should return fixed values (e.g., `test-uuid-1234`) to prevent snapshot/assertion drift.
 - **ExecuTorch**: `react-native-executorch` and `react-native-executorch-expo-resource-fetcher` are mocked in `test-setup.ts`. The mock model returns `isReady: true`, `downloadProgress: 1`, and a 384-dim `Float32Array` from `forward()`. Override per-test with `vi.mocked(useTextEmbeddings).mockReturnValueOnce(...)`.
+- **SQLite**: `@op-engineering/op-sqlite` is mocked in `test-setup.ts`. The mock DB provides `executeSync` and `close`. Override in tests with `vi.mocked(open).mockReturnValueOnce(...)`.
 
 ---
 

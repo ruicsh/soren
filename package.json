@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@lobehub/icons-rn": "2.7.0",
+    "@op-engineering/op-sqlite": "15.2.12",
     "expo": "55.0.20",
     "expo-asset": "55.0.17",
     "expo-crypto": "55.0.14",
@@ -74,5 +75,8 @@
     "vitest": "4.1.5",
     "vitest-native": "0.3.0"
   },
-  "private": true
+  "private": true,
+  "op-sqlite": {
+    "sqliteVec": true
+  }
 }

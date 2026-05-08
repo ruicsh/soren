@@ -311,6 +311,19 @@ vi.mock('react-native-executorch', () => {
   };
 });
 
+// @op-engineering/op-sqlite — mock vector database
+vi.mock('@op-engineering/op-sqlite', () => {
+  const mockDb = {
+    close: vi.fn(),
+    execute: vi.fn(() => ({ rows: [] })),
+    executeSync: vi.fn(() => ({ rows: [] })),
+  };
+
+  return {
+    open: vi.fn(() => mockDb),
+  };
+});
+
 // react-native-executorch-expo-resource-fetcher — mock download adapter
 vi.mock('react-native-executorch-expo-resource-fetcher', () => ({
   ExpoResourceFetcher: {

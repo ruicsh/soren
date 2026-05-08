@@ -3,8 +3,9 @@
  * Maps exact property names used by the library.
  */
 export interface NiceAvatarConfig {
+  [key: string]: any;
   bgColor?: string;
-  earSize?: 'small' | 'big';
+  earSize?: 'big' | 'small';
   eyeStyle?: 'circle' | 'smile';
   faceColor?: string;
   hairColor?: string;
@@ -17,7 +18,6 @@ export interface NiceAvatarConfig {
   noseStyle?: string;
   shirtColor?: string;
   shirtStyle?: string;
-  [key: string]: any;
 }
 
 /**

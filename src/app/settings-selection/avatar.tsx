@@ -41,7 +41,7 @@ export default function AvatarSelectionScreen() {
     shuffle();
   }, [shuffle]);
 
-  const handleSelect = (selectedConfig: null | NiceAvatarConfig) => {
+  const handleSelect = (selectedConfig: NiceAvatarConfig | null) => {
     saveWithConfig({ avatarConfig: selectedConfig });
     back();
   };

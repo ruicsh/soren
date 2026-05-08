@@ -31,7 +31,7 @@ export type AvatarProvider =
   | string;
 
 interface ChatbotAvatarProps {
-  avatarConfig?: null | NiceAvatarConfig;
+  avatarConfig?: NiceAvatarConfig | null;
   modelId?: string;
   providerId?: string;
   size?: number;

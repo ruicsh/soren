@@ -7,7 +7,7 @@ import type { ChatMessage } from '@/lib/llm/types';
 import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
 
 export interface ChatbotConfig {
-  avatarConfig: null | NiceAvatarConfig;
+  avatarConfig: NiceAvatarConfig | null;
   lastConversationAt?: number;
   lastConversationSnippet?: string;
   llmModel: string;

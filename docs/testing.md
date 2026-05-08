@@ -62,6 +62,7 @@ This runs, in order:
 - **Deterministic**: Mocks should return fixed values (e.g., `test-uuid-1234`) to prevent snapshot/assertion drift.
 - **ExecuTorch**: `react-native-executorch` and `react-native-executorch-expo-resource-fetcher` are mocked in `test-setup.ts`. The mock model returns `isReady: true`, `downloadProgress: 1`, and a 384-dim `Float32Array` from `forward()`. Override per-test with `vi.mocked(useTextEmbeddings).mockReturnValueOnce(...)`.
 - **SQLite**: `@op-engineering/op-sqlite` is mocked in `test-setup.ts`. The mock DB provides `executeSync` and `close`. Override in tests with `vi.mocked(open).mockReturnValueOnce(...)`.
+- **Memory Store**: Mock via `vi.mocked(useMemoryStore).mockReturnValue(...)` in tests that exercise `useChatStream`. Return shape: `{ clear, insertInteraction, isReady, search, status }`. The `insertInteraction` expects `(dateKey: string, timeKey: string, embedding: Float32Array)`. Tests that exercise memory injection must also mock `resolveMemoryText` from `@/lib/chatbot-config` to return `string[]`.
 
 ---
 

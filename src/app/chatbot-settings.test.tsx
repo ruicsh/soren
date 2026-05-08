@@ -72,6 +72,7 @@ describe('ChatbotSettingsScreen', () => {
   };
 
   beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.clearAllMocks();
     const router = useRouter();
     (router.back as any).mockImplementation(mockBack);

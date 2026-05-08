@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import React from 'react';
 import { vi } from 'vitest';
 
+import { ExecutorchContext } from '@/context/ExecutorchContext';
 import { createProvider } from '@/lib/llm/catalog';
 import { LLMError } from '@/lib/llm/types';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
@@ -9,6 +11,15 @@ import { useChatStream } from './use-chat-stream';
 
 vi.mock('@/lib/byok-keys', () => ({
   getApiKey: vi.fn(() => Promise.resolve('mock-key')),
+}));
+
+vi.mock('@/hooks/use-memory-store', () => ({
+  useMemoryStore: vi.fn(() => ({
+    insertInteraction: vi.fn(),
+    isReady: true,
+    search: vi.fn(async () => []),
+    status: 'ready',
+  })),
 }));
 
 vi.mock('@/lib/llm/catalog', () => ({
@@ -24,6 +35,19 @@ vi.mock('@/lib/llm/xhr-stream', () => ({
   createStreamChat: vi.fn(),
 }));
 
+const mockExecutorch = {
+  downloadProgress: 0,
+  embed: vi.fn(async () => new Float32Array(384)),
+  error: null,
+  status: 'ready' as const,
+};
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <ExecutorchContext.Provider value={mockExecutorch}>
+    {children}
+  </ExecutorchContext.Provider>
+);
+
 describe('useChatStream retries', () => {
   it('retries on transient errors and eventually succeeds', async () => {
     let calls = 0;
@@ -38,12 +62,14 @@ describe('useChatStream retries', () => {
       })() as any;
     });
 
-    const { result } = renderHook(() =>
-      useChatStream({
-        chatbotUuid: 'u1',
-        providerId: 'p1',
-        providerModel: 'm1',
-      }),
+    const { result } = renderHook(
+      () =>
+        useChatStream({
+          chatbotUuid: 'u1',
+          providerId: 'p1',
+          providerModel: 'm1',
+        }),
+      { wrapper },
     );
 
     await waitFor(() => expect(createProvider).toHaveBeenCalled());
@@ -68,12 +94,14 @@ describe('useChatStream retries', () => {
       throw new LLMError('Internal Error', 500, undefined, true);
     });
 
-    const { result } = renderHook(() =>
-      useChatStream({
-        chatbotUuid: 'u1',
-        providerId: 'p1',
-        providerModel: 'm1',
-      }),
+    const { result } = renderHook(
+      () =>
+        useChatStream({
+          chatbotUuid: 'u1',
+          providerId: 'p1',
+          providerModel: 'm1',
+        }),
+      { wrapper },
     );
 
     // Wait for history to load

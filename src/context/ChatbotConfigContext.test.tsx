@@ -5,11 +5,23 @@ import {
   ChatbotConfigProvider,
   useChatbotConfigContext,
 } from '@/context/ChatbotConfigContext';
+import { ExecutorchContext } from '@/context/ExecutorchContext';
 import { deleteApiKey as mockDeleteApiKey } from '@/lib/byok-keys';
 import {
   listChatbotConfigs,
   loadOrCreateDefaultChatbotConfig,
 } from '@/lib/chatbot-config';
+
+vi.mock('@/lib/memory-store', () => ({
+  openMemoryStore: vi.fn(() =>
+    Promise.resolve({
+      close: vi.fn(),
+      insertInteraction: vi.fn(),
+      isReady: true,
+      status: 'ready',
+    }),
+  ),
+}));
 
 vi.mock('@/lib/chatbot-config', () => ({
   appendChatTurn: vi.fn(),
@@ -46,16 +58,21 @@ describe('ChatbotConfigContext switching', () => {
   });
 
   it('switches active chatbot correctly', async () => {
+    const mockExecutorch = {
+      downloadProgress: 1,
+      embed: vi.fn(() => Promise.resolve(new Float32Array(384).fill(0.1))),
+      error: null,
+      status: 'ready' as const,
+    };
+
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      <ExecutorchContext.Provider value={mockExecutorch}>
+        <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      </ExecutorchContext.Provider>
     );
 
     const { result } = await renderHook(() => useChatbotConfigContext(), {
       wrapper,
-    });
-
-    await act(async () => {
-      await Promise.resolve();
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -69,8 +86,17 @@ describe('ChatbotConfigContext switching', () => {
   });
 
   it('preserves active chatbot across re-mounts/re-runs', async () => {
+    const mockExecutorch = {
+      downloadProgress: 1,
+      embed: vi.fn(() => Promise.resolve(new Float32Array(384).fill(0.1))),
+      error: null,
+      status: 'ready' as const,
+    };
+
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      <ExecutorchContext.Provider value={mockExecutorch}>
+        <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      </ExecutorchContext.Provider>
     );
 
     const { rerender, result } = await renderHook(
@@ -79,10 +105,6 @@ describe('ChatbotConfigContext switching', () => {
         wrapper,
       },
     );
-
-    await act(async () => {
-      await Promise.resolve();
-    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -99,16 +121,21 @@ describe('ChatbotConfigContext switching', () => {
   });
 
   it('deletes provider key only if no other bot uses it', async () => {
+    const mockExecutorch = {
+      downloadProgress: 1,
+      embed: vi.fn(() => Promise.resolve(new Float32Array(384).fill(0.1))),
+      error: null,
+      status: 'ready' as const,
+    };
+
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      <ExecutorchContext.Provider value={mockExecutorch}>
+        <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+      </ExecutorchContext.Provider>
     );
 
     const { result } = await renderHook(() => useChatbotConfigContext(), {
       wrapper,
-    });
-
-    await act(async () => {
-      await Promise.resolve();
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

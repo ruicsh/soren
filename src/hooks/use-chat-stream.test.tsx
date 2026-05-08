@@ -4,10 +4,12 @@ import {
   renderHook,
   waitFor,
 } from '@testing-library/react-native';
+import React from 'react';
 import { vi } from 'vitest';
 
 import type { StreamMetrics } from '@/lib/llm/types';
 
+import { ExecutorchContext } from '@/context/ExecutorchContext';
 import { getApiKey } from '@/lib/byok-keys';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
@@ -40,6 +42,7 @@ vi.mock('@/lib/chatbot-config', () => ({
         loadMessagesDeferred = { reject, resolve };
       }),
   ),
+  resolveMemoryText: vi.fn(async () => []),
 }));
 
 vi.mock('@/lib/llm/catalog', () => ({
@@ -64,6 +67,21 @@ vi.mock('@/lib/llm/xhr-stream', () => ({
   createStreamChat: vi.fn(),
 }));
 
+vi.mock('@/hooks/use-memory-store', () => ({
+  useMemoryStore: vi.fn(() => ({
+    clear: vi.fn(async () => {}),
+    insert: vi.fn(async () => {}),
+    search: vi.fn(async () => []),
+  })),
+}));
+
+const mockExecutorchContext = {
+  downloadProgress: 0,
+  embed: vi.fn(async () => new Float32Array(384)),
+  error: null,
+  status: 'ready' as const,
+};
+
 function withMetrics(
   gen: AsyncGenerator<string>,
 ): AsyncGenerator<string> & { metrics: StreamMetrics } {
@@ -81,8 +99,15 @@ const DEFAULT_OPTIONS: UseChatStreamOptions = {
 async function renderUseChatStream({
   overrides = {},
 }: { overrides?: Partial<UseChatStreamOptions> } = {}) {
-  const renderResult = await renderHook(() =>
-    useChatStream({ ...DEFAULT_OPTIONS, ...overrides }),
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ExecutorchContext.Provider value={mockExecutorchContext}>
+      {children}
+    </ExecutorchContext.Provider>
+  );
+
+  const renderResult = await renderHook(
+    () => useChatStream({ ...DEFAULT_OPTIONS, ...overrides }),
+    { wrapper },
   );
 
   // Resolve async effects within act() to prevent act warnings
@@ -360,8 +385,15 @@ describe('useChatStream', () => {
     // Override the mock before rendering
     vi.mocked(getApiKey).mockResolvedValue(null);
 
-    const renderResult = await renderHook(() =>
-      useChatStream({ ...DEFAULT_OPTIONS }),
+    const renderResult = await renderHook(
+      () => useChatStream({ ...DEFAULT_OPTIONS }),
+      {
+        wrapper: ({ children }) => (
+          <ExecutorchContext.Provider value={mockExecutorchContext}>
+            {children}
+          </ExecutorchContext.Provider>
+        ),
+      },
     );
 
     // Resolve messages but not API key (let it fail)

@@ -29,16 +29,14 @@ Core layers:
 1. UI routes and components
 2. Feature hooks (chat streaming, voice mode, dictation, TTS)
 3. App state context (`ChatbotConfigProvider`)
-4. Vector store (`VectorStoreProvider`)
-5. Persistence layer (FileSystem + SecureStore)
-6. LLM provider layer (provider catalog + streaming transport)
+4. Persistence layer (FileSystem + SecureStore)
+5. LLM provider layer (provider catalog + streaming transport)
 
 Root composition:
 
 - `GestureHandlerRootView`
 - `SafeAreaProvider`
 - `ExecutorchProvider` (model download modal + embedding context)
-- `VectorStoreProvider` (sqlite-vec health check + storage context)
 - `ChatbotConfigProvider`
 - Expo `Stack` navigator
 
@@ -102,9 +100,9 @@ Screens keep small UI state locally (input draft, scroll refs, temporary flags),
 
 ## Vector store storage
 
-- Location: app document directory `soren_vectors.db`
-- Virtual table `vec_embeddings` using `vec0`
-- Stores 384-dim embeddings (`float[384]`) with auxiliary `metadata` text column
+- Location: app document directory `chatbots/<uuid>/memory.db`
+- Virtual table `vec_interactions` using `vec0`
+- Stores 384-dim embeddings (`float[384]`) with auxiliary `metadata` JSON pointer column
 
 ## 7) LLM Provider Architecture
 
@@ -180,19 +178,40 @@ On error, user can dismiss and continue without embeddings.
 
 Debug logging: set `EXPO_PUBLIC_DEBUG_EXECUTORCH=1` for verbose `[ExecuTorch]` logs.
 
-## 9.6) Vector Store Architecture
+## 9.6) Memory Store Architecture
 
-`use-vector-store` manages the sqlite-vec lifecycle:
+Per-chatbot vector store for conversational memory with semantic retrieval:
 
-1. `initVectorStore()` — called once on mount
-2. Health check: `SELECT vec_version()` — verifies extension availability
-3. Schema: `CREATE VIRTUAL TABLE IF NOT EXISTS vec_embeddings USING vec0(embedding float[384], +metadata text)`
-4. Status machine: `initializing → ready` (or `error`)
+- **Database**: `memory.db` in `chatbots/<uuid>/` directory
+- **Schema**: `CREATE VIRTUAL TABLE vec_interactions USING vec0(embedding float[384], +metadata text)`
+- **Metadata**: `MemoryPointer` JSON with `{ dateKey: string, timeKey: string }` — no full-text duplication
+- **Status machine**: `initializing → ready` (or `error`)
 
-`VectorStoreProvider` exposes `{ status, error, insertEmbedding, searchSimilar }`.
-Operations are guarded and only execute when status is `ready`.
+`use-memory-store` hook lifecycle:
 
-Debug logging: set `EXPO_PUBLIC_DEBUG_SQLITE=1` for verbose `[SQLite]` logs.
+1. `openMemoryStore(uuid)` — opens/creates `memory.db` for the chatbot
+2. Verifies `sqlite-vec` extension with `SELECT vec_version()`
+3. Creates virtual table if not exists
+4. Closes previous store when `chatbotUuid` changes
+
+Exposed operations (only when `status === 'ready'`):
+
+- `insertInteraction(dateKey, timeKey, embedding)` — stores a pointer `{ dateKey, timeKey }` and an embedding vector
+- `search(embedding, limit?)` — KNN search returning top-N `MemoryQueryResult` items (each has `{ dateKey, timeKey, distance }`)
+- `clear()` — deletes all interactions from `vec_interactions`
+
+Retrieval integrated in `use-chat-stream`:
+
+1. On `sendMessage`, embeds user input via ExecuTorch
+2. Queries memory store for top 3 relevant interactions
+3. Resolves pointers via `resolveMemoryText(uuid, results)` in `chatbot-config.ts` — reads `YYYYMMDD.md` files, caches per-date to avoid redundant I/O, builds `"User: ... \nAssistant: ..."` pairs
+4. Injects resolved memories into system prompt via `buildSystemPrompt({ memories })`
+5. After stream completes, inserts the new turn into memory store as a fresh `{ dateKey, timeKey }` pointer
+6. Falls back gracefully if memory store is not ready or embedding fails
+
+Debug logging: set `EXPO_PUBLIC_DEBUG_SQLITE=1` for verbose `[Memory]` logs.
+
+Cleanup: per-row try/catch in metadata JSON parsing skips corrupted records. `clear()` triggered via "Clear Memory" button in Chatbot Settings screen with destructive confirmation alert.
 
 ## 10) UI Architecture
 
@@ -236,3 +255,5 @@ Testing strategy:
 - Chat transcripts stored in markdown are human-readable but not query-optimized
 - Message id generation uses timestamp+random helper, not a globally stable UUID scheme
 - Error handling is user-friendly but mostly local (no centralized telemetry pipeline yet)
+- Memory store is per-chatbot, not shared; clearing memory for one chatbot does not affect others
+- Memory retrieval is best-effort: if ExecuTorch embedding fails or memory store is not ready, chat proceeds without injected context

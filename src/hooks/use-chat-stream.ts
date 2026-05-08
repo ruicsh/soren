@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ChatMessage } from '@/lib/llm/types';
 
+import { useExecutorchContext } from '@/context/ExecutorchContext';
+import { useMemoryStore } from '@/hooks/use-memory-store';
 import { getApiKey } from '@/lib/byok-keys';
 import {
   DEFAULT_SYSTEM_PROMPT,
   loadLatestAvailableChatMessages,
+  resolveMemoryText,
 } from '@/lib/chatbot-config';
 import { createProvider } from '@/lib/llm/catalog';
 import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
@@ -44,6 +47,9 @@ export function useChatStream(options?: UseChatStreamOptions) {
     providerModel,
     systemPrompt,
   } = options || {};
+
+  const { embed } = useExecutorchContext();
+  const memoryStore = useMemoryStore(chatbotUuid || '');
 
   const [provider, setProvider] = useState<any>(null);
 
@@ -178,8 +184,31 @@ export function useChatStream(options?: UseChatStreamOptions) {
       const MAX_RETRIES = 2;
       let attempt = 0;
 
+      let embedding: Float32Array | null = null;
+      if (memoryStore.isReady && memoryStore.search) {
+        try {
+          embedding = await embed(text.trim());
+        } catch (err) {
+          console.warn('[useChatStream] Embedding failed:', err);
+        }
+      }
+
       const runStream = async () => {
         try {
+          let memories: string[] = [];
+
+          if (memoryStore.isReady && memoryStore.search && embedding) {
+            try {
+              const results = await memoryStore.search(embedding, 3);
+
+              if (chatbotUuid) {
+                memories = await resolveMemoryText(chatbotUuid, results);
+              }
+            } catch (err) {
+              console.warn('[useChatStream] Memory search failed:', err);
+            }
+          }
+
           const history = [...messages, userMessage].map((m) => ({
             content: m.content,
             role: m.role as 'assistant' | 'system' | 'user',
@@ -188,6 +217,7 @@ export function useChatStream(options?: UseChatStreamOptions) {
           const historyWithSystem = [
             {
               content: buildSystemPrompt({
+                memories,
                 systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPT,
               }),
               role: 'system' as const,
@@ -234,6 +264,17 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
       try {
         await runStream();
+
+        // After stream success, insert into memory if we have an embedding
+        if (embedding && memoryStore.insertInteraction) {
+          const date = new Date(now);
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          const dateKey = `${y}${m}${d}`;
+          const timeKey = date.toTimeString().split(' ')[0];
+          memoryStore.insertInteraction(dateKey, timeKey, embedding);
+        }
       } finally {
         if (flushTimerRef.current) {
           clearInterval(flushTimerRef.current);
@@ -243,7 +284,16 @@ export function useChatStream(options?: UseChatStreamOptions) {
         setIsStreaming(false);
       }
     },
-    [messages, flush, provider, chatbotUuid, providerId, systemPrompt],
+    [
+      messages,
+      flush,
+      provider,
+      chatbotUuid,
+      providerId,
+      systemPrompt,
+      embed,
+      memoryStore,
+    ],
   );
 
   // Cleanup interval on unmount

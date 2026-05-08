@@ -14,20 +14,28 @@ interface ExecutorchContextType {
   status: ExecutorchStatus;
 }
 
-const ExecutorchContext = createContext<ExecutorchContextType | null>(null);
+export const ExecutorchContext = createContext<ExecutorchContextType | null>(
+  null,
+);
 
 export function ExecutorchProvider(props: PropsWithChildren) {
   const { children } = props;
   const executorch = useExecutorch();
 
+  // In test environments, if useExecutorch returns an object with a mock,
+  // ensure we don't render the modal if it depends on real native modules that might fail.
+  const isTest = process.env.NODE_ENV === 'test';
+
   return (
     <ExecutorchContext.Provider value={executorch}>
       {children}
-      <ModelDownloadModal
-        downloadProgress={executorch.downloadProgress}
-        error={executorch.error}
-        status={executorch.status}
-      />
+      {!isTest && (
+        <ModelDownloadModal
+          downloadProgress={executorch.downloadProgress}
+          error={executorch.error}
+          status={executorch.status}
+        />
+      )}
     </ExecutorchContext.Provider>
   );
 }

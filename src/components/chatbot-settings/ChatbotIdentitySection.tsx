@@ -1,13 +1,29 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { colors, radius, spacing, typography } from '@/theme';
 
 export interface ChatbotIdentitySectionProps {
+  onClearMemory?: () => void;
   uuid: string;
 }
 
 export function ChatbotIdentitySection(props: ChatbotIdentitySectionProps) {
-  const { uuid } = props;
+  const { onClearMemory, uuid } = props;
+
+  const handleClearMemory = () => {
+    Alert.alert(
+      'Clear Memory',
+      'This will permanently delete all stored interactions for this chatbot. This cannot be undone.',
+      [
+        { style: 'cancel', text: 'Cancel' },
+        {
+          onPress: onClearMemory,
+          style: 'destructive',
+          text: 'Clear',
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.section}>
@@ -19,6 +35,16 @@ export function ChatbotIdentitySection(props: ChatbotIdentitySectionProps) {
             {uuid}
           </Text>
         </View>
+
+        {onClearMemory && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleClearMemory}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearButtonText}>Clear Memory</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -29,6 +55,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg2,
     borderRadius: radius.lg,
     overflow: 'hidden',
+  },
+  clearButton: {
+    alignItems: 'center',
+    backgroundColor: colors.bg3,
+    justifyContent: 'center',
+    padding: spacing[3],
+  },
+  clearButtonText: {
+    color: colors.error,
+    fontSize: typography.sm,
+    fontWeight: '600',
   },
   label: {
     color: colors.text,

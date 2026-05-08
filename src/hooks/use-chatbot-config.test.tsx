@@ -3,9 +3,21 @@ import React from 'react';
 import { vi } from 'vitest';
 
 import { ChatbotConfigProvider } from '@/context/ChatbotConfigContext';
+import { ExecutorchProvider } from '@/context/ExecutorchContext';
 import { saveChatbotConfig } from '@/lib/chatbot-config';
 
 import { useChatbotConfig } from './use-chatbot-config';
+
+vi.mock('@/lib/memory-store', () => ({
+  openMemoryStore: vi.fn(() =>
+    Promise.resolve({
+      close: vi.fn(),
+      insertInteraction: vi.fn(),
+      isReady: true,
+      status: 'ready',
+    }),
+  ),
+}));
 
 const mockConfig: any = {
   llmModel: 'llama-3.1-8b-instant',
@@ -38,7 +50,9 @@ vi.mock('@/lib/llm/models', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+  <ExecutorchProvider>
+    <ChatbotConfigProvider>{children}</ChatbotConfigProvider>
+  </ExecutorchProvider>
 );
 
 const DEFAULT_OPTIONS = { wrapper };

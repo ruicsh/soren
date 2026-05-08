@@ -293,6 +293,58 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
   return config;
 }
 
+export async function resolveMemoryText(
+  uuid: string,
+  pointers: { dateKey: string; timeKey: string }[],
+): Promise<string[]> {
+  const resolved: string[] = [];
+  const fileCache = new Map<string, ChatMessage[]>();
+
+  for (const { dateKey, timeKey } of pointers) {
+    try {
+      let messages = fileCache.get(dateKey);
+
+      if (!messages) {
+        // Parse YYYYMMDD string back to Date
+        const year = parseInt(dateKey.slice(0, 4), 10);
+        const month = parseInt(dateKey.slice(4, 6), 10) - 1;
+        const day = parseInt(dateKey.slice(6, 8), 10);
+        const date = new Date(year, month, day);
+
+        messages = await loadChatMessagesForDate(uuid, date);
+        fileCache.set(dateKey, messages);
+      }
+
+      // Find user/assistant pair matching the timeKey
+      // We search for the user message at this timeKey, and then the next assistant message.
+      // But in our format, both have the same timeKey header in the markdown.
+      // loadChatMessagesForDate already parses them into separate messages with timestamps.
+      // We can reconstruct HH:mm:ss from message.timestamp.
+      const pair = messages.filter((m) => {
+        if (m.timestamp === undefined) return false;
+        const d = new Date(m.timestamp);
+        const hhmmss = d.toTimeString().split(' ')[0];
+
+        return hhmmss === timeKey;
+      });
+
+      const user = pair.find((m) => m.role === 'user');
+      const assistant = pair.find((m) => m.role === 'assistant');
+
+      if (user && assistant) {
+        resolved.push(`User: ${user.content}\nAssistant: ${assistant.content}`);
+      }
+    } catch (err) {
+      console.warn(
+        `[Memory] Failed to resolve text for ${dateKey} ${timeKey}:`,
+        err,
+      );
+    }
+  }
+
+  return resolved;
+}
+
 export async function saveChatbotConfig(config: ChatbotConfig) {
   const botDir = new Directory(Paths.document, 'chatbots', config.uuid);
   const root = new Directory(Paths.document, 'chatbots');

@@ -31,14 +31,14 @@ Full verify order:
 - Main screens: `src/app/index.tsx` (chat), `src/app/voice.tsx`, `src/app/chatbot-settings.tsx`
 - LLM/provider layer: `src/lib/llm/` (`openai-compat`, `anthropic`, `xhr-stream`)
 - On-device embeddings: `src/hooks/use-executorch.ts` (MiniLM L6 v2 via `react-native-executorch`)
-- On-device vector store: `src/lib/vector-store.ts` (sqlite-vec via `@op-engineering/op-sqlite`)
+- On-device vector store: `src/lib/memory-store.ts` (sqlite-vec via `@op-engineering/op-sqlite`)
 
 ## Env Vars
 
 - `EXPO_PUBLIC_DEBUG_VOICE=1` — optional verbose logs for `use-dictation`, `use-tts`, and `use-voice-mode`
 - `EXPO_PUBLIC_DEBUG_XHR_STREAM=1` — optional verbose logs for `src/lib/llm/xhr-stream.ts`
 - `EXPO_PUBLIC_DEBUG_EXECUTORCH=1` — optional verbose logs for `use-executorch` (init, model download, health check, ready state)
-- `EXPO_PUBLIC_DEBUG_SQLITE=1` — optional verbose logs for `src/lib/vector-store.ts` (init, inserts, KNN search)
+- `EXPO_PUBLIC_DEBUG_SQLITE=1` — optional verbose logs for `src/lib/memory-store.ts` (init, inserts, KNN search)
 
 ## Testing
 

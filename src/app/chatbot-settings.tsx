@@ -20,6 +20,7 @@ import { ChatbotProfileSection } from '@/components/chatbot-settings/ChatbotProf
 import { ChatbotSettingsHeader } from '@/components/chatbot-settings/ChatbotSettingsHeader';
 import { useChatbotConfig } from '@/hooks/use-chatbot-config';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useMemoryStore } from '@/hooks/use-memory-store';
 import { colors, spacing, typography } from '@/theme';
 
 export default function ChatbotSettingsScreen() {
@@ -49,6 +50,8 @@ export default function ChatbotSettingsScreen() {
     saveWithConfig,
     updateApiKeyDraft,
   } = useChatbotConfig();
+
+  const { clear: clearMemory } = useMemoryStore(config?.uuid ?? null);
 
   const debouncedSaveName = useDebounce((name: string) => {
     saveWithConfig({ name });
@@ -160,7 +163,10 @@ export default function ChatbotSettingsScreen() {
 
             {error && <Text style={styles.error}>{error}</Text>}
 
-            <ChatbotIdentitySection uuid={config.uuid} />
+            <ChatbotIdentitySection
+              onClearMemory={clearMemory ?? undefined}
+              uuid={config.uuid}
+            />
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>

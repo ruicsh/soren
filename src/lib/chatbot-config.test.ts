@@ -242,4 +242,43 @@ describe('chatbot-config', () => {
       expect(messages).toEqual([]);
     });
   });
+
+  describe('resolveMemoryText', () => {
+    it('resolves text from multiple pointers and deduplicates file reads', async () => {
+      vi.spyOn(File.prototype, 'exists', 'get').mockReturnValue(true);
+      vi.spyOn(File.prototype, 'text')
+        .mockResolvedValueOnce(
+          '## 12:00:00\n- [12:00:00] User: u1\n- [12:00:00] Assistant: a1',
+        )
+        .mockResolvedValueOnce(
+          '## 13:00:00\n- [13:00:00] User: u2\n- [13:00:00] Assistant: a2',
+        );
+
+      const { resolveMemoryText } = await import('./chatbot-config');
+      const pointers = [
+        { dateKey: '20240508', timeKey: '12:00:00' },
+        { dateKey: '20240508', timeKey: '12:00:00' }, // Duplicate hit
+        { dateKey: '20240509', timeKey: '13:00:00' },
+      ];
+
+      const resolved = await resolveMemoryText('uuid', pointers);
+
+      expect(resolved).toHaveLength(3);
+      expect(resolved[0]).toBe('User: u1\nAssistant: a1');
+      expect(resolved[1]).toBe('User: u1\nAssistant: a1');
+      expect(resolved[2]).toBe('User: u2\nAssistant: a2');
+      // Verify loadChatMessagesForDate (via File.text) was called only twice due to cache
+      expect(File.prototype.text).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips missing files or missing timeKeys', async () => {
+      vi.spyOn(File.prototype, 'exists', 'get').mockReturnValue(false);
+
+      const { resolveMemoryText } = await import('./chatbot-config');
+      const pointers = [{ dateKey: '20240508', timeKey: '12:00:00' }];
+      const resolved = await resolveMemoryText('uuid', pointers);
+
+      expect(resolved).toHaveLength(0);
+    });
+  });
 });

@@ -32,6 +32,7 @@ Full verify order:
 - LLM/provider layer: `src/lib/llm/` (`openai-compat`, `anthropic`, `xhr-stream`)
 - On-device embeddings: `src/hooks/use-executorch.ts` (MiniLM L6 v2 via `react-native-executorch`)
 - On-device vector store: `src/lib/memory-store.ts` (sqlite-vec via `@op-engineering/op-sqlite`)
+- Avatars: `src/components/chatbot-avatar/` (nice-avatar B/W rendering, shared helpers in `avatar-bw.ts`)
 
 ## Env Vars
 

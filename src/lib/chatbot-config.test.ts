@@ -51,6 +51,7 @@ describe('chatbot-config', () => {
 
   it('persists lastConversationAt', async () => {
     const config = {
+      avatarConfig: null,
       lastConversationAt: 123456789,
       llmModel: 'm1',
       llmProvider: 'p1',
@@ -69,6 +70,7 @@ describe('chatbot-config', () => {
 
   it('saves config to correct path', async () => {
     const config = {
+      avatarConfig: null,
       llmModel: 'llama-3.1-70b-versatile',
       llmProvider: 'groq',
       name: 'New Name',

@@ -28,6 +28,7 @@
   "dependencies": {
     "@lobehub/icons-rn": "2.7.0",
     "@op-engineering/op-sqlite": "15.2.12",
+    "@zamplyy/react-native-nice-avatar": "1.1.2",
     "expo": "55.0.20",
     "expo-asset": "55.0.17",
     "expo-crypto": "55.0.14",

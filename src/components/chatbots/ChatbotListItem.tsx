@@ -45,6 +45,7 @@ export function ChatbotListItem(props: ChatbotListItemProps) {
       >
         <View style={styles.avatarContainer}>
           <ChatbotAvatar
+            avatarConfig={item.avatarConfig}
             modelId={item.llmModel}
             providerId={item.llmProvider}
             size={50}

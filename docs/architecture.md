@@ -222,6 +222,32 @@ UI composition favors small focused components:
 - Voice screen separates status display, animation, and call controls
 - Shared design tokens from `src/theme.ts` with `StyleSheet.create`
 
+## 10.5) Avatar Architecture
+
+Per-chatbot customizable avatars via `@zamplyy/react-native-nice-avatar` (React Native fork of `react-nice-avatar`) rendered in black and white.
+
+**Shared types and helpers** — `src/components/chatbot-avatar/avatar-bw.ts`:
+- `NiceAvatarConfig` type: maps the library's property names (`bgColor`, `hairStyle`, `eyeStyle`, etc.)
+- `BW_AVATAR_COLORS` constant: fixed grayscale palette (`#FFFFFF` backgrounds, `#1A1A1A` hair, `#333333` hat, `#D9D9D9` shirt)
+- `applyAvatarBW(config)`: merges a config with B/W overrides, disables `isGradient` and `hairColorRandom`
+
+**`ChatbotAvatar` component** — `src/components/chatbot-avatar/ChatbotAvatar.tsx`:
+- When `avatarConfig` is non-null: renders `NiceAvatar` with `applyAvatarBW` and `shape="rounded"`
+- When `avatarConfig` is null/undefined: falls back to `@lobehub/icons-rn` logo icons (model name match first, then provider name match)
+- Ultimate fallback: `Brain` icon from `lucide-react-native`
+- Always wrapped in a white rounded container matching the avatar size
+
+**Data persistence**:
+- `avatarConfig: null | NiceAvatarConfig` stored in each chatbot's `config.json` as plain JSON
+- No separate avatar files on disk
+
+**Selection screen** — `src/app/settings-selection/avatar.tsx`:
+- "Default" row at top (resets `avatarConfig` to `null`, hiding selected state with a blue dot)
+- 3×3 grid (9 custom avatar options) generated via `genConfig()` from the library
+- "Shuffle" button below the grid regenerates all 9 options
+- Selecting a grid item calls `saveWithConfig({ avatarConfig: opt })` and pops the route
+- `isGradient` explicitly disabled because gradients do not render correctly in the current `@zamplyy` fork
+
 ## 11) Quality and Verification
 
 Required local gate:

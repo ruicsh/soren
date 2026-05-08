@@ -4,6 +4,8 @@ import { SettingSelectRow } from '@/components/settings/SettingSelectRow';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export interface ChatbotProfileSectionProps {
+  avatarLabel: string;
+  onSelectAvatar: () => void;
   onSelectPersonality: () => void;
   onSelectVoice: () => void;
   personalityLabel: string;
@@ -11,13 +13,25 @@ export interface ChatbotProfileSectionProps {
 }
 
 export function ChatbotProfileSection(props: ChatbotProfileSectionProps) {
-  const { onSelectPersonality, onSelectVoice, personalityLabel, voiceLabel } =
-    props;
+  const {
+    avatarLabel,
+    onSelectAvatar,
+    onSelectPersonality,
+    onSelectVoice,
+    personalityLabel,
+    voiceLabel,
+  } = props;
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Chatbot Profile</Text>
       <View style={styles.card}>
+        <SettingSelectRow
+          label="Avatar"
+          onPress={onSelectAvatar}
+          value={avatarLabel}
+        />
+        <View style={styles.separator} />
         <SettingSelectRow
           label="Personality"
           onPress={onSelectPersonality}

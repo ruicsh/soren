@@ -156,6 +156,32 @@ vi.mock('@lobehub/icons-rn', () => {
   };
 });
 
+// @zamplyy/react-native-nice-avatar — mock SVG avatar generator
+vi.mock('@zamplyy/react-native-nice-avatar', () => {
+  const MockAvatar = () => null;
+  MockAvatar.displayName = 'NiceAvatar';
+
+  return {
+    __esModule: true,
+    default: MockAvatar,
+    genConfig: vi.fn(() => ({
+      bgColor: '#000000',
+      earSize: 'small',
+      eyeStyle: 'circle',
+      faceColor: '#FFFFFF',
+      hairColor: '#000000',
+      hairStyle: 'normal',
+      hatColor: '#000000',
+      hatStyle: 'none',
+      mouthStyle: 'smile',
+      noseStyle: 'short',
+      sex: 'man',
+      shirtColor: '#000000',
+      shirtStyle: 'polo',
+    })),
+  };
+});
+
 // expo-linear-gradient — mock for @lobehub/icons-rn
 vi.mock('expo-linear-gradient', () => ({
   LinearGradient: ({ children }: { children?: React.ReactNode }) =>

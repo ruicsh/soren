@@ -12,8 +12,14 @@ import {
   Qwen,
   ZAI,
 } from '@lobehub/icons-rn';
+import NiceAvatar from '@zamplyy/react-native-nice-avatar';
 import { Brain as IconBrain } from 'lucide-react-native';
 import { View } from 'react-native';
+
+import {
+  applyAvatarBW,
+  type NiceAvatarConfig,
+} from '@/components/chatbot-avatar/avatar-bw';
 
 export type AvatarProvider =
   | 'anthropic'
@@ -25,13 +31,35 @@ export type AvatarProvider =
   | string;
 
 interface ChatbotAvatarProps {
+  avatarConfig?: null | NiceAvatarConfig;
   modelId?: string;
   providerId?: string;
   size?: number;
 }
 
 export const ChatbotAvatar = (props: ChatbotAvatarProps) => {
-  const { modelId, providerId, size = 40 } = props;
+  const { avatarConfig, modelId, providerId, size = 40 } = props;
+
+  // Render nice-avatar when a custom avatar config is provided
+  if (avatarConfig) {
+    const bwConfig = applyAvatarBW(avatarConfig);
+
+    return (
+      <View
+        style={{
+          borderRadius: size * 0.2,
+          height: size,
+          overflow: 'hidden',
+          width: size,
+        }}
+        testID="avatar-container"
+      >
+        <NiceAvatar shape="rounded" size={size} {...(bwConfig as any)} />
+        <View testID="icon-nice-avatar" />
+      </View>
+    );
+  }
+
   let icon = null;
 
   const mid = modelId?.toLowerCase() || '';

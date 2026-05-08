@@ -69,6 +69,7 @@ export default function VoiceScreen() {
           style={styles.avatarWrap}
         >
           <ChatbotAvatar
+            avatarConfig={config?.avatarConfig ?? null}
             modelId={config?.llmModel}
             providerId={config?.llmProvider}
             size={120}

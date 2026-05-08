@@ -1,11 +1,13 @@
 import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 
+import type { NiceAvatarConfig } from '@/components/chatbot-avatar/avatar-bw';
 import type { ChatMessage } from '@/lib/llm/types';
 
 import { sanitizeAssistantContent } from '@/lib/llm/sanitize';
 
 export interface ChatbotConfig {
+  avatarConfig: null | NiceAvatarConfig;
   lastConversationAt?: number;
   lastConversationSnippet?: string;
   llmModel: string;
@@ -104,6 +106,7 @@ export async function listChatbotConfigs(): Promise<ChatbotConfig[]> {
 
           // Migration/Defaults
           configs.push({
+            avatarConfig: parsed.avatarConfig ?? null,
             lastConversationAt: parsed.lastConversationAt,
             lastConversationSnippet: parsed.lastConversationSnippet,
             llmModel: parsed.llmModel ?? DEFAULT_MODEL,
@@ -280,6 +283,7 @@ export async function loadOrCreateDefaultChatbotConfig(): Promise<ChatbotConfig>
   // Create new default bot
   const uuid = Crypto.randomUUID();
   const config: ChatbotConfig = {
+    avatarConfig: null,
     llmModel: DEFAULT_MODEL,
     llmProvider: DEFAULT_PROVIDER,
     name: DEFAULT_NAME,

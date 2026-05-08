@@ -7,6 +7,8 @@ import {
 } from './ChatbotProfileSection';
 
 const DEFAULT_PROPS: ChatbotProfileSectionProps = {
+  avatarLabel: 'Default',
+  onSelectAvatar: vi.fn(),
   onSelectPersonality: vi.fn(),
   onSelectVoice: vi.fn(),
   personalityLabel: 'Default Personality',

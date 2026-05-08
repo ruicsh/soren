@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ChatbotNameEditor } from './ChatbotNameEditor';
 
 const DEFAULT_PROPS = {
+  avatarConfig: null,
   modelId: 'gpt-4',
   name: 'Test Bot',
   onNameChange: vi.fn(),

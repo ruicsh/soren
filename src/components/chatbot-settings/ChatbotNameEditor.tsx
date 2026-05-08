@@ -4,6 +4,7 @@ import { ChatbotAvatar } from '@/components/chatbot-avatar/ChatbotAvatar';
 import { colors, radius, spacing, typography } from '@/theme';
 
 interface ChatbotNameEditorProps {
+  avatarConfig: null | Record<string, boolean | string>;
   modelId: string;
   name: string;
   onNameChange: (text: string) => void;
@@ -11,12 +12,17 @@ interface ChatbotNameEditorProps {
 }
 
 export function ChatbotNameEditor(props: ChatbotNameEditorProps) {
-  const { modelId, name, onNameChange, providerId } = props;
+  const { avatarConfig, modelId, name, onNameChange, providerId } = props;
 
   return (
     <View style={styles.avatarSection}>
       <View style={styles.avatarContainer}>
-        <ChatbotAvatar modelId={modelId} providerId={providerId} size={48} />
+        <ChatbotAvatar
+          avatarConfig={avatarConfig}
+          modelId={modelId}
+          providerId={providerId}
+          size={48}
+        />
       </View>
       <TextInput
         onChangeText={onNameChange}

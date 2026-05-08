@@ -160,6 +160,7 @@ export function ChatbotConfigProvider(props: PropsWithChildren) {
   const createChatbot = useCallback(async () => {
     const uuid = (await import('expo-crypto')).randomUUID();
     const newBot: ChatbotConfig = {
+      avatarConfig: null,
       llmModel: 'llama-3.1-8b-instant',
       llmProvider: 'groq',
       name: 'New Chatbot',

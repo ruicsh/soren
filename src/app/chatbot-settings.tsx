@@ -101,6 +101,8 @@ export default function ChatbotSettingsScreen() {
         config?.voiceId ??
         '');
 
+  const avatarLabel = config?.avatarConfig ? 'Custom' : 'Default';
+
   const personalityLabel = config?.systemPrompt
     ? config.systemPrompt.slice(0, 30) +
       (config.systemPrompt.length > 30 ? '...' : '')
@@ -130,6 +132,7 @@ export default function ChatbotSettingsScreen() {
 
           <ScrollView contentContainerStyle={styles.content}>
             <ChatbotNameEditor
+              avatarConfig={config.avatarConfig}
               modelId={config.llmModel}
               name={nameDraft}
               onNameChange={handleNameChange}
@@ -137,6 +140,8 @@ export default function ChatbotSettingsScreen() {
             />
 
             <ChatbotProfileSection
+              avatarLabel={avatarLabel}
+              onSelectAvatar={() => push('/settings-selection/avatar')}
               onSelectPersonality={() =>
                 push('/settings-selection/personality')
               }

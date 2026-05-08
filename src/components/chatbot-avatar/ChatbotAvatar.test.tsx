@@ -84,6 +84,32 @@ describe('ChatbotAvatar', () => {
     expect(screen.getByTestId('icon-fallback')).toBeOnTheScreen();
   });
 
+  it('renders nice-avatar when avatarConfig is provided', () => {
+    render(
+      <ChatbotAvatar
+        avatarConfig={{ hairStyle: 'normal', sex: 'man' }}
+        modelId="llama-3.1"
+      />,
+    );
+    expect(screen.getByTestId('icon-nice-avatar')).toBeOnTheScreen();
+  });
+
+  it('falls back to provider icon when avatarConfig is null', () => {
+    render(
+      <ChatbotAvatar
+        avatarConfig={null}
+        modelId="llama-3.1"
+        providerId="groq"
+      />,
+    );
+    expect(screen.getByTestId('icon-groq')).toBeOnTheScreen();
+  });
+
+  it('falls back to provider icon when avatarConfig is undefined', () => {
+    render(<ChatbotAvatar modelId="llama-3.1" />);
+    expect(screen.getByTestId(/icon-llama/)).toBeOnTheScreen();
+  });
+
   it('wraps icons in a white background View', () => {
     render(<ChatbotAvatar modelId="llama-3.1" />);
     const container = screen.getByTestId('avatar-container');

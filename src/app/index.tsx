@@ -110,6 +110,7 @@ export default function Home() {
             >
               <View style={styles.avatarContainer}>
                 <ChatbotAvatar
+                  avatarConfig={config?.avatarConfig ?? null}
                   modelId={config?.llmModel}
                   providerId={config?.llmProvider}
                   size={32}

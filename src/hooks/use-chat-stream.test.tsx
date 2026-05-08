@@ -10,6 +10,7 @@ import { vi } from 'vitest';
 import type { StreamMetrics } from '@/lib/llm/types';
 
 import { ExecutorchContext } from '@/context/ExecutorchContext';
+import { useMemoryStore } from '@/hooks/use-memory-store';
 import { getApiKey } from '@/lib/byok-keys';
 import { createProvider } from '@/lib/llm/catalog';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
@@ -70,8 +71,10 @@ vi.mock('@/lib/llm/xhr-stream', () => ({
 vi.mock('@/hooks/use-memory-store', () => ({
   useMemoryStore: vi.fn(() => ({
     clear: vi.fn(async () => {}),
-    insert: vi.fn(async () => {}),
+    insertInteraction: vi.fn(),
+    isReady: true,
     search: vi.fn(async () => []),
+    status: 'ready',
   })),
 }));
 
@@ -450,5 +453,137 @@ describe('useChatStream', () => {
       ]),
       expect.anything(),
     );
+  });
+
+  describe('memory embedding', () => {
+    it('embeds combined user+assistant text for memory insertion', async () => {
+      vi.mocked(createStreamChat).mockImplementation(() =>
+        withMetrics(
+          (async function* () {
+            yield 'Rich assistant answer with ';
+            yield 'detailed information';
+          })(),
+        ),
+      );
+
+      const { result } = await renderUseChatStream();
+      await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+      await act(async () => {
+        await result.current.sendMessage('Short question');
+      });
+
+      expect(mockExecutorchContext.embed).toHaveBeenCalledTimes(2);
+      expect(mockExecutorchContext.embed).toHaveBeenNthCalledWith(
+        1,
+        'Short question',
+      );
+      expect(mockExecutorchContext.embed).toHaveBeenNthCalledWith(
+        2,
+        'User: Short question\nAssistant: Rich assistant answer with detailed information',
+      );
+    });
+
+    it('passes combined-text embedding to insertInteraction', async () => {
+      const insertInteractionSpy = vi.fn();
+      vi.mocked(useMemoryStore).mockReturnValue({
+        clear: vi.fn(),
+        insertInteraction: insertInteractionSpy,
+        isReady: true,
+        search: vi.fn(async () => []),
+        status: 'ready',
+      });
+
+      const testEmbedding = new Float32Array(384);
+      testEmbedding[42] = 7;
+
+      mockExecutorchContext.embed
+        .mockResolvedValueOnce(new Float32Array(384))
+        .mockResolvedValueOnce(testEmbedding);
+
+      vi.mocked(createStreamChat).mockImplementation(() =>
+        withMetrics(
+          (async function* () {
+            yield 'Some response';
+          })(),
+        ),
+      );
+
+      const { result } = await renderUseChatStream();
+      await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+      await act(async () => {
+        await result.current.sendMessage('Hi');
+      });
+
+      expect(insertInteractionSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        testEmbedding,
+      );
+    });
+
+    it('skips memory insertion when assistant response is empty', async () => {
+      vi.mocked(createStreamChat).mockImplementation(() =>
+        withMetrics(
+          (async function* () {
+            // empty stream — yields nothing
+          })(),
+        ),
+      );
+
+      const { result } = await renderUseChatStream();
+      await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+      await act(async () => {
+        await result.current.sendMessage('Hi');
+      });
+
+      // embed only called once for search embedding — memory embedding skipped
+      expect(mockExecutorchContext.embed).toHaveBeenCalledTimes(1);
+      expect(mockExecutorchContext.embed).toHaveBeenCalledWith('Hi');
+    });
+
+    it('skips memory insertion when embedding fails', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const insertInteractionSpy = vi.fn();
+        vi.mocked(useMemoryStore).mockReturnValue({
+          clear: vi.fn(),
+          insertInteraction: insertInteractionSpy,
+          isReady: true,
+          search: vi.fn(async () => []),
+          status: 'ready',
+        });
+
+        mockExecutorchContext.embed = vi
+          .fn()
+          .mockRejectedValue(new Error('Embedding model unavailable'));
+
+        vi.mocked(createStreamChat).mockImplementation(() =>
+          withMetrics(
+            (async function* () {
+              yield 'Some response';
+            })(),
+          ),
+        );
+
+        const { result } = await renderUseChatStream();
+        await waitFor(() => expect(createProvider).toHaveBeenCalled());
+
+        await act(async () => {
+          await result.current.sendMessage('Hi');
+        });
+
+        // Chat still works despite embedding failure
+        const assistant =
+          result.current.messages[result.current.messages.length - 1];
+        expect(assistant.content).toBe('Some response');
+        expect(insertInteractionSpy).not.toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
   });
 });

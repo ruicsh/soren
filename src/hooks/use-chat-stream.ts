@@ -265,15 +265,39 @@ export function useChatStream(options?: UseChatStreamOptions) {
       try {
         await runStream();
 
-        // After stream success, insert into memory if we have an embedding
-        if (embedding && memoryStore.insertInteraction) {
+        // Drain any pending stream content before building memory embedding
+        flush();
+
+        // After stream success, compute a combined embedding from the
+        // full user+assistant exchange (matching resolveMemoryText format)
+        // so the vector index captures the full interaction, not just the query.
+        const sanitizedAssistant = sanitizeAssistantContent(
+          assistantRawRef.current,
+        );
+        let memoryEmbedding: Float32Array | null = null;
+
+        if (sanitizedAssistant.trim()) {
+          const resolvedText = `User: ${text.trim()}\nAssistant: ${sanitizedAssistant}`;
+          const cappedText =
+            resolvedText.length > 2000
+              ? resolvedText.slice(0, 2000) + '...'
+              : resolvedText;
+
+          try {
+            memoryEmbedding = await embed(cappedText);
+          } catch (err) {
+            console.warn('[useChatStream] Memory embedding failed:', err);
+          }
+        }
+
+        if (memoryEmbedding && memoryStore.insertInteraction) {
           const date = new Date(now);
           const y = date.getFullYear();
           const m = String(date.getMonth() + 1).padStart(2, '0');
           const d = String(date.getDate()).padStart(2, '0');
           const dateKey = `${y}${m}${d}`;
           const timeKey = date.toTimeString().split(' ')[0];
-          memoryStore.insertInteraction(dateKey, timeKey, embedding);
+          memoryStore.insertInteraction(dateKey, timeKey, memoryEmbedding);
         }
       } finally {
         if (flushTimerRef.current) {

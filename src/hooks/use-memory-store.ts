@@ -21,6 +21,7 @@ export interface UseMemoryStoreReturn {
     | ((
         embedding: Float32Array,
         limit?: number,
+        maxDistance?: number,
       ) => Promise<MemoryQueryResult[]>)
     | null;
   status: MemoryStoreStatus;
@@ -95,11 +96,11 @@ export function useMemoryStore(
   );
 
   const search = useCallback(
-    async (embedding: Float32Array, limit?: number) => {
+    async (embedding: Float32Array, limit?: number, maxDistance?: number) => {
       if (!storeRef.current || status !== 'ready') return [];
 
       try {
-        return await storeRef.current.search(embedding, limit);
+        return await storeRef.current.search(embedding, limit, maxDistance);
       } catch (err) {
         console.warn('[Memory] Search failed:', err);
 

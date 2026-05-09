@@ -22,6 +22,7 @@ export interface MemoryStore {
   search: (
     embedding: Float32Array,
     limit?: number,
+    maxDistance?: number,
   ) => Promise<MemoryQueryResult[]>;
   status: MemoryStoreStatus;
 }
@@ -129,7 +130,11 @@ export async function openMemoryStore(uuid: string): Promise<MemoryStore> {
       get isReady() {
         return db !== null && storeStatus === 'ready';
       },
-      search: async (embedding: Float32Array, limit = 5) => {
+      search: async (
+        embedding: Float32Array,
+        limit = 5,
+        maxDistance?: number,
+      ) => {
         if (!db || storeStatus !== 'ready') {
           throw new Error('Memory store not ready');
         }
@@ -142,6 +147,11 @@ export async function openMemoryStore(uuid: string): Promise<MemoryStore> {
 
         if (DEBUG) console.log(`[Memory] Searching (limit=${limit})`);
 
+        // When filtering by distance, fetch more candidates from the DB so
+        // close matches beyond rank-N aren't silently lost by the SQL LIMIT.
+        const candidateLimit =
+          maxDistance !== undefined ? Math.max(limit, 20) : limit;
+
         const result = db.executeSync(
           `
           SELECT
@@ -152,7 +162,7 @@ export async function openMemoryStore(uuid: string): Promise<MemoryStore> {
           ORDER BY distance
           LIMIT ?
         `,
-          [embedding, limit],
+          [embedding, candidateLimit],
         );
 
         const items: MemoryQueryResult[] = [];
@@ -161,14 +171,29 @@ export async function openMemoryStore(uuid: string): Promise<MemoryStore> {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i]!;
           try {
+            const distance = row.distance;
+            if (typeof distance !== 'number' || Number.isNaN(distance)) {
+              if (DEBUG)
+                console.warn(
+                  '[Memory] Row has non-numeric distance:',
+                  distance,
+                );
+              continue;
+            }
             const meta = JSON.parse(row.metadata as string) as MemoryPointer;
             items.push({
               ...meta,
-              distance: row.distance as number,
+              distance,
             });
           } catch (err) {
             if (DEBUG) console.warn('[Memory] Failed to parse metadata:', err);
           }
+        }
+
+        if (maxDistance !== undefined) {
+          return items
+            .filter((item) => item.distance <= maxDistance)
+            .slice(0, limit);
         }
 
         return items;

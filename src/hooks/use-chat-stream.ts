@@ -17,6 +17,8 @@ import { LLMError } from '@/lib/llm/types';
 import { createStreamChat } from '@/lib/llm/xhr-stream';
 
 const BATCH_MS = 50;
+/** Cosine distance threshold for memory recall. 0=identical, 0.5=moderate match. Results above this are discarded to avoid injecting irrelevant context. */
+const MEMORY_MAX_DISTANCE = 0.5;
 
 export interface UseChatStreamOptions {
   chatbotUuid?: string;
@@ -199,7 +201,11 @@ export function useChatStream(options?: UseChatStreamOptions) {
 
           if (memoryStore.isReady && memoryStore.search && embedding) {
             try {
-              const results = await memoryStore.search(embedding, 3);
+              const results = await memoryStore.search(
+                embedding,
+                3,
+                MEMORY_MAX_DISTANCE,
+              );
 
               if (chatbotUuid) {
                 memories = await resolveMemoryText(chatbotUuid, results);

@@ -197,17 +197,17 @@ Per-chatbot vector store for conversational memory with semantic retrieval:
 Exposed operations (only when `status === 'ready'`):
 
 - `insertInteraction(dateKey, timeKey, embedding)` — stores a pointer `{ dateKey, timeKey }` and an embedding vector
-- `search(embedding, limit?)` — KNN search returning top-N `MemoryQueryResult` items (each has `{ dateKey, timeKey, distance }`)
+- `search(embedding, limit?, maxDistance?)` — KNN search returning `MemoryQueryResult` items. When `maxDistance` is provided, results with cosine distance above the threshold are filtered out. Internally fetches more DB candidates (`Math.max(limit, 20)`) when filtering is active to avoid losing close matches beyond the SQL LIMIT.
 - `clear()` — deletes all interactions from `vec_interactions`
 
 Retrieval integrated in `use-chat-stream`:
 
 1. On `sendMessage`, embeds user input via ExecuTorch
-2. Queries memory store for top 3 relevant interactions
+2. Queries memory store for up to 3 relevant interactions with a cosine distance threshold of 0.5 (`MEMORY_MAX_DISTANCE`). Results above this threshold are discarded — if no interaction passes the filter, no memory context is injected (chat proceeds without it).
 3. Resolves pointers via `resolveMemoryText(uuid, results)` in `chatbot-config.ts` — reads `YYYYMMDD.md` files, caches per-date to avoid redundant I/O, builds `"User: ... \nAssistant: ..."` pairs
 4. Injects resolved memories into system prompt via `buildSystemPrompt({ memories })`
 5. After stream completes, inserts the new turn into memory store as a fresh `{ dateKey, timeKey }` pointer
-6. Falls back gracefully if memory store is not ready or embedding fails
+6. Falls back gracefully if memory store is not ready, embedding fails, or memory search fails
 
 Debug logging: set `EXPO_PUBLIC_DEBUG_SQLITE=1` for verbose `[Memory]` logs.
 
@@ -286,4 +286,4 @@ Testing strategy:
 - Message id generation uses timestamp+random helper, not a globally stable UUID scheme
 - Error handling is user-friendly but mostly local (no centralized telemetry pipeline yet)
 - Memory store is per-chatbot, not shared; clearing memory for one chatbot does not affect others
-- Memory retrieval is best-effort: if ExecuTorch embedding fails or memory store is not ready, chat proceeds without injected context
+- Memory retrieval is best-effort: if ExecuTorch embedding fails, memory store is not ready, or no results pass the cosine distance threshold (0.5), chat proceeds without injected context

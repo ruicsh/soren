@@ -134,6 +134,116 @@ describe('memory-store', () => {
     );
   });
 
+  it('filters results by maxDistance threshold', async () => {
+    const mockDb = {
+      close: vi.fn(),
+      executeSync: vi.fn((sql) => {
+        if (sql.includes('vec_version')) {
+          return { rows: [{ version: 'v0.1.0' }] };
+        }
+        if (sql.includes('SELECT')) {
+          return {
+            rows: [
+              {
+                distance: 0.1,
+                metadata: JSON.stringify({
+                  dateKey: '20240508',
+                  timeKey: '10:00:00',
+                }),
+              },
+              {
+                distance: 0.3,
+                metadata: JSON.stringify({
+                  dateKey: '20240508',
+                  timeKey: '11:00:00',
+                }),
+              },
+              {
+                distance: 0.6,
+                metadata: JSON.stringify({
+                  dateKey: '20240508',
+                  timeKey: '12:00:00',
+                }),
+              },
+              {
+                distance: 0.9,
+                metadata: JSON.stringify({
+                  dateKey: '20240509',
+                  timeKey: '13:00:00',
+                }),
+              },
+            ],
+          };
+        }
+
+        return { rows: [] };
+      }),
+    };
+    vi.mocked(open).mockReturnValue(mockDb as any);
+
+    const store = await openMemoryStore('test-uuid');
+    const embedding = new Float32Array(384).fill(0.1);
+    const results = await store.search(embedding, 4, 0.5);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toMatchObject({
+      dateKey: '20240508',
+      distance: 0.1,
+      timeKey: '10:00:00',
+    });
+    expect(results[1]).toMatchObject({
+      dateKey: '20240508',
+      distance: 0.3,
+      timeKey: '11:00:00',
+    });
+    expect(mockDb.executeSync).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT'),
+      [embedding, 20],
+    );
+  });
+
+  it('returns all results when maxDistance is omitted (backward compatible)', async () => {
+    const mockDb = {
+      close: vi.fn(),
+      executeSync: vi.fn((sql) => {
+        if (sql.includes('vec_version')) {
+          return { rows: [{ version: 'v0.1.0' }] };
+        }
+        if (sql.includes('SELECT')) {
+          return {
+            rows: [
+              {
+                distance: 0.1,
+                metadata: JSON.stringify({
+                  dateKey: '20240508',
+                  timeKey: '10:00:00',
+                }),
+              },
+              {
+                distance: 0.8,
+                metadata: JSON.stringify({
+                  dateKey: '20240508',
+                  timeKey: '12:00:00',
+                }),
+              },
+            ],
+          };
+        }
+
+        return { rows: [] };
+      }),
+    };
+    vi.mocked(open).mockReturnValue(mockDb as any);
+
+    const store = await openMemoryStore('test-uuid');
+    const embedding = new Float32Array(384).fill(0.1);
+    const results = await store.search(embedding, 3);
+
+    expect(results).toHaveLength(2);
+    expect(results[0].distance).toBe(0.1);
+    expect(results[1].distance).toBe(0.8);
+  });
+
   it('fails when sqlite-vec is missing', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 

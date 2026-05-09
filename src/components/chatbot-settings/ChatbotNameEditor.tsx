@@ -21,7 +21,7 @@ export function ChatbotNameEditor(props: ChatbotNameEditorProps) {
           avatarConfig={avatarConfig}
           modelId={modelId}
           providerId={providerId}
-          size={48}
+          size={80}
         />
       </View>
       <TextInput
@@ -41,10 +41,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.bg2,
     borderRadius: radius.full,
-    height: 64,
+    height: 96,
     justifyContent: 'center',
     marginBottom: spacing[2],
-    width: 64,
+    width: 96,
   },
   avatarNameInput: {
     color: colors.text,

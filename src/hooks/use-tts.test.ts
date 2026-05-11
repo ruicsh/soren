@@ -241,4 +241,28 @@ describe('useTTS', () => {
       expect.objectContaining({ language: 'fr-FR' }),
     );
   });
+
+  it('excludes non-English voices from availableVoices', async () => {
+    const voices = [
+      {
+        identifier: 'en.samantha',
+        language: 'en-US',
+        name: 'Samantha',
+        quality: Speech.VoiceQuality.Enhanced,
+      },
+      {
+        identifier: 'es.maria',
+        language: 'es-MX',
+        name: 'Maria',
+        quality: Speech.VoiceQuality.Default,
+      },
+    ];
+    const { result } = await renderUseTTS({}, voices);
+
+    expect(result.current.availableVoices).toHaveLength(1);
+    expect(result.current.availableVoices[0].identifier).toBe('en.samantha');
+    expect(
+      result.current.availableVoices.find((v) => v.identifier === 'es.maria'),
+    ).toBeUndefined();
+  });
 });

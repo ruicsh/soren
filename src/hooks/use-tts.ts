@@ -47,7 +47,15 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
     let mounted = true;
     Speech.getAvailableVoicesAsync().then((voices) => {
       if (!mounted) return;
-      setAvailableVoices(voices);
+
+      // Filter to English voices only
+      const englishVoices = voices.filter((v) => {
+        const primaryLang = v.language.split(/[-_]/)[0].toLowerCase();
+
+        return primaryLang === 'en';
+      });
+
+      setAvailableVoices(englishVoices);
 
       if (options?.voice) {
         voiceRef.current = options.voice;
@@ -55,11 +63,11 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
         return;
       }
 
-      if (voices.length === 0) return;
+      if (englishVoices.length === 0) return;
 
       debugLog('voices_available', {
-        count: voices.length,
-        voices: voices.map((v) => ({
+        count: englishVoices.length,
+        voices: englishVoices.map((v) => ({
           id: v.identifier,
           lang: v.language,
           name: v.name,
@@ -67,10 +75,12 @@ export function useTTS(options?: UseTTSOptions): UseTTSReturn {
         })),
       });
 
-      let candidates = voices;
+      let candidates = englishVoices;
       const lang = languageRef.current;
       if (lang) {
-        const filtered = voices.filter((v) => v.language.startsWith(lang));
+        const filtered = englishVoices.filter((v) =>
+          v.language.startsWith(lang),
+        );
         if (filtered.length > 0) {
           candidates = filtered;
         }

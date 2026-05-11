@@ -60,6 +60,15 @@ describe('AppHeader', () => {
       expect(screen.getByTestId('my-title-id')).toBeTruthy();
       expect(screen.getByTestId('my-title-id').type).toBe('Text');
     });
+
+    it('does not render leftContent when variant is title', () => {
+      renderAppHeader({
+        leftContent: <Text testID="left-content">Profile</Text>,
+        title: 'Test',
+      });
+
+      expect(screen.queryByTestId('left-content')).toBeNull();
+    });
   });
 
   describe('variant: custom', () => {
@@ -87,6 +96,12 @@ describe('AppHeader', () => {
 
       expect(screen.getByTestId('right-content')).toBeTruthy();
       expect(screen.getByText('Call')).toBeTruthy();
+    });
+
+    it('does not render right slot content when rightSlot is not provided', () => {
+      renderAppHeader({ variant: 'custom' });
+
+      expect(screen.queryByTestId('right-content')).toBeNull();
     });
 
     it('calls onBack when back button is pressed', () => {

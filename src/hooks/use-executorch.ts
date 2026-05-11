@@ -147,7 +147,8 @@ export function useExecutorch(): UseExecutorchReturn {
 
       return model.forward(text);
     },
-    [model, status],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [model.forward, status],
   );
 
   return {

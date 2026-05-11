@@ -30,8 +30,8 @@ describe('VoiceSelectionScreen', () => {
     },
     {
       identifier: 'v3',
-      language: 'pt-BR',
-      name: 'Luciana',
+      language: 'en-GB',
+      name: 'Daniel',
       quality: 'Premium',
     },
   ];
@@ -57,7 +57,6 @@ describe('VoiceSelectionScreen', () => {
 
     expect(screen.getByText('Recommended')).toBeTruthy();
     expect(screen.getByText('Suggested (English)')).toBeTruthy();
-    expect(screen.getByText('Portuguese')).toBeTruthy();
 
     // Alex is recommended (selected) and in Suggested (en)
     const alexItems = screen.getAllByText('Alex');
@@ -81,16 +80,16 @@ describe('VoiceSelectionScreen', () => {
     render(<VoiceSelectionScreen />);
 
     const searchInput = screen.getByPlaceholderText('Search...');
-    fireEvent.changeText(searchInput, 'Luciana');
+    fireEvent.changeText(searchInput, 'Daniel');
 
     expect(screen.queryByText('Alex')).toBeNull();
-    expect(screen.getByText('Luciana')).toBeTruthy();
+    expect(screen.getByText('Daniel')).toBeTruthy();
   });
 
   it('updates config when a voice is selected', () => {
     render(<VoiceSelectionScreen />);
 
-    fireEvent.press(screen.getByText('Luciana'));
+    fireEvent.press(screen.getByText('Daniel'));
 
     expect(mockSaveWithConfig).toHaveBeenCalledWith({ voiceId: 'v3' });
     expect(mockBack).toHaveBeenCalled();

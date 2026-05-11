@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, spacing, typography } from '@/theme';
@@ -38,11 +39,18 @@ export function AppHeader(props: AppHeaderProps) {
     variant = 'title',
   } = props;
 
+  // Stable handleBack that always calls the latest onBack callback
+  const onBackRef = useRef(onBack);
+  onBackRef.current = onBack;
+  const handleBack = useCallback(() => {
+    onBackRef.current?.();
+  }, []);
+
   if (variant === 'custom') {
     return (
       <View style={styles.headerCustom}>
         <View style={styles.leftArea}>
-          {!hideBackButton && <BackButton onPress={() => onBack?.()} />}
+          {!hideBackButton && <BackButton onPress={handleBack} />}
           {leftContent}
         </View>
         <View style={styles.rightArea}>{rightSlot}</View>
@@ -53,7 +61,7 @@ export function AppHeader(props: AppHeaderProps) {
   return (
     <View style={styles.headerTitleVariant}>
       <View style={styles.sideSlot}>
-        {!hideBackButton && <BackButton onPress={() => onBack?.()} />}
+        {!hideBackButton && <BackButton onPress={handleBack} />}
       </View>
       <View style={styles.centerSlot}>
         <Text style={styles.titleText} testID={centerTestID}>
